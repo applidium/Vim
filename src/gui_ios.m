@@ -44,15 +44,6 @@ struct {
 } gui_ios;
 
 
-// -- Initialization --------------------------------------------------------
-
-    void
-macvim_early_init()
-{
-    printf("%s\n",__func__);  
-}
-
-
 /*
  * Parse the GUI related command-line arguments.  Any arguments used are
  * deleted from argv, and *argc is decremented accordingly.  This is called
@@ -104,6 +95,9 @@ gui_mch_init_check(void)
 gui_mch_init(void)
 {
     printf("%s\n",__func__);  
+    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    gui_ios.window.backgroundColor = [UIColor blueColor];
+
 //
 //    gui_mac_info("%s", exe_name);
 //    
@@ -189,6 +183,7 @@ gui_mch_exit(int rc)
     int
 gui_mch_open(void)
 {
+    [gui_ios.window makeKeyAndVisible];
     printf("%s\n",__func__);  
 }
 
@@ -229,22 +224,6 @@ gui_mch_flush(void)
     // This function is called way too often to be useful as a hint for
     // flushing.  If we were to flush every time it was called the screen would
     // flicker.
-    printf("%s\n",__func__);  
-}
-
-
-    void
-gui_macvim_flush(void)
-{
-    printf("%s\n",__func__);  
-}
-
-
-/* Force flush output to MacVim.  Do not call this method unless absolutely
- * necessary. */
-    void
-gui_macvim_force_flush(void)
-{
     printf("%s\n",__func__);  
 }
 
@@ -307,18 +286,8 @@ gui_mch_delete_lines(int row, int num_lines)
 }
 
 
-    void
-gui_mch_draw_string(int row, int col, char_u *s, int len, int cells, int flags)
-{
+void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     printf("%s\n",__func__);  
-}
-
-
-    int
-gui_macvim_draw_string(int row, int col, char_u *s, int len, int flags)
-{
-    printf("%s\n",__func__);  
-    return 0;
 }
 
 

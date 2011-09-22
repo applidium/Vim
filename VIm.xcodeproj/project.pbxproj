@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A31B10F142BA1CE006D816D /* gui_ios.pro in Resources */ = {isa = PBXBuildFile; fileRef = 7A31B10E142BA1CE006D816D /* gui_ios.pro */; };
 		7A68CADA1422952B0019E159 /* blowfish.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6B1422932F00075221 /* blowfish.c */; };
 		7A68CADC1422952C0019E159 /* buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6C1422932F00075221 /* buffer.c */; };
 		7A68CADD142295440019E159 /* charset.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6D1422932F00075221 /* charset.c */; };
@@ -65,6 +66,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7A31B10E142BA1CE006D816D /* gui_ios.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_ios.pro; sourceTree = "<group>"; };
 		7A68CB0E1422A0720019E159 /* libm.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libm.dylib; path = usr/lib/libm.dylib; sourceTree = SDKROOT; };
 		7A68CB101422A09D0019E159 /* libcurses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcurses.dylib; path = usr/lib/libcurses.dylib; sourceTree = SDKROOT; };
 		7A71941414228FA500B62000 /* VIm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VIm.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1246,6 +1248,7 @@
 			isa = PBXGroup;
 			children = (
 				7A992C991422932F00075221 /* blowfish.pro */,
+				7A31B10E142BA1CE006D816D /* gui_ios.pro */,
 				7A992C9A1422932F00075221 /* buffer.pro */,
 				7A992C9B1422932F00075221 /* charset.pro */,
 				7A992C9C1422932F00075221 /* diff.pro */,
@@ -1648,6 +1651,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A31B10F142BA1CE006D816D /* gui_ios.pro in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
