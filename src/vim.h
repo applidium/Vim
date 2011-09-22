@@ -117,8 +117,12 @@
     Error: To compile for both MACOS X and Classic use a Classic Carbon
 #endif
 /* Unless made through the Makefile enforce GUI on Mac */
-#if defined(MACOS) && !defined(HAVE_CONFIG_H)
-# define FEAT_GUI_MAC
+#if defined(TARGET_OS_MAC) && !defined(HAVE_CONFIG_H)
+#  if defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_IPHONE)
+#    define FEAT_GUI_IOS
+#  else
+#    define FEAT_GUI_MAC
+#  endif
 #endif
 
 #if defined(FEAT_GUI_MOTIF) \
@@ -320,7 +324,7 @@
 # include "os_mint.h"
 #endif
 
-#if defined(MACOS)
+#if defined(MACOS) && !defined(TARGET_IPHONE_SIMULATOR) && !defined(TARGET_OS_IPHONE)
 # if defined(__MRC__) || defined(__SC__) /* MPW Compilers */
 #  define HAVE_SETENV
 # endif
