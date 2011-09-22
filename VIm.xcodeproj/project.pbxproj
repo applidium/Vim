@@ -40,8 +40,6 @@
 		7A68CAF914229E440019E159 /* normal.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C081422932F00075221 /* normal.c */; };
 		7A68CAFA14229E440019E159 /* ops.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C401422932F00075221 /* ops.c */; };
 		7A68CAFB14229E440019E159 /* option.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C411422932F00075221 /* option.c */; };
-		7A68CAFC14229E440019E159 /* os_mac_conv.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C4B1422932F00075221 /* os_mac_conv.c */; };
-		7A68CAFD14229E440019E159 /* os_macosx.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C501422932F00075221 /* os_macosx.m */; };
 		7A68CAFE14229E440019E159 /* os_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C581422932F00075221 /* os_unix.c */; };
 		7A68CAFF14229E440019E159 /* popupmnu.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992C971422932F00075221 /* popupmnu.c */; };
 		7A68CB0014229E440019E159 /* pty.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992CEB1422932F00075221 /* pty.c */; };
@@ -64,8 +62,6 @@
 		7A71941914228FA500B62000 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941814228FA500B62000 /* UIKit.framework */; };
 		7A71941B14228FA500B62000 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941A14228FA500B62000 /* Foundation.framework */; };
 		7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941C14228FA500B62000 /* CoreGraphics.framework */; };
-		7A992E0B1422937300075221 /* ios_info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7A992E091422937300075221 /* ios_info.plist */; };
-		7A992E11142294F900075221 /* pathdef.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B691422932F00075221 /* pathdef.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -138,7 +134,6 @@
 		7A992B981422932F00075221 /* gui_gtk_x11.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gui_gtk_x11.c; sourceTree = "<group>"; };
 		7A992B991422932F00075221 /* gui_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gui_ios.m; sourceTree = "<group>"; };
 		7A992B9A1422932F00075221 /* gui_mac.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gui_mac.c; sourceTree = "<group>"; };
-		7A992B9B1422932F00075221 /* gui_macvim.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gui_macvim.m; sourceTree = "<group>"; };
 		7A992B9C1422932F00075221 /* gui_motif.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gui_motif.c; sourceTree = "<group>"; };
 		7A992B9D1422932F00075221 /* gui_photon.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gui_photon.c; sourceTree = "<group>"; };
 		7A992B9E1422932F00075221 /* gui_w16.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gui_w16.c; sourceTree = "<group>"; };
@@ -744,6 +739,8 @@
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
 		7A992E091422937300075221 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ios_info.plist; path = src/ios_info.plist; sourceTree = SOURCE_ROOT; };
 		7A992E0A1422937300075221 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ios_prefix.pch; path = src/ios_prefix.pch; sourceTree = SOURCE_ROOT; };
+		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
+		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -765,8 +762,6 @@
 		7A71940914228FA500B62000 = {
 			isa = PBXGroup;
 			children = (
-				7A68CB101422A09D0019E159 /* libcurses.dylib */,
-				7A68CB0E1422A0720019E159 /* libm.dylib */,
 				7A71941E14228FA500B62000 /* VIm */,
 				7A71941714228FA500B62000 /* Frameworks */,
 				7A71941514228FA500B62000 /* Products */,
@@ -784,6 +779,8 @@
 		7A71941714228FA500B62000 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7A68CB101422A09D0019E159 /* libcurses.dylib */,
+				7A68CB0E1422A0720019E159 /* libm.dylib */,
 				7A71941814228FA500B62000 /* UIKit.framework */,
 				7A71941A14228FA500B62000 /* Foundation.framework */,
 				7A71941C14228FA500B62000 /* CoreGraphics.framework */,
@@ -867,7 +864,6 @@
 				7A992B981422932F00075221 /* gui_gtk_x11.c */,
 				7A992B991422932F00075221 /* gui_ios.m */,
 				7A992B9A1422932F00075221 /* gui_mac.c */,
-				7A992B9B1422932F00075221 /* gui_macvim.m */,
 				7A992B9C1422932F00075221 /* gui_motif.c */,
 				7A992B9D1422932F00075221 /* gui_photon.c */,
 				7A992B9E1422932F00075221 /* gui_w16.c */,
@@ -975,6 +971,7 @@
 				7A992C4B1422932F00075221 /* os_mac_conv.c */,
 				7A992C4C1422932F00075221 /* os_mac_rsrc */,
 				7A992C501422932F00075221 /* os_macosx.m */,
+				7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */,
 				7A992C511422932F00075221 /* os_mint.h */,
 				7A992C521422932F00075221 /* os_msdos.c */,
 				7A992C531422932F00075221 /* os_msdos.h */,
@@ -1588,6 +1585,15 @@
 			path = xxd;
 			sourceTree = "<group>";
 		};
+		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
+			isa = PBXGroup;
+			children = (
+				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
+				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
+			);
+			path = os_ios_rsrc;
+			sourceTree = "<group>";
+		};
 		7AEFCF4F1422926B008AF44E /* New Group */ = {
 			isa = PBXGroup;
 			children = (
@@ -1642,7 +1648,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A992E0B1422937300075221 /* ios_info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1659,8 +1664,6 @@
 				7A68CAF914229E440019E159 /* normal.c in Sources */,
 				7A68CAFA14229E440019E159 /* ops.c in Sources */,
 				7A68CAFB14229E440019E159 /* option.c in Sources */,
-				7A68CAFC14229E440019E159 /* os_mac_conv.c in Sources */,
-				7A68CAFD14229E440019E159 /* os_macosx.m in Sources */,
 				7A68CAFE14229E440019E159 /* os_unix.c in Sources */,
 				7A68CAFF14229E440019E159 /* popupmnu.c in Sources */,
 				7A68CB0014229E440019E159 /* pty.c in Sources */,
@@ -1703,7 +1706,6 @@
 				7A68CAE4142295440019E159 /* ex_docmd.c in Sources */,
 				7A68CAE5142295440019E159 /* ex_eval.c in Sources */,
 				7A68CAE6142295440019E159 /* ex_getln.c in Sources */,
-				7A992E11142294F900075221 /* pathdef.c in Sources */,
 				7A68CADA1422952B0019E159 /* blowfish.c in Sources */,
 				7A68CADC1422952C0019E159 /* buffer.c in Sources */,
 			);
@@ -1761,18 +1763,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/ios_prefix.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = "HAVE_CONFIG_H=1";
-				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
-					"HAVE_CONFIG_H=1",
-					FEAT_GUI_IOS,
-					MACOS_X_UNIX,
-				);
+				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"${SRCROOT}/src",
 					"${SRCROOT}/src/proto",
 				);
-				INFOPLIST_FILE = src/ios_info.plist;
+				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1782,18 +1778,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/ios_prefix.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = "HAVE_CONFIG_H=1";
-				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
-					"HAVE_CONFIG_H=1",
-					FEAT_GUI_IOS,
-					MACOS_X_UNIX,
-				);
+				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"${SRCROOT}/src",
 					"${SRCROOT}/src/proto",
 				);
-				INFOPLIST_FILE = src/ios_info.plist;
+				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
