@@ -17,7 +17,7 @@
 #define BalloonEval int   /* used in header files */
 
 #include "vim.h"
-#ifndef FEAT_GUI_MAC
+#if !(defined(FEAT_GUI_MAC) || defined(FEAT_GUI_IOS))
 # include <CoreServices/CoreServices.h>
 #endif
 
