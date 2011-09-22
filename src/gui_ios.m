@@ -20,14 +20,6 @@ struct {
     UIWindow * window;
 } gui_ios;
 
-static GuiFont gui_macvim_font_with_name(char_u *name);
-static int specialKeyToNSKey(int key);
-static int vimModMaskToEventModifierFlags(int mods);
-
-NSArray *descriptor_for_menu(vimmenu_T *menu);
-vimmenu_T *menu_for_descriptor(NSArray *desc);
-
-
 
 // -- Initialization --------------------------------------------------------
 
@@ -364,8 +356,8 @@ gui_mch_def_colors()
 gui_mch_new_colors(void)
 {
     printf("%s\n",__func__);  
-    gui.def_back_pixel = gui.back_pixel;
-    gui.def_norm_pixel = gui.norm_pixel;
+//    gui.def_back_pixel = gui.back_pixel;
+//    gui.def_norm_pixel = gui.norm_pixel;
 
 }
 

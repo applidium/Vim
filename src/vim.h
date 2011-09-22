@@ -246,7 +246,7 @@
 #endif
 
 /* The Mac conversion stuff doesn't work under X11. */
-#if defined(FEAT_MBYTE) && defined(MACOS_X)
+#if defined(FEAT_MBYTE) && defined(MACOS_X) && !defined(TARGET_OS_IPHONE) && !defined(TARGET_OS_SIMULATOR)
 # define MACOS_CONVERT
 #endif
 
@@ -275,7 +275,8 @@
 #endif
 
 #if (defined(UNIX) || defined(__EMX__) || defined(VMS)) \
-	&& (!defined(MACOS_X) || defined(HAVE_CONFIG_H))
+	&& (!defined(MACOS_X) || defined(HAVE_CONFIG_H)) \
+    || (defined(TARGET_OS_IPHONE) || defined(TARGET_OS_SIMULATOR))
 # include "os_unix.h"	    /* bring lots of system header files */
 #endif
 
@@ -325,7 +326,7 @@
 # include "os_mint.h"
 #endif
 
-#if defined(MACOS) && !defined(TARGET_IPHONE_SIMULATOR) && !defined(TARGET_OS_IPHONE)
+#if defined(MACOS)
 # if defined(__MRC__) || defined(__SC__) /* MPW Compilers */
 #  define HAVE_SETENV
 # endif

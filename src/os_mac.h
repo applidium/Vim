@@ -52,11 +52,19 @@
 /* && defined(HAVE_CURSE) */
 /* The curses.h from MacOS X provides by default some BACKWARD compatibility
  * definition which can cause us problem later on. So we undefine a few of them. */
-# include <curses.h>
-# undef reg
-# undef ospeed
+# if defined(TARGET_OS_SIMULATOR) || defined(TARGET_OS_IPHONE)
+#  include <string.h>
+#  include <ctype.h>
+#  include <fcntl.h>
+#  include <sys/ioctl.h>
+#  include <time.h>
+# else
+#  include <curses.h>
+#  undef reg
+#  undef ospeed
 /* OK defined to 0 in MacOS X 10.2 curses!  Remove it, we define it to be 1. */
-# undef OK
+#  undef OK
+# endif
 #endif
 #include <signal.h>
 #include <errno.h>
