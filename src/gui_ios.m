@@ -21,9 +21,15 @@
 @end
 
 @implementation VImAppDelegate
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [self performSelector:@selector(_test) withObject:nil afterDelay:2.0f];
     [self performSelector:@selector(_VImMain) withObject:nil afterDelay:1.0f];
     return YES;
+}
+
+- (void)_test {
+    add_to_input_buf(":set number\n", 13);
 }
 
 - (void)_VImMain {
@@ -32,7 +38,7 @@
 }
 @end
 
-@interface VImTextView : UIView {
+@interface VImTextView : UIView <UIKeyInput> {
     CGLayerRef _cgLayer;
 }
 @property (nonatomic, readonly) CGLayerRef cgLayer;
@@ -55,6 +61,24 @@
     }
     [super dealloc];
 }
+
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (BOOL)hasText {
+    return YES;
+}
+
+- (void)insertText:(NSString *)text {
+    NSLog(@"Inserting %@", text);
+    add_to_input_buf([text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+}
+
+- (void)deleteBackward {
+    NSLog(@"Delete backward");
+}
+
 
 @end
 
@@ -128,6 +152,7 @@ gui_mch_init(void)
     textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [window addSubview:textView];
     [textView release];
+    [textView becomeFirstResponder];
     gui_ios.window = window;
 
 //
@@ -326,7 +351,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     
     CGContextRef context = CGLayerGetContext(layer);
     
-    CGContextSelectFont(context, "Helvetica-Bold", 12.0f, kCGEncodingMacRoman);
+    CGContextSelectFont(context, "Courier", 12.0f, kCGEncodingMacRoman);
     CGContextSetCharacterSpacing(context, 12); // 4
     CGContextSetTextDrawingMode(context, kCGTextFillStroke); // 5
     
