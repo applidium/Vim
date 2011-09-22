@@ -157,7 +157,7 @@ static char_u *start_dir = NULL;	/* current working dir on startup */
 # ifdef VIMDLL
 _export
 # endif
-# ifdef FEAT_GUI_MSWIN
+# if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_IOS)
 #  ifdef __BORLANDC__
 _cdecl
 #  endif

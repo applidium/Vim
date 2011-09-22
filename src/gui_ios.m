@@ -14,7 +14,30 @@
  */
 
 #import "vim.h"
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+@interface VImAppDelegate : NSObject <UIApplicationDelegate> {
+}
+@end
+
+@implementation VImAppDelegate
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:1.0f];
+    return YES;
+}
+
+- (void)_VImMain {
+    char * argv[] = { "vim" };
+    VimMain(0, argv);
+}
+@end
+
+int main(int argc, char *argv[]) {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    int retVal = UIApplicationMain(argc, argv, nil, @"VImAppDelegate");
+    [pool release];
+    return retVal;
+}
 
 struct {
     UIWindow * window;
@@ -242,7 +265,8 @@ gui_mch_wait_for_chars(int wtime)
     // called, so force a flush of the command queue here.
     printf("%s\n",__func__);  
     printf("Waiting for %d\n", wtime);
-    usleep(1000*wtime);
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0]];
+//    usleep(1000*wtime);
 
     return OK;
 }
