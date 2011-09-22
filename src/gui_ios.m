@@ -32,6 +32,32 @@
 }
 @end
 
+@interface VImTextView : UIView {
+    CGLayerRef _cgLayer;
+}
+@property (nonatomic, readonly) CGLayerRef cgLayer;
+@end
+
+@implementation VImTextView
+@synthesize cgLayer = _cgLayer;
+- (void)drawRect:(CGRect)rect {
+    if (_cgLayer) {
+        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
+    } else {
+        [self willChangeValueForKey:@"cgLayer"];
+        _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
+        [self didChangeValueForKey:@"cgLayer"];
+    }
+}
+- (void)dealloc {
+    if (_cgLayer) {
+        CGLayerRelease(_cgLayer);
+    }
+    [super dealloc];
+}
+
+@end
+
 int main(int argc, char *argv[]) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     int retVal = UIApplicationMain(argc, argv, nil, @"VImAppDelegate");
@@ -41,6 +67,7 @@ int main(int argc, char *argv[]) {
 
 struct {
     UIWindow * window;
+    CGLayerRef layer;
 } gui_ios;
 
 
@@ -95,8 +122,13 @@ gui_mch_init_check(void)
 gui_mch_init(void)
 {
     printf("%s\n",__func__);  
-    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    gui_ios.window.backgroundColor = [UIColor blueColor];
+    UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    window.backgroundColor = [UIColor blueColor];
+    VImTextView * textView = [[VImTextView alloc] initWithFrame:window.bounds];
+    textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    [window addSubview:textView];
+    [textView release];
+    gui_ios.window = window;
 
 //
 //    gui_mac_info("%s", exe_name);
@@ -184,6 +216,7 @@ gui_mch_exit(int rc)
 gui_mch_open(void)
 {
     [gui_ios.window makeKeyAndVisible];
+    
     printf("%s\n",__func__);  
 }
 
@@ -287,7 +320,33 @@ gui_mch_delete_lines(int row, int num_lines)
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
+    CGLayerRef layer = textView.cgLayer;
+    
+    CGContextRef context = CGLayerGetContext(layer);
+    
+    CGContextSelectFont(context, "Helvetica-Bold", 12.0f, kCGEncodingMacRoman);
+    CGContextSetCharacterSpacing(context, 12); // 4
+    CGContextSetTextDrawingMode(context, kCGTextFillStroke); // 5
+    
+    CGContextSetRGBFillColor(context, 0, 1, 0, .5); // 6
+    CGContextSetRGBStrokeColor(context, 0, 0, 1, 1); // 7
+//    myTextTransform =  CGAffineTransformMakeRotation  (MyRadians (45)); // 8
+//    CGContextSetTextMatrix (myContext, myTextTransform); // 9
+    CGContextShowTextAtPoint (context, 12*col, 12*row, s, len); 
+    
+    [textView setNeedsDisplay];
+/*
+    
+    CGLayerCreateWithContext r
+    NSGraphicsContext
+    UIGraphicsPopContext()
+    UIGraphicsGetCurrentContext
+    CGContextRef
+    UIGraphicsBeginImageContext
+    [gui_ios.window lockFocus];
+ */
 }
 
 
