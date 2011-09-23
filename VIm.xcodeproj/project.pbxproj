@@ -63,6 +63,7 @@
 		7A71941914228FA500B62000 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941814228FA500B62000 /* UIKit.framework */; };
 		7A71941B14228FA500B62000 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941A14228FA500B62000 /* Foundation.framework */; };
 		7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941C14228FA500B62000 /* CoreGraphics.framework */; };
+		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -741,6 +742,7 @@
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
 		7A992E091422937300075221 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ios_info.plist; path = src/ios_info.plist; sourceTree = SOURCE_ROOT; };
 		7A992E0A1422937300075221 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ios_prefix.pch; path = src/ios_prefix.pch; sourceTree = SOURCE_ROOT; };
+		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -750,6 +752,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */,
 				7A68CB111422A09D0019E159 /* libcurses.dylib in Frameworks */,
 				7A68CB0F1422A0720019E159 /* libm.dylib in Frameworks */,
 				7A71941914228FA500B62000 /* UIKit.framework in Frameworks */,
@@ -764,6 +767,7 @@
 		7A71940914228FA500B62000 = {
 			isa = PBXGroup;
 			children = (
+				7A9DD4E4142CC10600B8F464 /* CoreText.framework */,
 				7A71941E14228FA500B62000 /* VIm */,
 				7A71941714228FA500B62000 /* Frameworks */,
 				7A71941514228FA500B62000 /* Products */,

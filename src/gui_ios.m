@@ -15,6 +15,7 @@
 
 #import "vim.h"
 #import <UIKit/UIKit.h>
+#import <CoreText/CoreText.h>
 
 @interface VImAppDelegate : NSObject <UIApplicationDelegate> {
 }
@@ -23,18 +24,13 @@
 @implementation VImAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    [self performSelector:@selector(_test) withObject:nil afterDelay:2.0f];
-    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:1.0f];
+    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:0.1f];
     return YES;
-}
-
-- (void)_test {
-    add_to_input_buf(":set number\n", 13);
 }
 
 - (void)_VImMain {
     char * argv[] = { "vim" };
-    VimMain(0, argv);
+    VimMain(1, argv);
 }
 @end
 
@@ -47,11 +43,27 @@
 @implementation VImTextView
 @synthesize cgLayer = _cgLayer;
 - (void)drawRect:(CGRect)rect {
+    NSLog(@"Drawing rect !");
     if (_cgLayer) {
-        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
+//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
+        CGContextRef context = UIGraphicsGetCurrentContext();
+//        CGContextTranslateCTM(context, 0, 400.0f);
+//        CGContextScaleCTM(context, 1.0, -1.0);
+        CGContextDrawLayerAtPoint(context, CGPointMake(20.0f, 50.0f), _cgLayer);
     } else {
         [self willChangeValueForKey:@"cgLayer"];
         _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
+#define DEBUG_IOS_LAYER_ALIGNMENT 1
+#if DEBUG_IOS_LAYER_ALIGNMENT
+        CGContextRef context = CGLayerGetContext(_cgLayer);
+
+        CGContextSetFillColorWithColor(context, [UIColor redColor].CGColor);
+        CGContextFillRect(context, CGRectMake(0.0f, 0.0f, 100.0f, 100.0f));
+        CGContextSetFillColorWithColor(context, [UIColor greenColor].CGColor);
+        CGContextFillRect(context, CGRectMake(100.0f, 0.0f, 100.0f, 100.0f));
+        CGContextSetFillColorWithColor(context, [UIColor blueColor].CGColor);
+        CGContextFillRect(context, CGRectMake(0.0f, 100.0f, 100.0f, 100.0f));
+#endif
         [self didChangeValueForKey:@"cgLayer"];
     }
 }
@@ -73,6 +85,7 @@
 - (void)insertText:(NSString *)text {
     NSLog(@"Inserting %@", text);
     add_to_input_buf([text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+    [self setNeedsDisplay];
 }
 
 - (void)deleteBackward {
@@ -302,8 +315,8 @@ gui_mch_wait_for_chars(int wtime)
     // called, so force a flush of the command queue here.
     printf("%s\n",__func__);  
     printf("Waiting for %d\n", wtime);
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0]];
-//    usleep(1000*wtime);
+    [[NSRunLoop currentRunLoop] acceptInputForMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0]];
+    printf("Finished waiting\n");
 
     return OK;
 }
@@ -345,6 +358,7 @@ gui_mch_delete_lines(int row, int num_lines)
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
+    printf("Drawing at %d x %d : %s", col, row, s);
     printf("%s\n",__func__);
     VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
     CGLayerRef layer = textView.cgLayer;
@@ -353,13 +367,34 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     
     CGContextSelectFont(context, "Courier", 12.0f, kCGEncodingMacRoman);
     CGContextSetCharacterSpacing(context, 12); // 4
-    CGContextSetTextDrawingMode(context, kCGTextFillStroke); // 5
+    CGContextSetTextDrawingMode(context, kCGTextFill); // 5
     
-    CGContextSetRGBFillColor(context, 0, 1, 0, .5); // 6
-    CGContextSetRGBStrokeColor(context, 0, 0, 1, 1); // 7
-//    myTextTransform =  CGAffineTransformMakeRotation  (MyRadians (45)); // 8
-//    CGContextSetTextMatrix (myContext, myTextTransform); // 9
-    CGContextShowTextAtPoint (context, 12*col, 12*row, s, len); 
+    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0); // 6
+
+#define USE_CORE_TEXT 0
+#if USE_CORE_TEXT
+    CTFontRef font = CTFontCreateWithName(@"Courier", 12.0f, &CGAffineTransformIdentity);
+    CFStringRef string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
+    
+    // Initialize string, font, and context
+    CFStringRef keys[] = { kCTFontAttributeName };
+    CFTypeRef values[] = { font };
+    CFDictionaryRef attributes = [NSDictionary dictionaryWithObject:font forKey:kCTFontAttributeName];
+    CFAttributedStringRef attrString = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes);
+    CFRelease(string);
+    CFRelease(attributes);
+    CTLineRef line = CTLineCreateWithAttributedString(attrString);
+    // Set text position and draw the line into the graphics context
+    CGContextSetTextPosition(context, 12.0 * col, 12.0 * row);
+    CTLineDraw(line, context);
+    CFRelease(line);
+#else
+    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
+    CGContextSetRGBFillColor(context, 0.2, 0.2, 0.2, 1.0);
+    CGContextFillRect(context, CGRectMake(12.0*col, 12.0*row, 12.0*len, 12.0));
+    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextShowTextAtPoint(context, 12.0*col, 12.0*row, s, len); 
+#endif
     
     [textView setNeedsDisplay];
 /*
