@@ -17,6 +17,9 @@
 #import <UIKit/UIKit.h>
 #import <CoreText/CoreText.h>
 
+#define GUI_IOS_CHAR_HEIGHT 8.0f
+#define GUI_IOS_CHAR_WIDTH 4.0f
+
 @interface VImAppDelegate : NSObject <UIApplicationDelegate> {
 }
 @end
@@ -29,8 +32,8 @@
 }
 
 - (void)_VImMain {
-    char * argv[] = { "vim" };
-    VimMain(1, argv);
+    char * argv[] = { "vim", "-c", "help" };
+    VimMain(3, argv);
 }
 @end
 
@@ -53,7 +56,7 @@
     } else {
         [self willChangeValueForKey:@"cgLayer"];
         _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
-#define DEBUG_IOS_LAYER_ALIGNMENT 1
+#define DEBUG_IOS_LAYER_ALIGNMENT 0
 #if DEBUG_IOS_LAYER_ALIGNMENT
         CGContextRef context = CGLayerGetContext(_cgLayer);
 
@@ -159,6 +162,9 @@ gui_mch_init_check(void)
 gui_mch_init(void)
 {
     printf("%s\n",__func__);  
+    
+    set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
+
     UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     window.backgroundColor = [UIColor blueColor];
     VImTextView * textView = [[VImTextView alloc] initWithFrame:window.bounds];
@@ -331,7 +337,8 @@ gui_mch_wait_for_chars(int wtime)
     void
 gui_mch_clear_all(void)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    
 }
 
 
@@ -358,18 +365,19 @@ gui_mch_delete_lines(int row, int num_lines)
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
-    printf("Drawing at %d x %d : %s", col, row, s);
     printf("%s\n",__func__);
+    printf("===========================\n");
+    printf("Drawing at %d x %d : |%.*s|\n", col, row, len, s);
+    printf("===========================\n");
     VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
     CGLayerRef layer = textView.cgLayer;
     
     CGContextRef context = CGLayerGetContext(layer);
+    CGContextSelectFont(context, "Courier", GUI_IOS_CHAR_HEIGHT, kCGEncodingMacRoman);
+    CGContextSetCharacterSpacing(context, 0.0f); // FIXME : maybe 0 isnt right. Seems to look better though
+    CGContextSetTextDrawingMode(context, kCGTextFill);
     
-    CGContextSelectFont(context, "Courier", 12.0f, kCGEncodingMacRoman);
-    CGContextSetCharacterSpacing(context, 12); // 4
-    CGContextSetTextDrawingMode(context, kCGTextFill); // 5
-    
-    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0); // 6
+    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0);
 
 #define USE_CORE_TEXT 0
 #if USE_CORE_TEXT
@@ -389,11 +397,19 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CTLineDraw(line, context);
     CFRelease(line);
 #else
-    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
     CGContextSetRGBFillColor(context, 0.2, 0.2, 0.2, 1.0);
-    CGContextFillRect(context, CGRectMake(12.0*col, 12.0*row, 12.0*len, 12.0));
+    CGContextFillRect(context, CGRectMake(GUI_IOS_CHAR_WIDTH*col, GUI_IOS_CHAR_HEIGHT*row, GUI_IOS_CHAR_WIDTH*len, GUI_IOS_CHAR_HEIGHT));
     CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
-    CGContextShowTextAtPoint(context, 12.0*col, 12.0*row, s, len); 
+    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
+    
+    NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
+    NSLog(@"Showing : |%@|", string);
+    char * romanBytes = [string cStringUsingEncoding:NSMacOSRomanStringEncoding];
+    int length = [string lengthOfBytesUsingEncoding:NSMacOSRomanStringEncoding];
+
+    
+    CGContextShowTextAtPoint(context, GUI_IOS_CHAR_WIDTH * col, GUI_IOS_CHAR_HEIGHT * row, romanBytes, length); 
+    [string release];
 #endif
     
     [textView setNeedsDisplay];
@@ -1078,10 +1094,10 @@ gui_mch_get_rgb(guicolor_T pixel)
     void
 gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 {
-    printf("%s\n",__func__);  
-    
-    *screen_w = 12;
-    *screen_h = 37;
+    printf("%s\n",__func__);
+    CGSize appSize = [[UIScreen mainScreen] applicationFrame].size;
+    *screen_w = appSize.width;
+    *screen_h = appSize.height;
 }
 
 
