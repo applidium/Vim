@@ -32,6 +32,7 @@
 }
 
 - (void)_VImMain {
+    vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
     char * argv[] = { "vim", "-c", "help" };
     VimMain(3, argv);
 }
@@ -162,7 +163,6 @@ gui_mch_init_check(void)
 gui_mch_init(void)
 {
     printf("%s\n",__func__);  
-    
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
     UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
