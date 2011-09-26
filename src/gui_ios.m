@@ -376,7 +376,7 @@ gui_mch_clear_all(void)
     CGLayerRef layer = textView.cgLayer;
     CGContextRef context = CGLayerGetContext(layer);
     
-    CGContextSetFillColorWithColor(context, gui.back_pixel);
+    CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGSize size = CGLayerGetSize(layer);
     CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
 }
@@ -400,7 +400,9 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    // 
+    
 }
 
 
@@ -735,7 +737,7 @@ gui_mch_init_font(char_u *font_name, int fontset) {
 
     
     CGRect boundingRect = CGRectZero;
-    CGGlyph glyph = CTFontGetGlyphWithName(gui.norm_font, (CFStringRef)@"0");
+    CGGlyph glyph = CTFontGetGlyphWithName(gui.norm_font, (CFStringRef)@"g");
     CTFontGetBoundingRectsForGlyphs(gui.norm_font, kCTFontHorizontalOrientation, &glyph, &boundingRect, 1);
     
     gui.char_ascent = CTFontGetAscent(gui.norm_font);
@@ -1200,7 +1202,8 @@ gui_mch_set_shellsize(
     int		base_height,
     int		direction)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    gui_resize_shell(gui_ios.window.bounds.size.width, gui_ios.window.bounds.size.height);
 }
 
 
