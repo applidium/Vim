@@ -17,4 +17,5 @@ void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));
 void gui_mch_set_sp_color __ARGS((guicolor_T color));
 guicolor_T gui_mch_get_color __ARGS((char_u *name));
+void gui_mch_def_colors __ARGS((void));
 /* vim: set ft=c : */

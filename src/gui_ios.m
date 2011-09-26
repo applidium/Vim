@@ -15,17 +15,12 @@
 
 #import "vim.h"
 #import <UIKit/UIKit.h>
-//#import <CoreText/CoreText.h>
-
-#define GUI_IOS_CHAR_HEIGHT 12.0f
-#define GUI_IOS_CHAR_WIDTH 7.0f
 
 @interface VImAppDelegate : NSObject <UIApplicationDelegate> {
 }
 @end
 
 @implementation VImAppDelegate
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [self performSelector:@selector(_VImMain) withObject:nil afterDelay:0.1f];
     return YES;
@@ -33,49 +28,57 @@
 
 - (void)_VImMain {
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
-    char * argv[] = { "vim", "-c", "help" };
-    VimMain(3, argv);
+    char * argv[] = { "vim" };
+    VimMain(1, argv);
 }
 @end
 
-@interface VImTextView : UIView <UIKeyInput> {
+@interface VImTextView : UIView <UIKeyInput, UITextInputTraits> {
     CGLayerRef _cgLayer;
+    UIView * _inputAcccessoryView;
 }
 @property (nonatomic, readonly) CGLayerRef cgLayer;
+@property (nonatomic, retain) UIView * inputAccessoryView;
 @end
 
 @implementation VImTextView
 @synthesize cgLayer = _cgLayer;
-- (void)drawRect:(CGRect)rect {
-    NSLog(@"Drawing rect !");
-    if (_cgLayer) {
-//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
-        CGContextRef context = UIGraphicsGetCurrentContext();
-//        CGContextTranslateCTM(context, 0, 400.0f);
-//        CGContextScaleCTM(context, 1.0, -1.0);
-        CGContextDrawLayerAtPoint(context, CGPointMake(20.0f, 50.0f), _cgLayer);
-    } else {
-        [self willChangeValueForKey:@"cgLayer"];
-        _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
-#define DEBUG_IOS_LAYER_ALIGNMENT 0
-#if DEBUG_IOS_LAYER_ALIGNMENT
-        CGContextRef context = CGLayerGetContext(_cgLayer);
-
-        CGContextSetFillColorWithColor(context, [UIColor redColor].CGColor);
-        CGContextFillRect(context, CGRectMake(0.0f, 0.0f, 100.0f, 100.0f));
-        CGContextSetFillColorWithColor(context, [UIColor greenColor].CGColor);
-        CGContextFillRect(context, CGRectMake(100.0f, 0.0f, 100.0f, 100.0f));
-        CGContextSetFillColorWithColor(context, [UIColor blueColor].CGColor);
-        CGContextFillRect(context, CGRectMake(0.0f, 100.0f, 100.0f, 100.0f));
-#endif
-        [self didChangeValueForKey:@"cgLayer"];
+@synthesize inputAccessoryView = _inputAcccessoryView;
+- (id)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        UIButton * escButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
+        [escButton addTarget:self action:@selector(sendSpecialKey:) forControlEvents:UIControlEventTouchUpInside];
+        _inputAcccessoryView = [escButton retain];
     }
+    return self;
 }
+
 - (void)dealloc {
+    [_inputAcccessoryView release];
     if (_cgLayer) {
         CGLayerRelease(_cgLayer);
     }
     [super dealloc];
+}
+
+- (void)drawRect:(CGRect)rect {
+    if (_cgLayer) {
+//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
+//        CGContextTranslateCTM(context, 0, 400.0f);
+//        CGContextScaleCTM(context, 1.0, -1.0);
+        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointMake(20.0f, 50.0f), _cgLayer);
+    } else {
+        [self willChangeValueForKey:@"cgLayer"];
+        _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
+        [self didChangeValueForKey:@"cgLayer"];
+    }
+}
+
+- (void)sendSpecialKey:(UIButton *)sender {
+    NSLog(@"Sending special key !");
+    char escapeString[] = {ESC, 0};
+    [self insertText:[NSString stringWithUTF8String:escapeString]];
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -88,7 +91,7 @@
 
 - (void)insertText:(NSString *)text {
     NSLog(@"Inserting %@", text);
-    add_to_input_buf([text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+    add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
     [self setNeedsDisplay];
 }
 
@@ -96,7 +99,14 @@
     NSLog(@"Delete backward");
 }
 
+#pragma mark - UITextInputTraits
+- (UITextAutocapitalizationType)autocapitalizationType {
+    return UITextAutocapitalizationTypeNone;
+}
 
+- (UIKeyboardType)keyboardType {
+    return UIKeyboardTypeURL;
+}
 @end
 
 int main(int argc, char *argv[]) {
@@ -109,7 +119,8 @@ int main(int argc, char *argv[]) {
 struct {
     UIWindow * window;
     CGLayerRef layer;
-    CTFontRef font;
+    CGColorRef fg_color;
+    CGColorRef bg_color;
     CGFloat char_width;
     CGFloat char_height;
     CGFloat char_ascent;
@@ -182,6 +193,17 @@ gui_mch_init(void)
     gui.norm_pixel = gui_mch_get_color("red");
     gui.back_pixel = gui_mch_get_color("white");
 
+    gui_mch_def_colors();
+    
+    /* Get the colors from the "Normal" group (set in syntax.c or in a vimrc
+     * file) */
+    set_normal_colors();
+    
+    /*
+     * Check that none of the colors are the same as the background color.
+     * Then store the current values as the defaults.
+     */
+    gui_check_colors();
     gui.def_norm_pixel = gui.norm_pixel;
     gui.def_back_pixel = gui.back_pixel;
 
@@ -390,10 +412,9 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     
     CGContextRef context = CGLayerGetContext(layer);
 
-    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0);
-    CGContextSetFillColorWithColor(context, gui.back_pixel);
+    CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len), FILL_Y(row+1)));
-    CGContextSetFillColorWithColor(context, gui.norm_pixel);
+    CGContextSetFillColorWithColor(context, gui_ios.fg_color);
     CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
 
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
@@ -431,8 +452,8 @@ gui_mch_insert_lines(int row, int num_lines)
     void
 gui_mch_set_fg_color(guicolor_T color)
 {
-    printf("%s\n",__func__);  
-    gui.norm_pixel = color;
+    printf("%s\n",__func__);
+    gui_ios.fg_color = color;
 }
 
 
@@ -443,7 +464,7 @@ gui_mch_set_fg_color(guicolor_T color)
 gui_mch_set_bg_color(guicolor_T color)
 {
     printf("%s\n",__func__);  
-    gui.back_pixel = color;
+    gui_ios.bg_color = color;
 }
 
 
