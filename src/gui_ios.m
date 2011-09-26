@@ -16,6 +16,20 @@
 #import "vim.h"
 #import <UIKit/UIKit.h>
 
+@class VImTextView;
+struct {
+    UIWindow * window;
+    VImTextView * text_view;
+    CGLayerRef layer;
+    CGColorRef fg_color;
+    CGColorRef bg_color;
+    CGFloat char_width;
+    CGFloat char_height;
+    CGFloat char_ascent;
+    CGFloat border_offset;
+} gui_ios;
+
+
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
     CGContextRef context = CGLayerGetContext(layer);
@@ -27,7 +41,6 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
-
     CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
 }
 
@@ -50,15 +63,12 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 @end
 
 @interface VImTextView : UIView <UIKeyInput, UITextInputTraits> {
-    CGLayerRef _cgLayer;
-    UIView * _inputAcccessoryView;
+    UIView *   _inputAcccessoryView;
 }
-@property (nonatomic, readonly) CGLayerRef cgLayer;
 @property (nonatomic, retain) UIView * inputAccessoryView;
 @end
 
 @implementation VImTextView
-@synthesize cgLayer = _cgLayer;
 @synthesize inputAccessoryView = _inputAcccessoryView;
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -72,22 +82,19 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 
 - (void)dealloc {
     [_inputAcccessoryView release];
-    if (_cgLayer) {
-        CGLayerRelease(_cgLayer);
+    if (gui_ios.layer) {
+        CGLayerRelease(gui_ios.layer);
+        gui_ios.layer = NULL;
     }
     [super dealloc];
 }
 
 - (void)drawRect:(CGRect)rect {
-    if (_cgLayer) {
-//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, _cgLayer);
-//        CGContextTranslateCTM(context, 0, 400.0f);
-//        CGContextScaleCTM(context, 1.0, -1.0);
-        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointMake(20.0f, 50.0f), _cgLayer);
+    if (gui_ios.layer != NULL) {
+//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, gui_ios.layer);
+        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointZero, gui_ios.layer);
     } else {
-        [self willChangeValueForKey:@"cgLayer"];
-        _cgLayer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
-        [self didChangeValueForKey:@"cgLayer"];
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
     }
 }
 
@@ -135,18 +142,6 @@ int main(int argc, char *argv[]) {
     [pool release];
     return retVal;
 }
-
-struct {
-    UIWindow * window;
-    CGLayerRef layer;
-    CGColorRef fg_color;
-    CGColorRef bg_color;
-    CGFloat char_width;
-    CGFloat char_height;
-    CGFloat char_ascent;
-    CGFloat border_offset;
-} gui_ios;
-
 
 /*
  * Parse the GUI related command-line arguments.  Any arguments used are
@@ -201,14 +196,13 @@ gui_mch_init(void)
     printf("%s\n",__func__);  
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
-    UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    window.backgroundColor = [UIColor blueColor];
-    VImTextView * textView = [[VImTextView alloc] initWithFrame:window.bounds];
-    textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    [window addSubview:textView];
-    [textView release];
-    [textView becomeFirstResponder];
-    gui_ios.window = window;
+    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
+    gui_ios.window.backgroundColor = [UIColor blueColor];
+    gui_ios.text_view = [[VImTextView alloc] initWithFrame:gui_ios.window.bounds];
+    gui_ios.text_view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    [gui_ios.window addSubview:gui_ios.text_view];
+    [gui_ios.text_view release];
+    [gui_ios.text_view becomeFirstResponder];
     
     gui.norm_pixel = gui_mch_get_color("red");
     gui.back_pixel = gui_mch_get_color("white");
@@ -388,16 +382,14 @@ gui_mch_wait_for_chars(int wtime)
 /*
  * Clear the whole text window.
  */
-    void
+void
 gui_mch_clear_all(void)
 {
     printf("%s\n",__func__);
-    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
-    CGLayerRef layer = textView.cgLayer;
-    CGContextRef context = CGLayerGetContext(layer);
+    CGContextRef context = CGLayerGetContext(gui_ios.layer);
     
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
-    CGSize size = CGLayerGetSize(layer);
+    CGSize size = CGLayerGetSize(gui_ios.layer);
     CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
 }
 
@@ -420,9 +412,6 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
-    CGLayerRef layer = textView.cgLayer;
-
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
                                    FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
@@ -433,17 +422,13 @@ gui_mch_delete_lines(int row, int num_lines)
                                    FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
                                    FILL_Y(gui.scroll_region_bot - row + 1));
 
-    CGLayerCopyRectToRect(layer, sourceRect, targetRect);
+    CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
 }
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     printf("%s\n",__func__);
-
-    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
-    CGLayerRef layer = textView.cgLayer;
-    
-    CGContextRef context = CGLayerGetContext(layer);
+    CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len), FILL_Y(row+1)));
@@ -463,8 +448,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CTLineDraw(line, context);
     CFRelease(line);
 
-    
-    [textView setNeedsDisplay];
+    [gui_ios.text_view setNeedsDisplay];
 }
 
 
@@ -475,9 +459,6 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
-    CGLayerRef layer = textView.cgLayer;
-    
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
                                    FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
@@ -488,7 +469,7 @@ gui_mch_insert_lines(int row, int num_lines)
                                    FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
                                    FILL_Y(gui.scroll_region_bot - (row + num_lines) + 1));
     
-    CGLayerCopyRectToRect(layer, sourceRect, targetRect);
+    CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
 }
 
 /*
