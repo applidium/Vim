@@ -204,9 +204,6 @@ gui_mch_init(void)
     [gui_ios.text_view release];
     [gui_ios.text_view becomeFirstResponder];
     
-    gui.norm_pixel = gui_mch_get_color("red");
-    gui.back_pixel = gui_mch_get_color("white");
-
     gui_mch_def_colors();
     
     /* Get the colors from the "Normal" group (set in syntax.c or in a vimrc
@@ -507,10 +504,11 @@ gui_mch_set_sp_color(guicolor_T color)
 /*
  * Set default colors.
  */
-    void
-gui_mch_def_colors()
-{
-    printf("%s\n",__func__);  
+void gui_mch_def_colors() {
+    gui.norm_pixel = gui_mch_get_color((char_u *)"white");
+    gui.back_pixel = gui_mch_get_color((char_u *)"black");
+    gui.def_back_pixel = gui.back_pixel;
+    gui.def_norm_pixel = gui.norm_pixel;
 }
 
 
