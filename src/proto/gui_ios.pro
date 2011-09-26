@@ -16,4 +16,5 @@ void gui_mch_insert_lines __ARGS((int row, int num_lines));
 void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));
 void gui_mch_set_sp_color __ARGS((guicolor_T color));
+guicolor_T gui_mch_get_color __ARGS((char_u *name));
 /* vim: set ft=c : */

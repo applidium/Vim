@@ -178,6 +178,13 @@ gui_mch_init(void)
     [textView release];
     [textView becomeFirstResponder];
     gui_ios.window = window;
+    
+    gui.norm_pixel = gui_mch_get_color("red");
+    gui.back_pixel = gui_mch_get_color("white");
+
+    gui.def_norm_pixel = gui.norm_pixel;
+    gui.def_back_pixel = gui.back_pixel;
+
 
 //
 //    gui_mac_info("%s", exe_name);
@@ -343,7 +350,13 @@ gui_mch_wait_for_chars(int wtime)
 gui_mch_clear_all(void)
 {
     printf("%s\n",__func__);
+    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
+    CGLayerRef layer = textView.cgLayer;
+    CGContextRef context = CGLayerGetContext(layer);
     
+    CGContextSetFillColorWithColor(context, gui.back_pixel);
+    CGSize size = CGLayerGetSize(layer);
+    CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
 }
 
 
@@ -378,9 +391,9 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CGContextRef context = CGLayerGetContext(layer);
 
     CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0);
-    CGContextSetRGBFillColor(context, 0.2, 0.2, 0.2, 1.0);
+    CGContextSetFillColorWithColor(context, gui.back_pixel);
     CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len), FILL_Y(row+1)));
-    CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetFillColorWithColor(context, gui.norm_pixel);
     CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
 
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
@@ -419,6 +432,7 @@ gui_mch_insert_lines(int row, int num_lines)
 gui_mch_set_fg_color(guicolor_T color)
 {
     printf("%s\n",__func__);  
+    gui.norm_pixel = color;
 }
 
 
@@ -429,6 +443,7 @@ gui_mch_set_fg_color(guicolor_T color)
 gui_mch_set_bg_color(guicolor_T color)
 {
     printf("%s\n",__func__);  
+    gui.back_pixel = color;
 }
 
 
@@ -1058,7 +1073,31 @@ gui_mch_flash(int msec)
 gui_mch_get_color(char_u *name)
 {
     printf("%s\n",__func__);  
-    return NULL;
+ 
+    static NSDictionary * sColorTable = nil;
+    if (sColorTable == nil) {
+        sColorTable = [[NSMutableDictionary alloc] init];
+
+        char_u * rgbFilePath = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
+        if (rgbFilePath == NULL) {
+            return INVALCOLOR;
+        }
+        NSString* rgbFileContent = [NSString stringWithContentsOfFile:[NSString stringWithUTF8String:(const char *)rgbFilePath]
+                                                             encoding:NSUTF8StringEncoding
+                                                                error:nil];
+        vim_free(rgbFilePath);
+        
+        for (NSString * colorLine in [rgbFileContent componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]]) {
+            int pos = 0;
+            int red = 0, green = 0, blue = 0;
+            if (sscanf([colorLine UTF8String], "%d %d %d %n", &red, &green, &blue, &pos) == 3) {
+                const char * colorName = [colorLine UTF8String] + pos;
+                [(NSMutableDictionary *)sColorTable setObject:(id)([UIColor colorWithRed:(CGFloat)red/255.0f green:(CGFloat)green/255.0f blue:(CGFloat)blue/255.0f alpha:1.0f].CGColor)
+                                                       forKey:[[NSString stringWithUTF8String:colorName] lowercaseString]];
+            }
+        }
+    }
+    return [sColorTable objectForKey:[[NSString stringWithUTF8String:(const char *)name] lowercaseString]];
 }
 
 
