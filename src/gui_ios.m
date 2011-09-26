@@ -16,6 +16,22 @@
 #import "vim.h"
 #import <UIKit/UIKit.h>
 
+void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
+void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
+    CGContextRef context = CGLayerGetContext(layer);
+
+    CGRect destinationRect = targetRect;
+    destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
+    destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
+
+    CGContextBeginPath(context);
+    CGContextAddRect(context, destinationRect);
+    CGContextClip(context);
+
+    CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+}
+
+
 @interface VImAppDelegate : NSObject <UIApplicationDelegate> {
 }
 @end
@@ -83,6 +99,10 @@
 
 - (BOOL)canBecomeFirstResponder {
     return YES;
+}
+
+- (BOOL)canResignFirstResponder {
+    return NO;
 }
 
 - (BOOL)hasText {
@@ -400,9 +420,20 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    printf("%s\n",__func__);
-    // 
-    
+    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
+    CGLayerRef layer = textView.cgLayer;
+
+    CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row + num_lines),
+                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
+                                   FILL_Y(gui.scroll_region_bot - (row + num_lines) + 1));
+
+    CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row),
+                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
+                                   FILL_Y(gui.scroll_region_bot - row + 1));
+
+    CGLayerCopyRectToRect(layer, sourceRect, targetRect);
 }
 
 
@@ -444,9 +475,21 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    printf("%s\n",__func__);  
-}
+    VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
+    CGLayerRef layer = textView.cgLayer;
+    
+    CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row),
+                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
+                                   FILL_Y(gui.scroll_region_bot - row + 1));
 
+    CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row + num_lines),
+                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
+                                   FILL_Y(gui.scroll_region_bot - (row + num_lines) + 1));
+    
+    CGLayerCopyRectToRect(layer, sourceRect, targetRect);
+}
 
 /*
  * Set the current text foreground color.
@@ -743,6 +786,8 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     gui.char_ascent = CTFontGetAscent(gui.norm_font);
     gui.char_width = boundingRect.size.width;
     gui.char_height = boundingRect.size.height;
+    gui.char_height = CTFontGetAscent(gui.norm_font) + CTFontGetDescent(gui.norm_font);
+
     
     return OK;
 }
