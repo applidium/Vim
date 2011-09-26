@@ -15,10 +15,10 @@
 
 #import "vim.h"
 #import <UIKit/UIKit.h>
-#import <CoreText/CoreText.h>
+//#import <CoreText/CoreText.h>
 
-#define GUI_IOS_CHAR_HEIGHT 8.0f
-#define GUI_IOS_CHAR_WIDTH 4.0f
+#define GUI_IOS_CHAR_HEIGHT 12.0f
+#define GUI_IOS_CHAR_WIDTH 7.0f
 
 @interface VImAppDelegate : NSObject <UIApplicationDelegate> {
 }
@@ -109,6 +109,11 @@ int main(int argc, char *argv[]) {
 struct {
     UIWindow * window;
     CGLayerRef layer;
+    CTFontRef font;
+    CGFloat char_width;
+    CGFloat char_height;
+    CGFloat char_ascent;
+    CGFloat border_offset;
 } gui_ios;
 
 
@@ -366,63 +371,33 @@ gui_mch_delete_lines(int row, int num_lines)
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     printf("%s\n",__func__);
-    printf("===========================\n");
-    printf("Drawing at %d x %d : |%.*s|\n", col, row, len, s);
-    printf("===========================\n");
+
     VImTextView * textView = (VImTextView *)[[gui_ios.window subviews] lastObject];
     CGLayerRef layer = textView.cgLayer;
     
     CGContextRef context = CGLayerGetContext(layer);
-    CGContextSelectFont(context, "Courier", GUI_IOS_CHAR_HEIGHT, kCGEncodingMacRoman);
-    CGContextSetCharacterSpacing(context, 0.0f); // FIXME : maybe 0 isnt right. Seems to look better though
-    CGContextSetTextDrawingMode(context, kCGTextFill);
-    
-    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0);
 
-#define USE_CORE_TEXT 0
-#if USE_CORE_TEXT
-    CTFontRef font = CTFontCreateWithName(@"Courier", 12.0f, &CGAffineTransformIdentity);
-    CFStringRef string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
-    
-    // Initialize string, font, and context
-    CFStringRef keys[] = { kCTFontAttributeName };
-    CFTypeRef values[] = { font };
-    CFDictionaryRef attributes = [NSDictionary dictionaryWithObject:font forKey:kCTFontAttributeName];
-    CFAttributedStringRef attrString = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes);
-    CFRelease(string);
-    CFRelease(attributes);
-    CTLineRef line = CTLineCreateWithAttributedString(attrString);
-    // Set text position and draw the line into the graphics context
-    CGContextSetTextPosition(context, 12.0 * col, 12.0 * row);
-    CTLineDraw(line, context);
-    CFRelease(line);
-#else
+    CGContextSetRGBStrokeColor(context, 1.0, 0.0, 1.0, 1.0);
     CGContextSetRGBFillColor(context, 0.2, 0.2, 0.2, 1.0);
-    CGContextFillRect(context, CGRectMake(GUI_IOS_CHAR_WIDTH*col, GUI_IOS_CHAR_HEIGHT*row, GUI_IOS_CHAR_WIDTH*len, GUI_IOS_CHAR_HEIGHT));
+    CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len), FILL_Y(row+1)));
     CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
     CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
-    
+
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
-    NSLog(@"Showing : |%@|", string);
-    char * romanBytes = [string cStringUsingEncoding:NSMacOSRomanStringEncoding];
-    int length = [string lengthOfBytesUsingEncoding:NSMacOSRomanStringEncoding];
+    NSDictionary * attributes = [NSDictionary dictionaryWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
+                                 [NSNumber numberWithBool:YES], kCTForegroundColorFromContextAttributeName,
+                                 nil];
+    NSAttributedString * attributedString = [[NSAttributedString alloc] initWithString:string attributes:attributes];
+    [attributes release];
+    [string release];
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)attributedString);
+    // Set text position and draw the line into the graphics context
+    CGContextSetTextPosition(context, TEXT_X(col), TEXT_Y(row));
+    CTLineDraw(line, context);
+    CFRelease(line);
 
     
-    CGContextShowTextAtPoint(context, GUI_IOS_CHAR_WIDTH * col, GUI_IOS_CHAR_HEIGHT * row, romanBytes, length); 
-    [string release];
-#endif
-    
     [textView setNeedsDisplay];
-/*
-    
-    CGLayerCreateWithContext r
-    NSGraphicsContext
-    UIGraphicsPopContext()
-    UIGraphicsGetCurrentContext
-    CGContextRef
-    UIGraphicsBeginImageContext
-    [gui_ios.window lockFocus];
- */
 }
 
 
@@ -708,9 +683,28 @@ gui_mch_get_fontname(GuiFont font, char_u *name)
  * could not be loaded, OK otherwise.
  */
     int
-gui_mch_init_font(char_u *font_name, int fontset)
-{
-    printf("%s\n",__func__);  
+gui_mch_init_font(char_u *font_name, int fontset) {
+    printf("%s\n",__func__);
+
+    NSString * normalizedFontName = @"Courier";
+    CGFloat normalizedFontSize = 12.0f;
+    if (font_name != NULL) {
+        normalizedFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
+    }
+    if (gui.norm_font != NULL) {
+        CFRelease(gui.norm_font);
+    }
+    gui.norm_font = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
+    [normalizedFontName release];
+
+    
+    CGRect boundingRect = CGRectZero;
+    CGGlyph glyph = CTFontGetGlyphWithName(gui.norm_font, (CFStringRef)@"0");
+    CTFontGetBoundingRectsForGlyphs(gui.norm_font, kCTFontHorizontalOrientation, &glyph, &boundingRect, 1);
+    
+    gui.char_ascent = CTFontGetAscent(gui.norm_font);
+    gui.char_width = boundingRect.size.width;
+    gui.char_height = boundingRect.size.height;
     
     return OK;
 }
