@@ -8,7 +8,7 @@
  * See README.txt for an overview of the Vim source code.
  */
 /*
- * gui_macvim.m
+ * gui_ios.m
  *
  * Hooks for the Vim gui code.  Mainly passes control on to MMBackend.
  */
@@ -162,14 +162,6 @@ gui_mch_prepare(int *argc, char **argv)
     // delete it from the arg list.  Such arguments must be ignored in main.c
     // command_line_scan() or Vim will issue an error on startup when that
     // argument is used.
-    printf("%s\n",__func__);  
-}
-
-
-/* Called directly after forking (even if we didn't fork). */
-    void
-gui_macvim_after_fork_init()
-{
     printf("%s\n",__func__);  
 }
 
@@ -783,17 +775,6 @@ gui_mch_set_font(GuiFont font)
 }
 
 
-/*
- * Return GuiFont in allocated memory.  The caller must free it using
- * gui_mch_free_font().
- */
-    GuiFont
-gui_macvim_font_with_name(char_u *name)
-{
-    printf("%s\n",__func__);  
-    return NOFONT;
-}
-
 // -- Scrollbars ------------------------------------------------------------
 
 // NOTE: Even though scrollbar identifiers are 'long' we tacitly assume that
@@ -1006,32 +987,6 @@ im_get_status(void)
 
 #endif // defined(USE_IM_CONTROL)
 
-
-
-
-// -- Find & Replace dialog -------------------------------------------------
-
-#ifdef FIND_REPLACE_DIALOG
-
-    static void
-macvim_find_and_replace(char_u *arg, BOOL replace)
-{
-    printf("%s\n",__func__);  
-}
-
-    void
-gui_mch_find_dialog(exarg_T *eap)
-{
-    printf("%s\n",__func__);  
-}
-
-    void
-gui_mch_replace_dialog(exarg_T *eap)
-{
-    printf("%s\n",__func__);  
-}
-
-#endif // FIND_REPLACE_DIALOG
 
 
 
@@ -1302,40 +1257,7 @@ gui_mch_fuopt_update()
 }
 
 
-    void
-gui_macvim_update_modified_flag()
-{
-    printf("%s\n",__func__);  
-}
 
-/*
- * Add search pattern 'pat' to the OS X find pasteboard.  This allows other
- * apps access the last pattern searched for (hitting <D-g> in another app will
- * initiate a search for the same pattern).
- */
-    void
-gui_macvim_add_to_find_pboard(char_u *pat)
-{
-    printf("%s\n",__func__);  
-}
-
-    void
-gui_macvim_set_antialias(int antialias)
-{
-    printf("%s\n",__func__);  
-}
-
-
-    void
-gui_macvim_wait_for_startup()
-{
-    printf("%s\n",__func__);  
-}
-
-void gui_macvim_get_window_layout(int *count, int *layout)
-{
-    printf("%s\n",__func__);  
-}
 
 
 #if defined(FEAT_SIGN_ICONS)
