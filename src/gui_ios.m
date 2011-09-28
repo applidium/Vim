@@ -525,50 +525,6 @@ gui_mch_invert_rectangle(int r, int c, int nr, int nc, int invert)
     printf("%s\n",__func__);  
 }
 
-
-
-// -- Tabline ---------------------------------------------------------------
-
-
-/*
- * Set the current tab to "nr".  First tab is 1.
- */
-    void
-gui_mch_set_curtab(int nr)
-{
-    printf("%s\n",__func__);  
-}
-
-
-/*
- * Return TRUE when tabline is displayed.
- */
-    int
-gui_mch_showing_tabline(void)
-{
-    printf("%s\n",__func__);  
-    return TRUE;
-}
-
-/*
- * Update the labels of the tabline.
- */
-    void
-gui_mch_update_tabline(void)
-{
-    printf("%s\n",__func__);  
-}
-
-/*
- * Show or hide the tabline.
- */
-    void
-gui_mch_show_tabline(int showit)
-{
-    printf("%s\n",__func__);  
-}
-
-
 // -- Menu ------------------------------------------------------------------
 
 
