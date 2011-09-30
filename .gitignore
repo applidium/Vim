@@ -53,6 +53,14 @@ nbproject/*
 
 # Mac OSX
 src/xxd/xxd.dSYM
+.DS_Store
+
+# iOS
+*.xcodeproj/*.pbxuser
+*.xcodeproj/*.mode1v3
+*.xcodeproj/*.perspectivev3
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
 
 # All platforms
 *.rej
