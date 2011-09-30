@@ -16,6 +16,8 @@
 #import "vim.h"
 #import <UIKit/UIKit.h>
 
+#define DEBUG_IOS_DRAWING 0
+
 @class VImTextView;
 struct {
     UIWindow * window;
@@ -38,10 +40,25 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
     destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
 
+    CGContextSaveGState(context);
+
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
     CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+    CGContextRestoreGState(context);
+
+#if DEBUG_IOS_DRAWING
+    CGContextSaveGState(context);
+    CGContextSetLineWidth(context, 1.0f);
+    CGFloat line[2] = {2.0f, 1.0f};
+    CGContextSetLineDash(context, 0.0f, line, 2);
+    CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
+    CGContextStrokeRect(context, sourceRect);
+    CGContextSetStrokeColorWithColor(context, [UIColor redColor].CGColor);
+    CGContextStrokeRect(context, targetRect);
+    CGContextRestoreGState(context);
+#endif
 }
 
 
@@ -90,11 +107,19 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 }
 
 - (void)drawRect:(CGRect)rect {
+//    [super drawRect:rect];
     if (gui_ios.layer != NULL) {
-//        CGContextDrawLayerInRect(UIGraphicsGetCurrentContext(), self.bounds, gui_ios.layer);
+#if DEBUG_IOS_DRAWING
+        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointMake(50.0f, 50.0f), gui_ios.layer);
+#else
         CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointZero, gui_ios.layer);
+#endif
     } else {
+#if DEBUG_IOS_DRAWING
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(600.0f, 600.0f), nil);
+#else
         gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
+#endif
     }
 }
 
@@ -195,6 +220,9 @@ gui_mch_init(void)
     [gui_ios.window addSubview:gui_ios.text_view];
     [gui_ios.text_view release];
     [gui_ios.text_view becomeFirstResponder];
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0f]]; //FIXME: Very dirty
+    // FIXME: We need to wait for the layer to be created, in the drawRect call
     
     gui_mch_def_colors();
     
@@ -338,7 +366,9 @@ gui_mch_flush(void)
     // This function is called way too often to be useful as a hint for
     // flushing.  If we were to flush every time it was called the screen would
     // flicker.
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    CGContextFlush(CGLayerGetContext(gui_ios.layer));
+    [gui_ios.text_view setNeedsDisplay];
 }
 
 
@@ -390,40 +420,30 @@ gui_mch_clear_all(void)
     void
 gui_mch_clear_block(int row1, int col1, int row2, int col2)
 {
-    printf("%s\n",__func__);  
-}
-
-
-/*
- * Delete the given number of lines from the given row, scrolling up any
- * text further down within the scroll region.
- */
-    void
-gui_mch_delete_lines(int row, int num_lines)
-{
-    CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
-                                   FILL_Y(row + num_lines),
-                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
-                                   FILL_Y(gui.scroll_region_bot - (row + num_lines) + 1));
-
-    CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
-                                   FILL_Y(row),
-                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
-                                   FILL_Y(gui.scroll_region_bot - row + 1));
-
-    CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
+    printf("%s\n",__func__);
+    CGContextRef context = CGLayerGetContext(gui_ios.layer);
+    
+    CGContextSetFillColorWithColor(context, gui_ios.bg_color);
+#if DEBUG_IOS_DRAWING
+    CGContextSetFillColorWithColor(context, [UIColor purpleColor].CGColor);
+#endif
+    CGContextFillRect(context, CGRectMake(FILL_X(col1),
+                                          FILL_Y(row1),
+                                          FILL_X(col2+1)-FILL_X(col1),
+                                          FILL_Y(row2+1)-FILL_Y(row1)));
 }
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     printf("%s\n",__func__);
+    printf("Drawing \"%.*s\"\n", len, s);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
-    CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len), FILL_Y(row+1)));
+    CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len)-FILL_X(col), FILL_Y(row+1)-FILL_Y(row)));
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
     CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
-
+    
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
     NSDictionary * attributes = [NSDictionary dictionaryWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
                                  [NSNumber numberWithBool:YES], kCTForegroundColorFromContextAttributeName,
@@ -436,8 +456,27 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CGContextSetTextPosition(context, TEXT_X(col), TEXT_Y(row));
     CTLineDraw(line, context);
     CFRelease(line);
+}
 
-    [gui_ios.text_view setNeedsDisplay];
+
+/*
+ * Delete the given number of lines from the given row, scrolling up any
+ * text further down within the scroll region.
+ */
+    void
+gui_mch_delete_lines(int row, int num_lines)
+{
+    CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row + num_lines),
+                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
+
+    CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
+                                   FILL_Y(row),
+                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
+
+    CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
 }
 
 
@@ -450,13 +489,13 @@ gui_mch_insert_lines(int row, int num_lines)
 {
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
-                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
-                                   FILL_Y(gui.scroll_region_bot - row + 1));
+                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
 
     CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
-                                   FILL_X(gui.scroll_region_right - gui.scroll_region_left + 1),
-                                   FILL_Y(gui.scroll_region_bot - (row + num_lines) + 1));
+                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
     
     CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
 }
@@ -1138,7 +1177,8 @@ gui_mch_set_shellsize(
     int		direction)
 {
     printf("%s\n",__func__);
-    gui_resize_shell(gui_ios.window.bounds.size.width, gui_ios.window.bounds.size.height);
+    CGSize layerSize = CGLayerGetSize(gui_ios.layer);
+    gui_resize_shell(layerSize.width, layerSize.height);
 }
 
 
