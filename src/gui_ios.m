@@ -157,7 +157,7 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 }
 
 - (UIKeyboardType)keyboardType {
-    return UIKeyboardTypeURL;
+    return UIKeyboardTypeDefault;
 }
 @end
 
@@ -485,6 +485,10 @@ gui_mch_delete_lines(int row, int num_lines)
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
 
     CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
+
+    gui_clear_block(gui.scroll_region_bot - num_lines + 1,
+                    gui.scroll_region_left,
+                    gui.scroll_region_bot, gui.scroll_region_right);
 }
 
 
@@ -507,6 +511,9 @@ gui_mch_insert_lines(int row, int num_lines)
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
     
     CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
+
+    gui_clear_block(row, gui.scroll_region_left,
+                    row + num_lines - 1, gui.scroll_region_right);
 }
 
 /*
