@@ -439,10 +439,17 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     printf("Drawing \"%.*s\"\n", len, s);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
+    //FIXME: Move this block somewhere else
+//    CGContextSetShouldAntialias(context, NO);
+//    CGContextSetAllowsAntialiasing(context, NO);
+    CGContextSetShouldSmoothFonts(context, NO);
+    CGContextSetCharacterSpacing(context, 0.0f);
+    CGContextSetTextDrawingMode(context, kCGTextFill); 
+
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len)-FILL_X(col), FILL_Y(row+1)-FILL_Y(row)));
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
-    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
+//    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
     
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
     NSDictionary * attributes = [NSDictionary dictionaryWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
@@ -466,6 +473,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
+    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
                                    FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
@@ -487,6 +495,7 @@ gui_mch_delete_lines(int row, int num_lines)
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
+    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
                                    FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
@@ -738,22 +747,40 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     if (font_name != NULL) {
         normalizedFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
     }
-    if (gui.norm_font != NULL) {
-        CFRelease(gui.norm_font);
-    }
-    gui.norm_font = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
+    CGFontRef rawFont = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
     [normalizedFontName release];
 
     
     CGRect boundingRect = CGRectZero;
-    CGGlyph glyph = CTFontGetGlyphWithName(gui.norm_font, (CFStringRef)@"g");
-    CTFontGetBoundingRectsForGlyphs(gui.norm_font, kCTFontHorizontalOrientation, &glyph, &boundingRect, 1);
+    CGGlyph glyph = CTFontGetGlyphWithName(rawFont, (CFStringRef)@"0");
+    CTFontGetBoundingRectsForGlyphs(rawFont, kCTFontHorizontalOrientation, &glyph, &boundingRect, 1);
     
-    gui.char_ascent = CTFontGetAscent(gui.norm_font);
+    
+    NSLog(@"Font bounding box for character 0 : %@", NSStringFromCGRect(boundingRect));
+    NSLog(@"Ascent = %.2f", CTFontGetAscent(rawFont));
+    NSLog(@"Computed height = %.2f", CTFontGetAscent(rawFont) + CTFontGetDescent(rawFont));
+    NSLog(@"Leading = %.2f", CTFontGetLeading(rawFont));
+    
+    CGSize advances = CGSizeZero;
+    
+    CTFontGetAdvancesForGlyphs(rawFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
+    NSLog(@"Advances = %@", NSStringFromCGSize(advances));
+
+    gui.char_ascent = CTFontGetAscent(rawFont);
     gui.char_width = boundingRect.size.width;
     gui.char_height = boundingRect.size.height;
-    gui.char_height = CTFontGetAscent(gui.norm_font) + CTFontGetDescent(gui.norm_font);
+//    gui.char_height = CTFontGetAscent(rawFont) + CTFontGetDescent(rawFont);
 
+    if (gui.norm_font != NULL) {
+        CFRelease(gui.norm_font);
+    }
+    // Now let's rescale the font
+    CGAffineTransform transform = CGAffineTransformMakeScale(boundingRect.size.width/advances.width, -1.0f);
+    gui.norm_font = CTFontCreateCopyWithAttributes(rawFont,
+                                                  normalizedFontSize,
+                                                  &transform,
+                                                  NULL);
+    CFRelease(rawFont);
     
     return OK;
 }
