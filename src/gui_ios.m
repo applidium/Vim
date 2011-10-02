@@ -148,8 +148,51 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     return YES;
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self becomeFirstResponder];
+}
+
 - (void)flush {
     [self.view setNeedsDisplay];
+}
+
+- (void)sendSpecialKey:(UIButton *)sender {
+    NSLog(@"Sending special key !");
+    char escapeString[] = {ESC, 0};
+    [self insertText:[NSString stringWithUTF8String:escapeString]];
+}
+
+
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (BOOL)canResignFirstResponder {
+    return NO;
+}
+
+- (BOOL)hasText {
+    return YES;
+}
+
+- (void)insertText:(NSString *)text {
+    NSLog(@"Inserting %@", text);
+    add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+    [self.view setNeedsDisplay];
+}
+
+- (void)deleteBackward {
+    NSLog(@"Delete backward");
+}
+
+#pragma mark - UITextInputTraits
+- (UITextAutocapitalizationType)autocapitalizationType {
+    return UITextAutocapitalizationTypeNone;
+}
+
+- (UIKeyboardType)keyboardType {
+    return UIKeyboardTypeDefault;
 }
 @end
 
@@ -211,7 +254,6 @@ gui_mch_init(void)
     gui_ios.window.rootViewController = gui_ios.view_controller;
     gui_ios.window.backgroundColor = [UIColor purpleColor];
     [gui_ios.view_controller release];
-    [gui_ios.view_controller becomeFirstResponder];
 //    gui_ios.text_view = [[VImTextView alloc] initWithFrame:gui_ios.window.bounds];
 //    gui_ios.text_view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
 //    [gui_ios.window addSubview:gui_ios.text_view];
