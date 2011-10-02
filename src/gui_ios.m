@@ -17,7 +17,7 @@
 #import <UIKit/UIKit.h>
 
 #define DEBUG_IOS_DRAWING 0
-
+void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
 @class VImViewController;
 @class VImTextView;
 struct {
@@ -26,59 +26,12 @@ struct {
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
-    CGFloat char_width;
-    CGFloat char_height;
-    CGFloat char_ascent;
-    CGFloat border_offset;
 } gui_ios;
 
 
-void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
-void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
-    CGContextRef context = CGLayerGetContext(layer);
 
-    CGRect destinationRect = targetRect;
-    destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
-    destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
-
-    CGContextSaveGState(context);
-
-    CGContextBeginPath(context);
-    CGContextAddRect(context, destinationRect);
-    CGContextClip(context);
-    CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
-    CGContextRestoreGState(context);
-
-#if DEBUG_IOS_DRAWING
-    CGContextSaveGState(context);
-    CGContextSetLineWidth(context, 1.0f);
-    CGFloat line[2] = {2.0f, 1.0f};
-    CGContextSetLineDash(context, 0.0f, line, 2);
-    CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
-    CGContextStrokeRect(context, sourceRect);
-    CGContextSetStrokeColorWithColor(context, [UIColor redColor].CGColor);
-    CGContextStrokeRect(context, targetRect);
-    CGContextRestoreGState(context);
-#endif
-}
-
-
-@interface VImAppDelegate : NSObject <UIApplicationDelegate> {
-}
-@end
-
-@implementation VImAppDelegate
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:0.1f];
-    return YES;
-}
-
-- (void)_VImMain {
-    vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
-    char * argv[] = { "vim", "-c", "help" };
-    VimMain(3, argv);
-}
-@end
+#pragma mark -
+#pragma mark VImTextView
 
 @interface VImTextView : UIView {
     UIView *   _inputAcccessoryView;
@@ -127,9 +80,12 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     [super layoutSubviews];
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
-
-
 @end
+
+
+
+#pragma mark -
+#pragma VImViewController
 
 @interface VImViewController : UIViewController <UIKeyInput, UITextInputTraits> {
 }
@@ -186,7 +142,6 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     NSLog(@"Delete backward");
 }
 
-#pragma mark - UITextInputTraits
 - (UITextAutocapitalizationType)autocapitalizationType {
     return UITextAutocapitalizationTypeNone;
 }
@@ -197,12 +152,71 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 @end
 
 
+
+#pragma mark -
+#pragma mark VImAppDelegate
+
+@interface VImAppDelegate : NSObject <UIApplicationDelegate> {
+}
+@end
+
+@implementation VImAppDelegate
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:0.1f];
+    return YES;
+}
+
+- (void)_VImMain {
+    vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
+    char * argv[] = { "vim", "-c", "help" };
+    VimMain(3, argv);
+}
+@end
+
+
+
+#pragma mark -
+#pragma mark Helper C functions
+
+void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
+    CGContextRef context = CGLayerGetContext(layer);
+    
+    CGRect destinationRect = targetRect;
+    destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
+    destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
+    
+    CGContextSaveGState(context);
+    
+    CGContextBeginPath(context);
+    CGContextAddRect(context, destinationRect);
+    CGContextClip(context);
+    CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+    CGContextRestoreGState(context);
+    
+#if DEBUG_IOS_DRAWING
+    CGContextSaveGState(context);
+    CGContextSetLineWidth(context, 1.0f);
+    CGFloat line[2] = {2.0f, 1.0f};
+    CGContextSetLineDash(context, 0.0f, line, 2);
+    CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
+    CGContextStrokeRect(context, sourceRect);
+    CGContextSetStrokeColorWithColor(context, [UIColor redColor].CGColor);
+    CGContextStrokeRect(context, targetRect);
+    CGContextRestoreGState(context);
+#endif
+}
+
 int main(int argc, char *argv[]) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     int retVal = UIApplicationMain(argc, argv, nil, @"VImAppDelegate");
     [pool release];
     return retVal;
 }
+
+
+
+#pragma mark -
+#pragma mark VIm C functions
 
 /*
  * Parse the GUI related command-line arguments.  Any arguments used are
@@ -254,97 +268,15 @@ gui_mch_init(void)
     gui_ios.window.rootViewController = gui_ios.view_controller;
     gui_ios.window.backgroundColor = [UIColor purpleColor];
     [gui_ios.view_controller release];
-//    gui_ios.text_view = [[VImTextView alloc] initWithFrame:gui_ios.window.bounds];
-//    gui_ios.text_view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-//    [gui_ios.window addSubview:gui_ios.text_view];
-//    [gui_ios.text_view release];
-//    [gui_ios.text_view becomeFirstResponder];
-    
-//    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0f]]; //FIXME: Very dirty
-    // FIXME: We need to wait for the layer to be created, in the drawRect call
     
     gui_mch_def_colors();
     
-    /* Get the colors from the "Normal" group (set in syntax.c or in a vimrc
-     * file) */
     set_normal_colors();
-    
-    /*
-     * Check that none of the colors are the same as the background color.
-     * Then store the current values as the defaults.
-     */
+
     gui_check_colors();
     gui.def_norm_pixel = gui.norm_pixel;
     gui.def_back_pixel = gui.back_pixel;
 
-
-//
-//    gui_mac_info("%s", exe_name);
-//    
-//    gui_mac.app_pool = [NSAutoreleasePool new];
-//    
-//    [NSApplication sharedApplication];
-//    
-//    gui_mac.app_delegate = [VimAppController new];
-//    [NSApp setDelegate: gui_mac.app_delegate];
-//    
-//    [NSApp setMainMenu: [[NSMenu new] autorelease]];
-//    gui_mac_set_application_menu();
-//    
-//    gui.char_width = 0;
-//    gui.char_height = 0;
-//    gui.char_ascent = 0;
-//    gui.num_rows = 24;
-//    gui.num_cols = 80;
-//    gui.tabline_height = 22;
-//    gui.in_focus = TRUE;
-//    
-//    gui.norm_pixel = 0x00000000;
-//    gui.back_pixel = 0x00FFFFFF;
-//    set_normal_colors();
-//    
-//    gui_check_colors();
-//    gui.def_norm_pixel = gui.norm_pixel;
-//    gui.def_back_pixel = gui.back_pixel;
-//    
-//    /* Get the colors for the highlight groups (gui_check_colors() might have
-//     * changed them) */
-//    highlight_gui_started();
-//    
-//#ifdef FEAT_MENU
-//    gui.menu_height = 0;
-//#endif
-//    gui.scrollbar_height = gui.scrollbar_width = [VIMScroller scrollerWidth];
-//    gui.border_offset = gui.border_width = 2;
-//    
-//    gui_mac.current_window = nil;
-//    gui_mac.input_received = NO;
-//    gui_mac.initialized    = NO;
-//    gui_mac.showing_tabline = NO;
-//    gui_mac.selecting_tab   = NO;
-//    gui_mac.window_at_front = NO;
-//    gui_mac.max_ops         = VIM_MAX_DRAW_OP_QUEUE;
-//    gui_mac.ops             = calloc(gui_mac.max_ops,
-//                                     sizeof(struct gui_mac_drawing_op));
-//    gui_mac.queued_ops      = 0;
-//    
-//    gui_mac.last_im_source = NULL;
-//    // get an ASCII source for use when IM is deactivated (by Vim)
-//    gui_mac.ascii_im_source = TISCopyCurrentKeyboardInputSource();
-//    
-//    CFBooleanRef isASCIICapable =
-//    TISGetInputSourceProperty(gui_mac.ascii_im_source,
-//                              kTISPropertyInputSourceIsASCIICapable);
-//    if (! CFBooleanGetValue(isASCIICapable))
-//    {
-//        CFRelease(gui_mac.ascii_im_source);
-//        gui_mac.ascii_im_source = TISCopyCurrentASCIICapableKeyboardInputSource();
-//    }
-//    
-//    return OK;
-//
-//    
-//    
     return OK;
 }
 
