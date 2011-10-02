@@ -76,7 +76,12 @@ struct {
     }
 }
 
-- (void)layoutaSubviews {
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
+}
+
+- (void)layoutSubviews {
     [super layoutSubviews];
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
@@ -88,22 +93,45 @@ struct {
 #pragma VImViewController
 
 @interface VImViewController : UIViewController <UIKeyInput, UITextInputTraits> {
+    VImTextView * _textView;
 }
 - (void)flush;
 @end
 
 @implementation VImViewController
 - (void)loadView {
-    self.view = [[VImTextView alloc] initWithFrame:CGRectMake(100.0f, 100.0f, 100.0f, 100.0f)];
+    self.view = [[[UIView alloc] init] autorelease];
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    gui_ios.window.backgroundColor = [UIColor greenColor];
+    self.view.backgroundColor = [UIColor purpleColor];
+
+    _textView = [[VImTextView alloc] initWithFrame:CGRectZero];
+    _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    [self.view addSubview:_textView];
+    _textView.frame = self.view.bounds;
+    [_textView release];
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWasShown:)
+                                                 name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillBeHidden:)
+                                                 name:UIKeyboardWillHideNotification object:nil];}
+
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    NSLog(@"View frame before rotation = %@", NSStringFromCGRect(self.view.frame));
-    NSLog(@"View bounds before rotation = %@", NSStringFromCGRect(self.view.bounds));
     return YES;
 }
+
+- (void)keyboardWasShown:(NSNotification *)notification {
+    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+}
+
+- (void)keyboardWillBeHidden:(NSNotification *)notification {
+    
+}
+
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
@@ -111,7 +139,7 @@ struct {
 }
 
 - (void)flush {
-    [self.view setNeedsDisplay];
+    [_textView setNeedsDisplay];
 }
 
 - (void)sendSpecialKey:(UIButton *)sender {
@@ -136,7 +164,7 @@ struct {
 - (void)insertText:(NSString *)text {
     NSLog(@"Inserting %@", text);
     add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
-    [self.view setNeedsDisplay];
+    [_textView setNeedsDisplay];
 }
 
 - (void)deleteBackward {
