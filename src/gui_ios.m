@@ -18,10 +18,11 @@
 
 #define DEBUG_IOS_DRAWING 0
 
+@class VImViewController;
 @class VImTextView;
 struct {
     UIWindow * window;
-    VImTextView * text_view;
+    VImViewController * view_controller;
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
@@ -74,12 +75,12 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 
 - (void)_VImMain {
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
-    char * argv[] = { "vim" };
-    VimMain(1, argv);
+    char * argv[] = { "vim", "-c", "help" };
+    VimMain(3, argv);
 }
 @end
 
-@interface VImTextView : UIView <UIKeyInput, UITextInputTraits> {
+@interface VImTextView : UIView {
     UIView *   _inputAcccessoryView;
 }
 @property (nonatomic, retain) UIView * inputAccessoryView;
@@ -107,7 +108,6 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 }
 
 - (void)drawRect:(CGRect)rect {
-//    [super drawRect:rect];
     if (gui_ios.layer != NULL) {
 #if DEBUG_IOS_DRAWING
         CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointMake(50.0f, 50.0f), gui_ios.layer);
@@ -118,48 +118,41 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
 #if DEBUG_IOS_DRAWING
         gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(600.0f, 600.0f), nil);
 #else
-        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), self.bounds.size, nil);
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
 #endif
     }
 }
 
-- (void)sendSpecialKey:(UIButton *)sender {
-    NSLog(@"Sending special key !");
-    char escapeString[] = {ESC, 0};
-    [self insertText:[NSString stringWithUTF8String:escapeString]];
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
 
-- (BOOL)canBecomeFirstResponder {
+
+@end
+
+@interface VImViewController : UIViewController <UIKeyInput, UITextInputTraits> {
+}
+- (void)flush;
+@end
+
+@implementation VImViewController
+- (void)loadView {
+    self.view = [[VImTextView alloc] initWithFrame:CGRectZero];
+    self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    gui_ios.window.backgroundColor = [UIColor greenColor];
+
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
     return YES;
 }
 
-- (BOOL)canResignFirstResponder {
-    return NO;
-}
-
-- (BOOL)hasText {
-    return YES;
-}
-
-- (void)insertText:(NSString *)text {
-    NSLog(@"Inserting %@", text);
-    add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
-    [self setNeedsDisplay];
-}
-
-- (void)deleteBackward {
-    NSLog(@"Delete backward");
-}
-
-#pragma mark - UITextInputTraits
-- (UITextAutocapitalizationType)autocapitalizationType {
-    return UITextAutocapitalizationTypeNone;
-}
-
-- (UIKeyboardType)keyboardType {
-    return UIKeyboardTypeDefault;
+- (void)flush {
+    [self.view setNeedsDisplay];
 }
 @end
+
 
 int main(int argc, char *argv[]) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -214,14 +207,18 @@ gui_mch_init(void)
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
     gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
-    gui_ios.window.backgroundColor = [UIColor blueColor];
-    gui_ios.text_view = [[VImTextView alloc] initWithFrame:gui_ios.window.bounds];
-    gui_ios.text_view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    [gui_ios.window addSubview:gui_ios.text_view];
-    [gui_ios.text_view release];
-    [gui_ios.text_view becomeFirstResponder];
+    gui_ios.view_controller = [[VImViewController alloc] init];
+    gui_ios.window.rootViewController = gui_ios.view_controller;
+    gui_ios.window.backgroundColor = [UIColor purpleColor];
+    [gui_ios.view_controller release];
+    [gui_ios.view_controller becomeFirstResponder];
+//    gui_ios.text_view = [[VImTextView alloc] initWithFrame:gui_ios.window.bounds];
+//    gui_ios.text_view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+//    [gui_ios.window addSubview:gui_ios.text_view];
+//    [gui_ios.text_view release];
+//    [gui_ios.text_view becomeFirstResponder];
     
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0f]]; //FIXME: Very dirty
+//    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0f]]; //FIXME: Very dirty
     // FIXME: We need to wait for the layer to be created, in the drawRect call
     
     gui_mch_def_colors();
@@ -368,7 +365,7 @@ gui_mch_flush(void)
     // flicker.
     printf("%s\n",__func__);
     CGContextFlush(CGLayerGetContext(gui_ios.layer));
-    [gui_ios.text_view setNeedsDisplay];
+    [gui_ios.view_controller flush];
 }
 
 
@@ -452,7 +449,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
 //    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
     
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
-    NSDictionary * attributes = [NSDictionary dictionaryWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
+    NSDictionary * attributes = [[NSDictionary alloc] initWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
                                  [NSNumber numberWithBool:YES], kCTForegroundColorFromContextAttributeName,
                                  nil];
     NSAttributedString * attributedString = [[NSAttributedString alloc] initWithString:string attributes:attributes];
@@ -1210,9 +1207,9 @@ gui_mch_set_shellsize(
     int		base_height,
     int		direction)
 {
-    printf("%s\n",__func__);
-    CGSize layerSize = CGLayerGetSize(gui_ios.layer);
-    gui_resize_shell(layerSize.width, layerSize.height);
+//    printf("%s\n",__func__);
+//    CGSize layerSize = CGLayerGetSize(gui_ios.layer);
+//    gui_resize_shell(layerSize.width, layerSize.height);
 }
 
 
