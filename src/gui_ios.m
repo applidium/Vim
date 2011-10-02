@@ -125,11 +125,15 @@ struct {
 }
 
 - (void)keyboardWasShown:(NSNotification *)notification {
-    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
+    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
 }
 
 - (void)keyboardWillBeHidden:(NSNotification *)notification {
-    
+    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
+    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
 }
 
 
