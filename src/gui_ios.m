@@ -76,7 +76,7 @@ struct {
     }
 }
 
-- (void)layoutSubviews {
+- (void)layoutaSubviews {
     [super layoutSubviews];
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
@@ -94,13 +94,14 @@ struct {
 
 @implementation VImViewController
 - (void)loadView {
-    self.view = [[VImTextView alloc] initWithFrame:CGRectZero];
+    self.view = [[VImTextView alloc] initWithFrame:CGRectMake(100.0f, 100.0f, 100.0f, 100.0f)];
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     gui_ios.window.backgroundColor = [UIColor greenColor];
-
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    NSLog(@"View frame before rotation = %@", NSStringFromCGRect(self.view.frame));
+    NSLog(@"View bounds before rotation = %@", NSStringFromCGRect(self.view.bounds));
     return YES;
 }
 
@@ -168,8 +169,8 @@ struct {
 
 - (void)_VImMain {
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
-    char * argv[] = { "vim", "-c", "help" };
-    VimMain(3, argv);
+    char * argv[] = { "vim" };
+    VimMain(1, argv);
 }
 @end
 
@@ -263,7 +264,7 @@ gui_mch_init(void)
     printf("%s\n",__func__);  
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
-    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
+    gui_ios.window = [[UIWindow alloc] init];
     gui_ios.view_controller = [[VImViewController alloc] init];
     gui_ios.window.rootViewController = gui_ios.view_controller;
     gui_ios.window.backgroundColor = [UIColor purpleColor];
