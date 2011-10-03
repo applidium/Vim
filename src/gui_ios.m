@@ -166,13 +166,13 @@ struct {
 }
 
 - (void)insertText:(NSString *)text {
-    NSLog(@"Inserting %@", text);
     add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
     [_textView setNeedsDisplay];
 }
 
 - (void)deleteBackward {
-    NSLog(@"Delete backward");
+    char escapeString[] = {BS, 0};
+    [self insertText:[NSString stringWithUTF8String:escapeString]];
 }
 
 - (UITextAutocapitalizationType)autocapitalizationType {
