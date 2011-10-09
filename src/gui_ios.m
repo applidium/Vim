@@ -579,7 +579,7 @@ gui_mch_new_colors(void)
  * Invert a rectangle from row r, column c, for nr rows and nc columns.
  */
     void
-gui_mch_invert_rectangle(int r, int c, int nr, int nc, int invert)
+gui_mch_invert_rectangle(int r, int c, int nr, int nc)
 {
     printf("%s\n",__func__);  
 }
