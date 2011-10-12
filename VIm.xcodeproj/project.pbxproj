@@ -70,39 +70,19 @@
 		7A31B10E142BA1CE006D816D /* gui_ios.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_ios.pro; sourceTree = "<group>"; };
 		7A68CB0E1422A0720019E159 /* libm.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libm.dylib; path = usr/lib/libm.dylib; sourceTree = SDKROOT; };
 		7A68CB101422A09D0019E159 /* libcurses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcurses.dylib; path = usr/lib/libcurses.dylib; sourceTree = SDKROOT; };
-		7A71941414228FA500B62000 /* VIm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VIm.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A71941414228FA500B62000 /* Vim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A71941814228FA500B62000 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		7A71941A14228FA500B62000 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7A71941C14228FA500B62000 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		7A71942414228FA500B62000 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		7A7B1FA6142FBE2E00A537BD /* runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; path = runtime; sourceTree = SOURCE_ROOT; };
 		7A992B5C1422932F00075221 /* arabic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arabic.c; sourceTree = "<group>"; };
 		7A992B5D1422932F00075221 /* arabic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arabic.h; sourceTree = "<group>"; };
 		7A992B5E1422932F00075221 /* ascii.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ascii.h; sourceTree = "<group>"; };
-		7A992B601422932F00075221 /* config.cache */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.cache; sourceTree = "<group>"; };
-		7A992B611422932F00075221 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
-		7A992B621422932F00075221 /* config.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.log; sourceTree = "<group>"; };
-		7A992B631422932F00075221 /* config.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.mk; sourceTree = "<group>"; };
-		7A992B641422932F00075221 /* config.status */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = config.status; sourceTree = "<group>"; };
-		7A992B651422932F00075221 /* configure */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = configure; sourceTree = "<group>"; };
-		7A992B661422932F00075221 /* link.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = link.log; sourceTree = "<group>"; };
-		7A992B671422932F00075221 /* link.sed */ = {isa = PBXFileReference; lastKnownFileType = text; path = link.sed; sourceTree = "<group>"; };
-		7A992B681422932F00075221 /* osdef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = osdef.h; sourceTree = "<group>"; };
-		7A992B691422932F00075221 /* pathdef.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pathdef.c; sourceTree = "<group>"; };
-		7A992B6A1422932F00075221 /* bigvim.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = bigvim.bat; sourceTree = "<group>"; };
 		7A992B6B1422932F00075221 /* blowfish.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = blowfish.c; sourceTree = "<group>"; };
 		7A992B6C1422932F00075221 /* buffer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = buffer.c; sourceTree = "<group>"; };
 		7A992B6D1422932F00075221 /* charset.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = charset.c; sourceTree = "<group>"; };
-		7A992B6E1422932F00075221 /* config.aap.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.aap.in; sourceTree = "<group>"; };
-		7A992B6F1422932F00075221 /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.h.in; sourceTree = "<group>"; };
-		7A992B701422932F00075221 /* config.mk.dist */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.mk.dist; sourceTree = "<group>"; };
-		7A992B711422932F00075221 /* config.mk.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.mk.in; sourceTree = "<group>"; };
-		7A992B721422932F00075221 /* configure */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = configure; sourceTree = "<group>"; };
-		7A992B731422932F00075221 /* configure.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.in; sourceTree = "<group>"; };
-		7A992B741422932F00075221 /* dehqx.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = dehqx.py; sourceTree = "<group>"; };
 		7A992B751422932F00075221 /* diff.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = diff.c; sourceTree = "<group>"; };
 		7A992B761422932F00075221 /* digraph.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = digraph.c; sourceTree = "<group>"; };
-		7A992B771422932F00075221 /* dimm.idl */ = {isa = PBXFileReference; lastKnownFileType = text; path = dimm.idl; sourceTree = "<group>"; };
 		7A992B781422932F00075221 /* dlldata.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dlldata.c; sourceTree = "<group>"; };
 		7A992B791422932F00075221 /* dosinst.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = dosinst.c; sourceTree = "<group>"; };
 		7A992B7A1422932F00075221 /* dosinst.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dosinst.h; sourceTree = "<group>"; };
@@ -151,22 +131,9 @@
 		7A992BA61422932F00075221 /* gui_xmebw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gui_xmebw.h; sourceTree = "<group>"; };
 		7A992BA71422932F00075221 /* gui_xmebwp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gui_xmebwp.h; sourceTree = "<group>"; };
 		7A992BA81422932F00075221 /* guiw16rc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = guiw16rc.h; sourceTree = "<group>"; };
-		7A992BA91422932F00075221 /* gvim.exe.mnf */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = gvim.exe.mnf; sourceTree = "<group>"; };
 		7A992BAB1422932F00075221 /* gvimext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = gvimext.cpp; sourceTree = "<group>"; };
-		7A992BAC1422932F00075221 /* gvimext.def */ = {isa = PBXFileReference; lastKnownFileType = text; path = gvimext.def; sourceTree = "<group>"; };
 		7A992BAD1422932F00075221 /* gvimext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gvimext.h; sourceTree = "<group>"; };
-		7A992BAE1422932F00075221 /* gvimext.inf */ = {isa = PBXFileReference; lastKnownFileType = text; path = gvimext.inf; sourceTree = "<group>"; };
-		7A992BAF1422932F00075221 /* gvimext.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = gvimext.rc; sourceTree = "<group>"; };
-		7A992BB01422932F00075221 /* GvimExt.reg */ = {isa = PBXFileReference; lastKnownFileType = text; path = GvimExt.reg; sourceTree = "<group>"; };
-		7A992BB11422932F00075221 /* gvimext_ming.def */ = {isa = PBXFileReference; lastKnownFileType = text; path = gvimext_ming.def; sourceTree = "<group>"; };
-		7A992BB21422932F00075221 /* gvimext_ming.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = gvimext_ming.rc; sourceTree = "<group>"; };
-		7A992BB31422932F00075221 /* Make_bc5.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_bc5.mak; sourceTree = "<group>"; };
-		7A992BB41422932F00075221 /* Make_ming.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_ming.mak; sourceTree = "<group>"; };
-		7A992BB51422932F00075221 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		7A992BB61422932F00075221 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		7A992BB71422932F00075221 /* resource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
-		7A992BB81422932F00075221 /* uninst.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = uninst.bat; sourceTree = "<group>"; };
-		7A992BB91422932F00075221 /* gvimtutor */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = gvimtutor; sourceTree = "<group>"; };
 		7A992BBA1422932F00075221 /* hangulin.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hangulin.c; sourceTree = "<group>"; };
 		7A992BBB1422932F00075221 /* hardcopy.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hardcopy.c; sourceTree = "<group>"; };
 		7A992BBC1422932F00075221 /* hashtab.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hashtab.c; sourceTree = "<group>"; };
@@ -177,8 +144,6 @@
 		7A992BC11422932F00075221 /* if_mzsch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = if_mzsch.h; sourceTree = "<group>"; };
 		7A992BC21422932F00075221 /* if_ole.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = if_ole.cpp; sourceTree = "<group>"; };
 		7A992BC31422932F00075221 /* if_ole.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = if_ole.h; sourceTree = "<group>"; };
-		7A992BC41422932F00075221 /* if_ole.idl */ = {isa = PBXFileReference; lastKnownFileType = text; path = if_ole.idl; sourceTree = "<group>"; };
-		7A992BC51422932F00075221 /* if_perl.xs */ = {isa = PBXFileReference; lastKnownFileType = text; path = if_perl.xs; sourceTree = "<group>"; };
 		7A992BC61422932F00075221 /* if_perlsfio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = if_perlsfio.c; sourceTree = "<group>"; };
 		7A992BC71422932F00075221 /* if_py_both.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = if_py_both.h; sourceTree = "<group>"; };
 		7A992BC81422932F00075221 /* if_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = if_python.c; sourceTree = "<group>"; };
@@ -189,42 +154,11 @@
 		7A992BCD1422932F00075221 /* if_tcl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = if_tcl.c; sourceTree = "<group>"; };
 		7A992BCE1422932F00075221 /* if_xcmdsrv.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = if_xcmdsrv.c; sourceTree = "<group>"; };
 		7A992BCF1422932F00075221 /* iid_ole.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = iid_ole.c; sourceTree = "<group>"; };
-		7A992BD01422932F00075221 /* infplist.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = infplist.xml; sourceTree = "<group>"; };
-		7A992BD11422932F00075221 /* INSTALL */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALL; sourceTree = "<group>"; };
-		7A992BD21422932F00075221 /* INSTALLami.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALLami.txt; sourceTree = "<group>"; };
-		7A992BD31422932F00075221 /* INSTALLmac.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALLmac.txt; sourceTree = "<group>"; };
-		7A992BD41422932F00075221 /* installman.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = installman.sh; sourceTree = "<group>"; };
-		7A992BD51422932F00075221 /* installml.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = installml.sh; sourceTree = "<group>"; };
-		7A992BD61422932F00075221 /* INSTALLpc.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALLpc.txt; sourceTree = "<group>"; };
-		7A992BD71422932F00075221 /* INSTALLvms.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALLvms.txt; sourceTree = "<group>"; };
-		7A992BD81422932F00075221 /* INSTALLx.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = INSTALLx.txt; sourceTree = "<group>"; };
 		7A992BD91422932F00075221 /* integration.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = integration.c; sourceTree = "<group>"; };
 		7A992BDA1422932F00075221 /* integration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = integration.h; sourceTree = "<group>"; };
-		7A992BDD1422932F00075221 /* VImAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VImAppDelegate.h; sourceTree = "<group>"; };
-		7A992BDE1422932F00075221 /* VImAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VImAppDelegate.m; sourceTree = "<group>"; };
 		7A992BDF1422932F00075221 /* keymap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keymap.h; sourceTree = "<group>"; };
-		7A992BE01422932F00075221 /* link.390 */ = {isa = PBXFileReference; lastKnownFileType = text; path = link.390; sourceTree = "<group>"; };
-		7A992BE11422932F00075221 /* link.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = link.sh; sourceTree = "<group>"; };
 		7A992BE21422932F00075221 /* macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macros.h; sourceTree = "<group>"; };
-		7A992BE31422932F00075221 /* main.aap */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.aap; sourceTree = "<group>"; };
 		7A992BE41422932F00075221 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		7A992BE51422932F00075221 /* Make_bc3.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_bc3.mak; sourceTree = "<group>"; };
-		7A992BE61422932F00075221 /* Make_bc5.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_bc5.mak; sourceTree = "<group>"; };
-		7A992BE71422932F00075221 /* Make_cyg.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_cyg.mak; sourceTree = "<group>"; };
-		7A992BE81422932F00075221 /* Make_dice.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_dice.mak; sourceTree = "<group>"; };
-		7A992BE91422932F00075221 /* Make_djg.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_djg.mak; sourceTree = "<group>"; };
-		7A992BEA1422932F00075221 /* Make_dvc.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_dvc.mak; sourceTree = "<group>"; };
-		7A992BEB1422932F00075221 /* Make_ivc.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_ivc.mak; sourceTree = "<group>"; };
-		7A992BEC1422932F00075221 /* Make_manx.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_manx.mak; sourceTree = "<group>"; };
-		7A992BED1422932F00075221 /* Make_ming.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_ming.mak; sourceTree = "<group>"; };
-		7A992BEE1422932F00075221 /* Make_mint.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_mint.mak; sourceTree = "<group>"; };
-		7A992BEF1422932F00075221 /* Make_morph.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_morph.mak; sourceTree = "<group>"; };
-		7A992BF01422932F00075221 /* Make_mvc.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_mvc.mak; sourceTree = "<group>"; };
-		7A992BF11422932F00075221 /* Make_os2.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_os2.mak; sourceTree = "<group>"; };
-		7A992BF21422932F00075221 /* Make_sas.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_sas.mak; sourceTree = "<group>"; };
-		7A992BF31422932F00075221 /* Make_vms.mms */ = {isa = PBXFileReference; lastKnownFileType = text; path = Make_vms.mms; sourceTree = "<group>"; };
-		7A992BF41422932F00075221 /* Make_w16.mak */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Make_w16.mak; sourceTree = "<group>"; };
-		7A992BF51422932F00075221 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		7A992BF61422932F00075221 /* mark.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mark.c; sourceTree = "<group>"; };
 		7A992BF71422932F00075221 /* mbyte.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mbyte.c; sourceTree = "<group>"; };
 		7A992BF81422932F00075221 /* memfile.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = memfile.c; sourceTree = "<group>"; };
@@ -234,70 +168,11 @@
 		7A992BFC1422932F00075221 /* message.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = message.c; sourceTree = "<group>"; };
 		7A992BFD1422932F00075221 /* misc1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = misc1.c; sourceTree = "<group>"; };
 		7A992BFE1422932F00075221 /* misc2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = misc2.c; sourceTree = "<group>"; };
-		7A992BFF1422932F00075221 /* mkinstalldirs */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = mkinstalldirs; sourceTree = "<group>"; };
 		7A992C001422932F00075221 /* move.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = move.c; sourceTree = "<group>"; };
-		7A992C011422932F00075221 /* msvc2008.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = msvc2008.bat; sourceTree = "<group>"; };
-		7A992C021422932F00075221 /* msvc2010.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = msvc2010.bat; sourceTree = "<group>"; };
-		7A992C031422932F00075221 /* msvcsetup.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = msvcsetup.bat; sourceTree = "<group>"; };
-		7A992C041422932F00075221 /* mysign */ = {isa = PBXFileReference; lastKnownFileType = text; path = mysign; sourceTree = "<group>"; };
 		7A992C051422932F00075221 /* nbdebug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = nbdebug.c; sourceTree = "<group>"; };
 		7A992C061422932F00075221 /* nbdebug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nbdebug.h; sourceTree = "<group>"; };
 		7A992C071422932F00075221 /* netbeans.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = netbeans.c; sourceTree = "<group>"; };
 		7A992C081422932F00075221 /* normal.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = normal.c; sourceTree = "<group>"; };
-		7A992C0A1422932F00075221 /* blowfish.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = blowfish.o; sourceTree = "<group>"; };
-		7A992C0B1422932F00075221 /* buffer.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = buffer.o; sourceTree = "<group>"; };
-		7A992C0C1422932F00075221 /* charset.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = charset.o; sourceTree = "<group>"; };
-		7A992C0D1422932F00075221 /* diff.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = diff.o; sourceTree = "<group>"; };
-		7A992C0E1422932F00075221 /* digraph.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = digraph.o; sourceTree = "<group>"; };
-		7A992C0F1422932F00075221 /* edit.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = edit.o; sourceTree = "<group>"; };
-		7A992C101422932F00075221 /* eval.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = eval.o; sourceTree = "<group>"; };
-		7A992C111422932F00075221 /* ex_cmds.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ex_cmds.o; sourceTree = "<group>"; };
-		7A992C121422932F00075221 /* ex_cmds2.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ex_cmds2.o; sourceTree = "<group>"; };
-		7A992C131422932F00075221 /* ex_docmd.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ex_docmd.o; sourceTree = "<group>"; };
-		7A992C141422932F00075221 /* ex_eval.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ex_eval.o; sourceTree = "<group>"; };
-		7A992C151422932F00075221 /* ex_getln.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ex_getln.o; sourceTree = "<group>"; };
-		7A992C161422932F00075221 /* fileio.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = fileio.o; sourceTree = "<group>"; };
-		7A992C171422932F00075221 /* fold.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = fold.o; sourceTree = "<group>"; };
-		7A992C181422932F00075221 /* getchar.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = getchar.o; sourceTree = "<group>"; };
-		7A992C191422932F00075221 /* gui.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = gui.o; sourceTree = "<group>"; };
-		7A992C1A1422932F00075221 /* gui_ios.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = gui_ios.o; sourceTree = "<group>"; };
-		7A992C1B1422932F00075221 /* hardcopy.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = hardcopy.o; sourceTree = "<group>"; };
-		7A992C1C1422932F00075221 /* hashtab.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = hashtab.o; sourceTree = "<group>"; };
-		7A992C1D1422932F00075221 /* if_cscope.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = if_cscope.o; sourceTree = "<group>"; };
-		7A992C1E1422932F00075221 /* if_xcmdsrv.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = if_xcmdsrv.o; sourceTree = "<group>"; };
-		7A992C1F1422932F00075221 /* main.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = main.o; sourceTree = "<group>"; };
-		7A992C201422932F00075221 /* mark.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = mark.o; sourceTree = "<group>"; };
-		7A992C211422932F00075221 /* mbyte.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = mbyte.o; sourceTree = "<group>"; };
-		7A992C221422932F00075221 /* memfile.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = memfile.o; sourceTree = "<group>"; };
-		7A992C231422932F00075221 /* memline.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = memline.o; sourceTree = "<group>"; };
-		7A992C241422932F00075221 /* menu.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = menu.o; sourceTree = "<group>"; };
-		7A992C251422932F00075221 /* message.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = message.o; sourceTree = "<group>"; };
-		7A992C261422932F00075221 /* misc1.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = misc1.o; sourceTree = "<group>"; };
-		7A992C271422932F00075221 /* misc2.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = misc2.o; sourceTree = "<group>"; };
-		7A992C281422932F00075221 /* move.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = move.o; sourceTree = "<group>"; };
-		7A992C291422932F00075221 /* netbeans.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = netbeans.o; sourceTree = "<group>"; };
-		7A992C2A1422932F00075221 /* normal.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = normal.o; sourceTree = "<group>"; };
-		7A992C2B1422932F00075221 /* ops.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ops.o; sourceTree = "<group>"; };
-		7A992C2C1422932F00075221 /* option.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = option.o; sourceTree = "<group>"; };
-		7A992C2D1422932F00075221 /* os_mac_conv.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = os_mac_conv.o; sourceTree = "<group>"; };
-		7A992C2E1422932F00075221 /* os_macosx.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = os_macosx.o; sourceTree = "<group>"; };
-		7A992C2F1422932F00075221 /* os_unix.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = os_unix.o; sourceTree = "<group>"; };
-		7A992C301422932F00075221 /* pathdef.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = pathdef.o; sourceTree = "<group>"; };
-		7A992C311422932F00075221 /* popupmnu.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = popupmnu.o; sourceTree = "<group>"; };
-		7A992C321422932F00075221 /* pty.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = pty.o; sourceTree = "<group>"; };
-		7A992C331422932F00075221 /* quickfix.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = quickfix.o; sourceTree = "<group>"; };
-		7A992C341422932F00075221 /* regexp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = regexp.o; sourceTree = "<group>"; };
-		7A992C351422932F00075221 /* screen.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = screen.o; sourceTree = "<group>"; };
-		7A992C361422932F00075221 /* search.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = search.o; sourceTree = "<group>"; };
-		7A992C371422932F00075221 /* sha256.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = sha256.o; sourceTree = "<group>"; };
-		7A992C381422932F00075221 /* spell.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = spell.o; sourceTree = "<group>"; };
-		7A992C391422932F00075221 /* syntax.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = syntax.o; sourceTree = "<group>"; };
-		7A992C3A1422932F00075221 /* tag.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = tag.o; sourceTree = "<group>"; };
-		7A992C3B1422932F00075221 /* term.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = term.o; sourceTree = "<group>"; };
-		7A992C3C1422932F00075221 /* ui.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ui.o; sourceTree = "<group>"; };
-		7A992C3D1422932F00075221 /* undo.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = undo.o; sourceTree = "<group>"; };
-		7A992C3E1422932F00075221 /* version.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = version.o; sourceTree = "<group>"; };
-		7A992C3F1422932F00075221 /* window.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = window.o; sourceTree = "<group>"; };
 		7A992C401422932F00075221 /* ops.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ops.c; sourceTree = "<group>"; };
 		7A992C411422932F00075221 /* option.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = option.c; sourceTree = "<group>"; };
 		7A992C421422932F00075221 /* option.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = option.h; sourceTree = "<group>"; };
@@ -479,9 +354,7 @@
 		7A992CF51422932F00075221 /* swis.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = swis.s; sourceTree = "<group>"; };
 		7A992CF61422932F00075221 /* syntax.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = syntax.c; sourceTree = "<group>"; };
 		7A992CF71422932F00075221 /* tag.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tag.c; sourceTree = "<group>"; };
-		7A992CF81422932F00075221 /* TAGS */ = {isa = PBXFileReference; lastKnownFileType = text; path = TAGS; sourceTree = "<group>"; };
 		7A992CF91422932F00075221 /* tearoff.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = tearoff.bmp; sourceTree = "<group>"; };
-		7A992CFB1422932F00075221 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		7A992CFC1422932F00075221 /* tee.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tee.c; sourceTree = "<group>"; };
 		7A992CFD1422932F00075221 /* term.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = term.c; sourceTree = "<group>"; };
 		7A992CFE1422932F00075221 /* term.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = term.h; sourceTree = "<group>"; };
@@ -741,8 +614,6 @@
 		7A992E001422933000075221 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		7A992E011422933000075221 /* xxd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xxd; sourceTree = "<group>"; };
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
-		7A992E091422937300075221 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ios_info.plist; path = src/ios_info.plist; sourceTree = SOURCE_ROOT; };
-		7A992E0A1422937300075221 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ios_prefix.pch; path = src/ios_prefix.pch; sourceTree = SOURCE_ROOT; };
 		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
@@ -768,8 +639,7 @@
 		7A71940914228FA500B62000 = {
 			isa = PBXGroup;
 			children = (
-				7A9DD4E4142CC10600B8F464 /* CoreText.framework */,
-				7A71941E14228FA500B62000 /* VIm */,
+				7A71941E14228FA500B62000 /* Vim */,
 				7A71941714228FA500B62000 /* Frameworks */,
 				7A71941514228FA500B62000 /* Products */,
 			);
@@ -778,7 +648,7 @@
 		7A71941514228FA500B62000 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7A71941414228FA500B62000 /* VIm.app */,
+				7A71941414228FA500B62000 /* Vim.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -788,6 +658,7 @@
 			children = (
 				7A68CB101422A09D0019E159 /* libcurses.dylib */,
 				7A68CB0E1422A0720019E159 /* libm.dylib */,
+				7A9DD4E4142CC10600B8F464 /* CoreText.framework */,
 				7A71941814228FA500B62000 /* UIKit.framework */,
 				7A71941A14228FA500B62000 /* Foundation.framework */,
 				7A71941C14228FA500B62000 /* CoreGraphics.framework */,
@@ -795,25 +666,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		7A71941E14228FA500B62000 /* VIm */ = {
+		7A71941E14228FA500B62000 /* Vim */ = {
 			isa = PBXGroup;
 			children = (
 				7A7B1FA6142FBE2E00A537BD /* runtime */,
 				7A992B561422932F00075221 /* src */,
-				7AEFCF4F1422926B008AF44E /* New Group */,
-				7A71941F14228FA500B62000 /* Supporting Files */,
 			);
+			name = Vim;
 			path = VIm;
-			sourceTree = "<group>";
-		};
-		7A71941F14228FA500B62000 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				7A992E091422937300075221 /* ios_info.plist */,
-				7A992E0A1422937300075221 /* ios_prefix.pch */,
-				7A71942414228FA500B62000 /* main.m */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		7A992B561422932F00075221 /* src */ = {
@@ -822,21 +682,11 @@
 				7A992B5C1422932F00075221 /* arabic.c */,
 				7A992B5D1422932F00075221 /* arabic.h */,
 				7A992B5E1422932F00075221 /* ascii.h */,
-				7A992B5F1422932F00075221 /* auto */,
-				7A992B6A1422932F00075221 /* bigvim.bat */,
 				7A992B6B1422932F00075221 /* blowfish.c */,
 				7A992B6C1422932F00075221 /* buffer.c */,
 				7A992B6D1422932F00075221 /* charset.c */,
-				7A992B6E1422932F00075221 /* config.aap.in */,
-				7A992B6F1422932F00075221 /* config.h.in */,
-				7A992B701422932F00075221 /* config.mk.dist */,
-				7A992B711422932F00075221 /* config.mk.in */,
-				7A992B721422932F00075221 /* configure */,
-				7A992B731422932F00075221 /* configure.in */,
-				7A992B741422932F00075221 /* dehqx.py */,
 				7A992B751422932F00075221 /* diff.c */,
 				7A992B761422932F00075221 /* digraph.c */,
-				7A992B771422932F00075221 /* dimm.idl */,
 				7A992B781422932F00075221 /* dlldata.c */,
 				7A992B791422932F00075221 /* dosinst.c */,
 				7A992B7A1422932F00075221 /* dosinst.h */,
@@ -885,9 +735,7 @@
 				7A992BA61422932F00075221 /* gui_xmebw.h */,
 				7A992BA71422932F00075221 /* gui_xmebwp.h */,
 				7A992BA81422932F00075221 /* guiw16rc.h */,
-				7A992BA91422932F00075221 /* gvim.exe.mnf */,
 				7A992BAA1422932F00075221 /* GvimExt */,
-				7A992BB91422932F00075221 /* gvimtutor */,
 				7A992BBA1422932F00075221 /* hangulin.c */,
 				7A992BBB1422932F00075221 /* hardcopy.c */,
 				7A992BBC1422932F00075221 /* hashtab.c */,
@@ -898,8 +746,6 @@
 				7A992BC11422932F00075221 /* if_mzsch.h */,
 				7A992BC21422932F00075221 /* if_ole.cpp */,
 				7A992BC31422932F00075221 /* if_ole.h */,
-				7A992BC41422932F00075221 /* if_ole.idl */,
-				7A992BC51422932F00075221 /* if_perl.xs */,
 				7A992BC61422932F00075221 /* if_perlsfio.c */,
 				7A992BC71422932F00075221 /* if_py_both.h */,
 				7A992BC81422932F00075221 /* if_python.c */,
@@ -910,41 +756,11 @@
 				7A992BCD1422932F00075221 /* if_tcl.c */,
 				7A992BCE1422932F00075221 /* if_xcmdsrv.c */,
 				7A992BCF1422932F00075221 /* iid_ole.c */,
-				7A992BD01422932F00075221 /* infplist.xml */,
-				7A992BD11422932F00075221 /* INSTALL */,
-				7A992BD21422932F00075221 /* INSTALLami.txt */,
-				7A992BD31422932F00075221 /* INSTALLmac.txt */,
-				7A992BD41422932F00075221 /* installman.sh */,
-				7A992BD51422932F00075221 /* installml.sh */,
-				7A992BD61422932F00075221 /* INSTALLpc.txt */,
-				7A992BD71422932F00075221 /* INSTALLvms.txt */,
-				7A992BD81422932F00075221 /* INSTALLx.txt */,
 				7A992BD91422932F00075221 /* integration.c */,
 				7A992BDA1422932F00075221 /* integration.h */,
-				7A992BDB1422932F00075221 /* iOS */,
 				7A992BDF1422932F00075221 /* keymap.h */,
-				7A992BE01422932F00075221 /* link.390 */,
-				7A992BE11422932F00075221 /* link.sh */,
 				7A992BE21422932F00075221 /* macros.h */,
-				7A992BE31422932F00075221 /* main.aap */,
 				7A992BE41422932F00075221 /* main.c */,
-				7A992BE51422932F00075221 /* Make_bc3.mak */,
-				7A992BE61422932F00075221 /* Make_bc5.mak */,
-				7A992BE71422932F00075221 /* Make_cyg.mak */,
-				7A992BE81422932F00075221 /* Make_dice.mak */,
-				7A992BE91422932F00075221 /* Make_djg.mak */,
-				7A992BEA1422932F00075221 /* Make_dvc.mak */,
-				7A992BEB1422932F00075221 /* Make_ivc.mak */,
-				7A992BEC1422932F00075221 /* Make_manx.mak */,
-				7A992BED1422932F00075221 /* Make_ming.mak */,
-				7A992BEE1422932F00075221 /* Make_mint.mak */,
-				7A992BEF1422932F00075221 /* Make_morph.mak */,
-				7A992BF01422932F00075221 /* Make_mvc.mak */,
-				7A992BF11422932F00075221 /* Make_os2.mak */,
-				7A992BF21422932F00075221 /* Make_sas.mak */,
-				7A992BF31422932F00075221 /* Make_vms.mms */,
-				7A992BF41422932F00075221 /* Make_w16.mak */,
-				7A992BF51422932F00075221 /* Makefile */,
 				7A992BF61422932F00075221 /* mark.c */,
 				7A992BF71422932F00075221 /* mbyte.c */,
 				7A992BF81422932F00075221 /* memfile.c */,
@@ -954,17 +770,11 @@
 				7A992BFC1422932F00075221 /* message.c */,
 				7A992BFD1422932F00075221 /* misc1.c */,
 				7A992BFE1422932F00075221 /* misc2.c */,
-				7A992BFF1422932F00075221 /* mkinstalldirs */,
 				7A992C001422932F00075221 /* move.c */,
-				7A992C011422932F00075221 /* msvc2008.bat */,
-				7A992C021422932F00075221 /* msvc2010.bat */,
-				7A992C031422932F00075221 /* msvcsetup.bat */,
-				7A992C041422932F00075221 /* mysign */,
 				7A992C051422932F00075221 /* nbdebug.c */,
 				7A992C061422932F00075221 /* nbdebug.h */,
 				7A992C071422932F00075221 /* netbeans.c */,
 				7A992C081422932F00075221 /* normal.c */,
-				7A992C091422932F00075221 /* objects */,
 				7A992C401422932F00075221 /* ops.c */,
 				7A992C411422932F00075221 /* option.c */,
 				7A992C421422932F00075221 /* option.h */,
@@ -1021,7 +831,6 @@
 				7A992CF51422932F00075221 /* swis.s */,
 				7A992CF61422932F00075221 /* syntax.c */,
 				7A992CF71422932F00075221 /* tag.c */,
-				7A992CF81422932F00075221 /* TAGS */,
 				7A992CF91422932F00075221 /* tearoff.bmp */,
 				7A992CFA1422932F00075221 /* tee */,
 				7A992CFD1422932F00075221 /* term.c */,
@@ -1072,120 +881,14 @@
 			path = src;
 			sourceTree = SOURCE_ROOT;
 		};
-		7A992B5F1422932F00075221 /* auto */ = {
-			isa = PBXGroup;
-			children = (
-				7A992B601422932F00075221 /* config.cache */,
-				7A992B611422932F00075221 /* config.h */,
-				7A992B621422932F00075221 /* config.log */,
-				7A992B631422932F00075221 /* config.mk */,
-				7A992B641422932F00075221 /* config.status */,
-				7A992B651422932F00075221 /* configure */,
-				7A992B661422932F00075221 /* link.log */,
-				7A992B671422932F00075221 /* link.sed */,
-				7A992B681422932F00075221 /* osdef.h */,
-				7A992B691422932F00075221 /* pathdef.c */,
-			);
-			path = auto;
-			sourceTree = "<group>";
-		};
 		7A992BAA1422932F00075221 /* GvimExt */ = {
 			isa = PBXGroup;
 			children = (
 				7A992BAB1422932F00075221 /* gvimext.cpp */,
-				7A992BAC1422932F00075221 /* gvimext.def */,
 				7A992BAD1422932F00075221 /* gvimext.h */,
-				7A992BAE1422932F00075221 /* gvimext.inf */,
-				7A992BAF1422932F00075221 /* gvimext.rc */,
-				7A992BB01422932F00075221 /* GvimExt.reg */,
-				7A992BB11422932F00075221 /* gvimext_ming.def */,
-				7A992BB21422932F00075221 /* gvimext_ming.rc */,
-				7A992BB31422932F00075221 /* Make_bc5.mak */,
-				7A992BB41422932F00075221 /* Make_ming.mak */,
-				7A992BB51422932F00075221 /* Makefile */,
-				7A992BB61422932F00075221 /* README.txt */,
 				7A992BB71422932F00075221 /* resource.h */,
-				7A992BB81422932F00075221 /* uninst.bat */,
 			);
 			path = GvimExt;
-			sourceTree = "<group>";
-		};
-		7A992BDB1422932F00075221 /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				7A992BDC1422932F00075221 /* Classes */,
-			);
-			path = iOS;
-			sourceTree = "<group>";
-		};
-		7A992BDC1422932F00075221 /* Classes */ = {
-			isa = PBXGroup;
-			children = (
-				7A992BDD1422932F00075221 /* VImAppDelegate.h */,
-				7A992BDE1422932F00075221 /* VImAppDelegate.m */,
-			);
-			path = Classes;
-			sourceTree = "<group>";
-		};
-		7A992C091422932F00075221 /* objects */ = {
-			isa = PBXGroup;
-			children = (
-				7A992C0A1422932F00075221 /* blowfish.o */,
-				7A992C0B1422932F00075221 /* buffer.o */,
-				7A992C0C1422932F00075221 /* charset.o */,
-				7A992C0D1422932F00075221 /* diff.o */,
-				7A992C0E1422932F00075221 /* digraph.o */,
-				7A992C0F1422932F00075221 /* edit.o */,
-				7A992C101422932F00075221 /* eval.o */,
-				7A992C111422932F00075221 /* ex_cmds.o */,
-				7A992C121422932F00075221 /* ex_cmds2.o */,
-				7A992C131422932F00075221 /* ex_docmd.o */,
-				7A992C141422932F00075221 /* ex_eval.o */,
-				7A992C151422932F00075221 /* ex_getln.o */,
-				7A992C161422932F00075221 /* fileio.o */,
-				7A992C171422932F00075221 /* fold.o */,
-				7A992C181422932F00075221 /* getchar.o */,
-				7A992C191422932F00075221 /* gui.o */,
-				7A992C1A1422932F00075221 /* gui_ios.o */,
-				7A992C1B1422932F00075221 /* hardcopy.o */,
-				7A992C1C1422932F00075221 /* hashtab.o */,
-				7A992C1D1422932F00075221 /* if_cscope.o */,
-				7A992C1E1422932F00075221 /* if_xcmdsrv.o */,
-				7A992C1F1422932F00075221 /* main.o */,
-				7A992C201422932F00075221 /* mark.o */,
-				7A992C211422932F00075221 /* mbyte.o */,
-				7A992C221422932F00075221 /* memfile.o */,
-				7A992C231422932F00075221 /* memline.o */,
-				7A992C241422932F00075221 /* menu.o */,
-				7A992C251422932F00075221 /* message.o */,
-				7A992C261422932F00075221 /* misc1.o */,
-				7A992C271422932F00075221 /* misc2.o */,
-				7A992C281422932F00075221 /* move.o */,
-				7A992C291422932F00075221 /* netbeans.o */,
-				7A992C2A1422932F00075221 /* normal.o */,
-				7A992C2B1422932F00075221 /* ops.o */,
-				7A992C2C1422932F00075221 /* option.o */,
-				7A992C2D1422932F00075221 /* os_mac_conv.o */,
-				7A992C2E1422932F00075221 /* os_macosx.o */,
-				7A992C2F1422932F00075221 /* os_unix.o */,
-				7A992C301422932F00075221 /* pathdef.o */,
-				7A992C311422932F00075221 /* popupmnu.o */,
-				7A992C321422932F00075221 /* pty.o */,
-				7A992C331422932F00075221 /* quickfix.o */,
-				7A992C341422932F00075221 /* regexp.o */,
-				7A992C351422932F00075221 /* screen.o */,
-				7A992C361422932F00075221 /* search.o */,
-				7A992C371422932F00075221 /* sha256.o */,
-				7A992C381422932F00075221 /* spell.o */,
-				7A992C391422932F00075221 /* syntax.o */,
-				7A992C3A1422932F00075221 /* tag.o */,
-				7A992C3B1422932F00075221 /* term.o */,
-				7A992C3C1422932F00075221 /* ui.o */,
-				7A992C3D1422932F00075221 /* undo.o */,
-				7A992C3E1422932F00075221 /* version.o */,
-				7A992C3F1422932F00075221 /* window.o */,
-			);
-			path = objects;
 			sourceTree = "<group>";
 		};
 		7A992C4C1422932F00075221 /* os_mac_rsrc */ = {
@@ -1342,7 +1045,6 @@
 		7A992CFA1422932F00075221 /* tee */ = {
 			isa = PBXGroup;
 			children = (
-				7A992CFB1422932F00075221 /* Makefile */,
 				7A992CFC1422932F00075221 /* tee.c */,
 			);
 			path = tee;
@@ -1603,19 +1305,12 @@
 			path = os_ios_rsrc;
 			sourceTree = "<group>";
 		};
-		7AEFCF4F1422926B008AF44E /* New Group */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "New Group";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7A71941314228FA500B62000 /* VIm */ = {
+		7A71941314228FA500B62000 /* Vim */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7A71943A14228FA500B62000 /* Build configuration list for PBXNativeTarget "VIm" */;
+			buildConfigurationList = 7A71943A14228FA500B62000 /* Build configuration list for PBXNativeTarget "Vim" */;
 			buildPhases = (
 				7A71941014228FA500B62000 /* Sources */,
 				7A71941114228FA500B62000 /* Frameworks */,
@@ -1625,9 +1320,9 @@
 			);
 			dependencies = (
 			);
-			name = VIm;
+			name = Vim;
 			productName = VIm;
-			productReference = 7A71941414228FA500B62000 /* VIm.app */;
+			productReference = 7A71941414228FA500B62000 /* Vim.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1635,7 +1330,7 @@
 /* Begin PBXProject section */
 		7A71940B14228FA500B62000 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */;
+			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -1647,7 +1342,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7A71941314228FA500B62000 /* VIm */,
+				7A71941314228FA500B62000 /* Vim */,
 			);
 		};
 /* End PBXProject section */
@@ -1754,7 +1449,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
@@ -1763,6 +1458,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -1802,7 +1498,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */ = {
+		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943814228FA500B62000 /* Debug */,
@@ -1811,7 +1507,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7A71943A14228FA500B62000 /* Build configuration list for PBXNativeTarget "VIm" */ = {
+		7A71943A14228FA500B62000 /* Build configuration list for PBXNativeTarget "Vim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943B14228FA500B62000 /* Debug */,
