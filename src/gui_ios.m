@@ -760,11 +760,11 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     printf("%s\n",__func__);
 
     NSString * normalizedFontName = @"Courier";
-    CGFloat normalizedFontSize = 12.0f;
+    CGFloat normalizedFontSize = 14.0f;
     if (font_name != NULL) {
         normalizedFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
     }
-    CGFontRef rawFont = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
+    CTFontRef rawFont = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
     [normalizedFontName release];
 
     
@@ -785,7 +785,7 @@ gui_mch_init_font(char_u *font_name, int fontset) {
 
     gui.char_ascent = CTFontGetAscent(rawFont);
     gui.char_width = boundingRect.size.width;
-    gui.char_height = boundingRect.size.height;
+    gui.char_height = boundingRect.size.height + 3.0f;
 //    gui.char_height = CTFontGetAscent(rawFont) + CTFontGetDescent(rawFont);
 
     if (gui.norm_font != NULL) {
