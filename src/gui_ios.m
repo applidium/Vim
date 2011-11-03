@@ -337,6 +337,7 @@ gui_mch_open(void)
     [gui_ios.window makeKeyAndVisible];
     
     printf("%s\n",__func__);  
+    return OK;
 }
 
 
@@ -363,7 +364,6 @@ gui_mch_update(void)
     // As a compromise we check for new input only every now and then. Note
     // that Cmd-. sends SIGINT so it has higher success rate at interrupting
     // Vim than Ctrl-C.
-    static CFAbsoluteTime lastTime = 0;
 
     printf("%s\n",__func__);  
 }
@@ -1098,7 +1098,8 @@ gui_mch_dialog(
     char_u	*textfield,
     int         ex_cmd)     // UNUSED
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    return OK;
 }
 
 
