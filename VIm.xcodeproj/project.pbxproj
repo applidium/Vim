@@ -1330,7 +1330,10 @@
 /* Begin PBXProject section */
 		7A71940B14228FA500B62000 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -1470,6 +1473,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"${SRCROOT}/src",
 					"${SRCROOT}/src/proto",
@@ -1485,6 +1489,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"${SRCROOT}/src",
 					"${SRCROOT}/src/proto",
@@ -1498,7 +1503,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */ = {
+		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943814228FA500B62000 /* Debug */,
