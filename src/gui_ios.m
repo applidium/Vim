@@ -201,6 +201,12 @@ struct {
 
 - (void)_VImMain {
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
+
+    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if (paths.count > 0) {
+        vim_setenv((char_u *)"HOME", (char_u *)[[paths objectAtIndex:0] UTF8String]);
+    }
+
     char * argv[] = { "vim" };
     VimMain(1, argv);
 }
