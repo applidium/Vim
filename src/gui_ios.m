@@ -450,17 +450,17 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
     //FIXME: Move this block somewhere else
-//    CGContextSetShouldAntialias(context, NO);
-//    CGContextSetAllowsAntialiasing(context, NO);
+    CGContextSetShouldAntialias(context, NO);
+    CGContextSetAllowsAntialiasing(context, NO);
     CGContextSetShouldSmoothFonts(context, NO);
+
     CGContextSetCharacterSpacing(context, 0.0f);
     CGContextSetTextDrawingMode(context, kCGTextFill); 
 
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len)-FILL_X(col), FILL_Y(row+1)-FILL_Y(row)));
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
-//    CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0));
-    
+
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
     NSDictionary * attributes = [[NSDictionary alloc] initWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
                                  [NSNumber numberWithBool:YES], kCTForegroundColorFromContextAttributeName,
