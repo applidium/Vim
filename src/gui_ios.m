@@ -26,9 +26,18 @@ struct {
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
+    int         blink_state;
+    long        blink_wait;
+    long        blink_on;
+    long        blink_off;
+    NSTimer *   blink_timer;
 } gui_ios;
 
-
+enum blink_state {
+    BLINK_NONE,     /* not blinking at all */
+    BLINK_OFF,      /* blinking, cursor is not shown */
+    BLINK_ON        /* blinking, cursor is shown */
+};
 
 #pragma mark -
 #pragma mark VImTextView
@@ -96,6 +105,7 @@ struct {
     VImTextView * _textView;
 }
 - (void)flush;
+- (void)blinkCursorTimer:(NSTimer *)timer;
 @end
 
 @implementation VImViewController
@@ -182,6 +192,36 @@ struct {
 - (UIKeyboardType)keyboardType {
     return UIKeyboardTypeDefault;
 }
+
+- (void) blinkCursorTimer:(NSTimer *)timer {
+    NSTimeInterval on_time, off_time;
+    
+    
+    [gui_ios.blink_timer invalidate];
+    if (gui_ios.blink_state == BLINK_ON) {
+        gui_undraw_cursor();
+        gui_ios.blink_state = BLINK_OFF;
+        
+        off_time = gui_ios.blink_off / 1000.0;
+        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval: off_time
+                                                               target: gui_ios.view_controller
+                                                             selector: @selector(blinkCursorTimer:)
+                                                             userInfo: nil
+                                                              repeats: NO];
+    }
+    else if (gui_ios.blink_state == BLINK_OFF) {
+        gui_update_cursor(TRUE, FALSE);
+        gui_ios.blink_state = BLINK_ON;
+        
+        on_time = gui_ios.blink_on / 1000.0;
+        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval: on_time
+                                                               target: gui_ios.view_controller
+                                                             selector: @selector(blinkCursorTimer:)
+                                                             userInfo: nil
+                                                              repeats: NO];
+    }
+}
+
 @end
 
 
@@ -473,6 +513,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CGContextSetTextPosition(context, TEXT_X(col), TEXT_Y(row));
     CTLineDraw(line, context);
     CFRelease(line);
+    [gui_ios.view_controller.view setNeedsDisplay];
 }
 
 
@@ -883,6 +924,19 @@ gui_mch_set_scrollbar_thumb(
 gui_mch_draw_hollow_cursor(guicolor_T color)
 {
     printf("%s\n",__func__);  
+    
+    int w = 1;
+    
+#ifdef FEAT_MBYTE
+    if (mb_lefthalve(gui.row, gui.col))
+        w = 2;
+#endif
+    
+    CGContextRef context = CGLayerGetContext(gui_ios.layer);
+    CGContextSetStrokeColorWithColor(context, color);
+
+    CGContextStrokeRect(context, CGRectMake(FILL_X(gui.col), FILL_Y(gui.row), w * gui.char_width, gui.char_height));
+    [gui_ios.view_controller.view setNeedsDisplay];
 }
 
 
@@ -892,7 +946,26 @@ gui_mch_draw_hollow_cursor(guicolor_T color)
     void
 gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    CGContextRef context = CGLayerGetContext(gui_ios.layer);
+    gui_mch_set_fg_color(color);
+    
+    CGRect rect;
+    int    left;
+    
+#ifdef FEAT_RIGHTLEFT
+    /* vertical line should be on the right of current point */
+    if (CURSOR_BAR_RIGHT)
+        left = FILL_X(gui.col + 1) - w;
+    else
+#endif
+        left = FILL_X(gui.col);
+    
+    rect = CGRectMake(left, FILL_Y(gui.row), w, h);
+    
+    CGContextSetFillColorWithColor(context, color);
+    CGContextFillRect(context, CGRectMake(left, FILL_Y(gui.row), (CGFloat)w, (CGFloat)h));
+    [gui_ios.view_controller.view setNeedsDisplay];
 }
 
 
@@ -904,10 +977,14 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
  * BLINK_OFF	blinking, cursor is not shown
  * BLINK_ON blinking, cursor is shown
  */
+
     void
 gui_mch_set_blinking(long wait, long on, long off)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    gui_ios.blink_wait = wait;
+    gui_ios.blink_on   = on;
+    gui_ios.blink_off  = off;
 }
 
 
@@ -918,7 +995,21 @@ gui_mch_set_blinking(long wait, long on, long off)
     void
 gui_mch_start_blink(void)
 {
-    printf("%s\n",__func__);  
+    printf("%s\n",__func__);
+    if (gui_ios.blink_timer != nil)
+        [gui_ios.blink_timer invalidate];
+    
+    if (gui_ios.blink_wait && gui_ios.blink_on &&
+        gui_ios.blink_off && gui.in_focus)
+    {
+        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval: gui_ios.blink_wait / 1000.0
+                                                               target: gui_ios.view_controller
+                                                             selector: @selector(blinkCursorTimer:)
+                                                             userInfo: nil
+                                                              repeats: NO];
+        gui_ios.blink_state = BLINK_ON;
+        gui_update_cursor(TRUE, FALSE);
+    }
 }
 
 
@@ -929,6 +1020,13 @@ gui_mch_start_blink(void)
 gui_mch_stop_blink(void)
 {
     printf("%s\n",__func__);  
+    [gui_ios.blink_timer invalidate];
+    
+//    if (gui_ios.blink_state == BLINK_OFF)
+//        gui_update_cursor(TRUE, FALSE);
+    
+    gui_ios.blink_state = BLINK_NONE;
+    gui_ios.blink_timer = nil;
 }
 
 
