@@ -344,7 +344,7 @@ gui_mch_init(void)
     printf("%s\n",__func__);  
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
-    gui_ios.window = [[UIWindow alloc] init];
+    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     gui_ios.view_controller = [[VImViewController alloc] init];
     gui_ios.window.rootViewController = gui_ios.view_controller;
     gui_ios.window.backgroundColor = [UIColor purpleColor];
