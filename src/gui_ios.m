@@ -193,7 +193,7 @@ enum blink_state {
     return UIKeyboardTypeDefault;
 }
 
-- (void) blinkCursorTimer:(NSTimer *)timer {
+- (void)blinkCursorTimer:(NSTimer *)timer {
     NSTimeInterval on_time, off_time;
     
     
@@ -203,23 +203,24 @@ enum blink_state {
         gui_ios.blink_state = BLINK_OFF;
         
         off_time = gui_ios.blink_off / 1000.0;
-        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval: off_time
-                                                               target: gui_ios.view_controller
-                                                             selector: @selector(blinkCursorTimer:)
-                                                             userInfo: nil
-                                                              repeats: NO];
+        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval:off_time
+                                                               target:self
+                                                             selector:@selector(blinkCursorTimer:)
+                                                             userInfo:nil
+                                                              repeats:NO];
     }
     else if (gui_ios.blink_state == BLINK_OFF) {
         gui_update_cursor(TRUE, FALSE);
         gui_ios.blink_state = BLINK_ON;
         
         on_time = gui_ios.blink_on / 1000.0;
-        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval: on_time
-                                                               target: gui_ios.view_controller
-                                                             selector: @selector(blinkCursorTimer:)
-                                                             userInfo: nil
-                                                              repeats: NO];
+        gui_ios.blink_timer = [NSTimer scheduledTimerWithTimeInterval:on_time
+                                                               target:self
+                                                             selector:@selector(blinkCursorTimer:)
+                                                             userInfo:nil
+                                                              repeats:NO];
     }
+    [_textView setNeedsDisplay];
 }
 
 @end
@@ -235,7 +236,8 @@ enum blink_state {
 
 @implementation VImAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    [self performSelector:@selector(_VImMain) withObject:nil afterDelay:0.1f];
+    // Per Apple's documentation : Performs the specified selector on the application’s main thread during that thread’s next run loop cycle. These methods give you the option of blocking the current thread until the selector is performed.
+    [self performSelectorOnMainThread:@selector(_VImMain) withObject:nil waitUntilDone:NO];
     return YES;
 }
 
@@ -485,6 +487,7 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
+    printf("Draw flags = %d\n", flags);
     printf("%s\n",__func__);
     printf("Drawing \"%.*s\"\n", len, s);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
@@ -497,9 +500,13 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     CGContextSetCharacterSpacing(context, 0.0f);
     CGContextSetTextDrawingMode(context, kCGTextFill); 
 
-    CGContextSetFillColorWithColor(context, gui_ios.bg_color);
-    CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len)-FILL_X(col), FILL_Y(row+1)-FILL_Y(row)));
+    if (!(flags & DRAW_TRANSP)) {
+        CGContextSetFillColorWithColor(context, gui_ios.bg_color);
+        CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row), FILL_X(col+len)-FILL_X(col), FILL_Y(row+1)-FILL_Y(row)));
+    }
+
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
+
 
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
     NSDictionary * attributes = [[NSDictionary alloc] initWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
@@ -512,8 +519,16 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     // Set text position and draw the line into the graphics context
     CGContextSetTextPosition(context, TEXT_X(col), TEXT_Y(row));
     CTLineDraw(line, context);
+
+    if (flags & DRAW_CURSOR) {
+        CGContextSaveGState(context);
+        CGContextSetBlendMode(context, kCGBlendModeDifference);
+        CGContextFillRect(context, CGRectMake(FILL_X(col), FILL_Y(row),
+                                              FILL_X(col+len)-FILL_X(col),
+                                              FILL_Y(row+1)-FILL_Y(row)));
+        CGContextRestoreGState(context);
+    }
     CFRelease(line);
-    [gui_ios.view_controller.view setNeedsDisplay];
 }
 
 
