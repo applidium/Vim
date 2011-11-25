@@ -64,6 +64,9 @@
 		7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941C14228FA500B62000 /* CoreGraphics.framework */; };
 		7A8CAA27147FAC1600908FBE /* runtime in Resources */ = {isa = PBXBuildFile; fileRef = 7A7B1FA6142FBE2E00A537BD /* runtime */; };
 		7A8CAA28147FAC2E00908FBE /* vimrc in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA1D147FA3D100908FBE /* vimrc */; };
+		7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA29147FCFC900908FBE /* VimIcon57.png */; };
+		7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2A147FCFC900908FBE /* VimIcon72.png */; };
+		7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2B147FCFC900908FBE /* VimIcon114.png */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
 /* End PBXBuildFile section */
 
@@ -77,6 +80,9 @@
 		7A71941C14228FA500B62000 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		7A7B1FA6142FBE2E00A537BD /* runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; path = runtime; sourceTree = SOURCE_ROOT; };
 		7A8CAA1D147FA3D100908FBE /* vimrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vimrc; sourceTree = "<group>"; };
+		7A8CAA29147FCFC900908FBE /* VimIcon57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon57.png; sourceTree = "<group>"; };
+		7A8CAA2A147FCFC900908FBE /* VimIcon72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon72.png; sourceTree = "<group>"; };
+		7A8CAA2B147FCFC900908FBE /* VimIcon114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon114.png; sourceTree = "<group>"; };
 		7A992B5C1422932F00075221 /* arabic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arabic.c; sourceTree = "<group>"; };
 		7A992B5D1422932F00075221 /* arabic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arabic.h; sourceTree = "<group>"; };
 		7A992B5E1422932F00075221 /* ascii.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ascii.h; sourceTree = "<group>"; };
@@ -1298,6 +1304,9 @@
 		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
 			isa = PBXGroup;
 			children = (
+				7A8CAA29147FCFC900908FBE /* VimIcon57.png */,
+				7A8CAA2A147FCFC900908FBE /* VimIcon72.png */,
+				7A8CAA2B147FCFC900908FBE /* VimIcon114.png */,
 				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
@@ -1357,6 +1366,9 @@
 			files = (
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
+				7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */,
+				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
+				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
