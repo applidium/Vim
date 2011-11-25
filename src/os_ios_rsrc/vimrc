@@ -1,0 +1,4 @@
+" System vimrc file for Vim on iOS
+
+set nocompatible
+imap \ <Esc>

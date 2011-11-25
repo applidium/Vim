@@ -43,25 +43,11 @@ enum blink_state {
 #pragma mark VImTextView
 
 @interface VImTextView : UIView {
-    UIView *   _inputAcccessoryView;
 }
-@property (nonatomic, retain) UIView * inputAccessoryView;
 @end
 
 @implementation VImTextView
-@synthesize inputAccessoryView = _inputAcccessoryView;
-- (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        UIButton * escButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
-        [escButton addTarget:self action:@selector(sendSpecialKey:) forControlEvents:UIControlEventTouchUpInside];
-        _inputAcccessoryView = [escButton retain];
-    }
-    return self;
-}
-
 - (void)dealloc {
-    [_inputAcccessoryView release];
     if (gui_ios.layer) {
         CGLayerRelease(gui_ios.layer);
         gui_ios.layer = NULL;
@@ -95,8 +81,6 @@ enum blink_state {
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
 @end
-
-
 
 #pragma mark -
 #pragma VImViewController
@@ -242,7 +226,9 @@ enum blink_state {
 }
 
 - (void)_VImMain {
-    vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"runtime"] UTF8String]);
+    NSString * vimPath = [[NSBundle mainBundle] resourcePath];
+    vim_setenv((char_u *)"VIM", (char_u *)[vimPath UTF8String]);
+    vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[vimPath stringByAppendingPathComponent:@"runtime"] UTF8String]);
 
     NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     if (paths.count > 0) {
