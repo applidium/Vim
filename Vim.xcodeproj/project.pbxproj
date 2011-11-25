@@ -62,7 +62,8 @@
 		7A71941914228FA500B62000 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941814228FA500B62000 /* UIKit.framework */; };
 		7A71941B14228FA500B62000 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941A14228FA500B62000 /* Foundation.framework */; };
 		7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941C14228FA500B62000 /* CoreGraphics.framework */; };
-		7A7B1FA7142FBE3100A537BD /* runtime in Resources */ = {isa = PBXBuildFile; fileRef = 7A7B1FA6142FBE2E00A537BD /* runtime */; };
+		7A8CAA27147FAC1600908FBE /* runtime in Resources */ = {isa = PBXBuildFile; fileRef = 7A7B1FA6142FBE2E00A537BD /* runtime */; };
+		7A8CAA28147FAC2E00908FBE /* vimrc in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA1D147FA3D100908FBE /* vimrc */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
 /* End PBXBuildFile section */
 
@@ -75,6 +76,7 @@
 		7A71941A14228FA500B62000 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7A71941C14228FA500B62000 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		7A7B1FA6142FBE2E00A537BD /* runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; path = runtime; sourceTree = SOURCE_ROOT; };
+		7A8CAA1D147FA3D100908FBE /* vimrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vimrc; sourceTree = "<group>"; };
 		7A992B5C1422932F00075221 /* arabic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arabic.c; sourceTree = "<group>"; };
 		7A992B5D1422932F00075221 /* arabic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arabic.h; sourceTree = "<group>"; };
 		7A992B5E1422932F00075221 /* ascii.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ascii.h; sourceTree = "<group>"; };
@@ -552,7 +554,6 @@
 		7A992DBF1422932F00075221 /* uninstal.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = uninstal.c; sourceTree = "<group>"; };
 		7A992DC01422932F00075221 /* version.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = version.c; sourceTree = "<group>"; };
 		7A992DC11422932F00075221 /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
-		7A992DC21422932F00075221 /* vim */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = vim; sourceTree = "<group>"; };
 		7A992DC31422932F00075221 /* vim.def */ = {isa = PBXFileReference; lastKnownFileType = text; path = vim.def; sourceTree = "<group>"; };
 		7A992DC41422932F00075221 /* vim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vim.h; sourceTree = "<group>"; };
 		7A992DC51422932F00075221 /* vim.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; path = vim.ico; sourceTree = "<group>"; };
@@ -672,8 +673,7 @@
 				7A7B1FA6142FBE2E00A537BD /* runtime */,
 				7A992B561422932F00075221 /* src */,
 			);
-			name = Vim;
-			path = VIm;
+			path = Vim;
 			sourceTree = "<group>";
 		};
 		7A992B561422932F00075221 /* src */ = {
@@ -847,7 +847,6 @@
 				7A992DBF1422932F00075221 /* uninstal.c */,
 				7A992DC01422932F00075221 /* version.c */,
 				7A992DC11422932F00075221 /* version.h */,
-				7A992DC21422932F00075221 /* vim */,
 				7A992DC31422932F00075221 /* vim.def */,
 				7A992DC41422932F00075221 /* vim.h */,
 				7A992DC51422932F00075221 /* vim.ico */,
@@ -1299,6 +1298,7 @@
 		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
 			isa = PBXGroup;
 			children = (
+				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
 			);
@@ -1321,7 +1321,7 @@
 			dependencies = (
 			);
 			name = Vim;
-			productName = VIm;
+			productName = Vim;
 			productReference = 7A71941414228FA500B62000 /* Vim.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -1333,7 +1333,7 @@
 			attributes = {
 				LastUpgradeCheck = 0420;
 			};
-			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */;
+			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -1355,7 +1355,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A7B1FA7142FBE3100A537BD /* runtime in Resources */,
+				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
+				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1503,7 +1504,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "VIm" */ = {
+		7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943814228FA500B62000 /* Debug */,
