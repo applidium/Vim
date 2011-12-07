@@ -3476,16 +3476,20 @@ list_version()
 #      if defined(MSWIN)
     MSG_PUTS(_("with GUI."));
 #      else
-#	if defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
+#   ifdef FEAT_GUI_IOS
+    MSG_PUTS(_("with iOS GUI."));
+#   else
+#	  if defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
     MSG_PUTS(_("with Carbon GUI."));
-#	else
-#	 if defined(TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
+#	  else
+#	   if defined(TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
     MSG_PUTS(_("with Cocoa GUI."));
-#	 else
-#	  if defined(MACOS)
+#	   else
+#	    if defined(MACOS)
     MSG_PUTS(_("with (classic) GUI."));
-#	  endif
-#	 endif
+#	    endif
+#	   endif
+#     endif
 #	endif
 #      endif
 #    endif
