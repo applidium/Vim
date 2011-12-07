@@ -16,21 +16,34 @@
 #import "vim.h"
 #import <UIKit/UIKit.h>
 
-#define DEBUG_IOS_DRAWING 0
+#define RGB(r,g,b)	((r) << 16) + ((g) << 8) + (b)
+#define ARRAY_LENGTH(a) (sizeof(a) / sizeof(a[0]))
+
+static int hex_digit(int c) {
+    if (VIM_ISDIGIT(c))
+        return c - '0';
+    c = TOLOWER_ASC(c);
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    return -1000;
+}
+
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
+CGColorRef CGColorCreateFromVimColor(guicolor_T color);
 @class VImViewController;
 @class VImTextView;
+
 struct {
     UIWindow * window;
     VImViewController * view_controller;
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
-    int         blink_state;
-    long        blink_wait;
-    long        blink_on;
-    long        blink_off;
-    NSTimer *   blink_timer;
+    int        blink_state;
+    long       blink_wait;
+    long       blink_on;
+    long       blink_off;
+    NSTimer *  blink_timer;
 } gui_ios;
 
 enum blink_state {
@@ -57,28 +70,22 @@ enum blink_state {
 
 - (void)drawRect:(CGRect)rect {
     if (gui_ios.layer != NULL) {
-#if DEBUG_IOS_DRAWING
-        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointMake(50.0f, 50.0f), gui_ios.layer);
-#else
         CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointZero, gui_ios.layer);
-#endif
     } else {
-#if DEBUG_IOS_DRAWING
-        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(600.0f, 600.0f), nil);
-#else
         gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
-#endif
     }
 }
 
 - (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
+    gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
+    gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
 }
 @end
 
@@ -87,74 +94,78 @@ enum blink_state {
 
 @interface VImViewController : UIViewController <UIKeyInput, UITextInputTraits> {
     VImTextView * _textView;
+    BOOL _hasBeenFlushedOnce;
 }
 - (void)flush;
 - (void)blinkCursorTimer:(NSTimer *)timer;
 @end
 
 @implementation VImViewController
-- (void)loadView {
-    self.view = [[[UIView alloc] init] autorelease];
-    self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    self.view.backgroundColor = [UIColor purpleColor];
 
-    _textView = [[VImTextView alloc] initWithFrame:CGRectZero];
+#pragma mark UIResponder
+- (BOOL)canBecomeFirstResponder {
+    return _hasBeenFlushedOnce;
+}
+
+- (BOOL)canResignFirstResponder {
+    return YES;
+}
+
+#pragma mark UIViewController
+- (void)loadView {
+    self.view = [[[UIView alloc] initWithFrame:CGRectZero] autorelease];
+    self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    
+    _textView = [[VImTextView alloc] initWithFrame:self.view.bounds];
     _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [self.view addSubview:_textView];
-    _textView.frame = self.view.bounds;
     [_textView release];
+
+    _hasBeenFlushedOnce = NO;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    UITapGestureRecognizer * tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(click:)];
+    [_textView addGestureRecognizer:tapGestureRecognizer];
+    [tapGestureRecognizer release];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWasShown:)
                                                  name:UIKeyboardDidShowNotification object:nil];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
-                                                 name:UIKeyboardWillHideNotification object:nil];}
+                                                 name:UIKeyboardWillHideNotification object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillChangeFrame:)
+                                                 name:UIKeyboardWillChangeFrameNotification object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidChangeFrame:)
+                                                 name:UIKeyboardDidChangeFrameNotification object:nil];
+}
+
+- (void)viewDidUnload {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidChangeFrameNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidShowNotification object:nil];
+
+    for (UIGestureRecognizer * gestureRecognizer in _textView.gestureRecognizers) {
+        [_textView removeGestureRecognizer:gestureRecognizer];
+    }
+
+    [super viewDidUnload];
+}
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
     return YES;
 }
 
-- (void)keyboardWasShown:(NSNotification *)notification {
-    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
-    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
-}
-
-- (void)keyboardWillBeHidden:(NSNotification *)notification {
-    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
-    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
-}
-
-
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    [self becomeFirstResponder];
-}
-
-- (void)flush {
-    [_textView setNeedsDisplay];
-}
-
-- (void)sendSpecialKey:(UIButton *)sender {
-    NSLog(@"Sending special key !");
-    char escapeString[] = {ESC, 0};
-    [self insertText:[NSString stringWithUTF8String:escapeString]];
-}
-
-
-- (BOOL)canBecomeFirstResponder {
-    return YES;
-}
-
-- (BOOL)canResignFirstResponder {
-    return NO;
-}
-
+#pragma mark UIKeyInput
 - (BOOL)hasText {
     return YES;
 }
@@ -169,12 +180,43 @@ enum blink_state {
     [self insertText:[NSString stringWithUTF8String:escapeString]];
 }
 
+#pragma mark UITextInputTraits
 - (UITextAutocapitalizationType)autocapitalizationType {
     return UITextAutocapitalizationTypeNone;
 }
 
 - (UIKeyboardType)keyboardType {
     return UIKeyboardTypeDefault;
+}
+
+#pragma mark VimViewController
+- (void)click:(id)sender {
+    [self becomeFirstResponder];
+}
+
+- (void)keyboardWasShown:(NSNotification *)notification {
+    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
+    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
+}
+
+- (void)keyboardWillBeHidden:(NSNotification *)notification {
+    CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
+    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
+}
+
+- (void)keyboardWillChangeFrame:(NSNotification *)notification {
+    NSLog(@"Will change frame");
+}
+
+- (void)keyboardDidChangeFrame:(NSNotification *)notification {
+    NSLog(@"Did change frame");
+}
+
+- (void)flush {
+    _hasBeenFlushedOnce = YES;
+    [_textView setNeedsDisplay];
 }
 
 - (void)blinkCursorTimer:(NSTimer *)timer {
@@ -220,7 +262,7 @@ enum blink_state {
 
 @implementation VImAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Per Apple's documentation : Performs the specified selector on the application’s main thread during that thread’s next run loop cycle. These methods give you the option of blocking the current thread until the selector is performed.
+    // Per Apple's documentation : Performs the specified selector on the application’s main thread during that thread’s next run loop cycle.
     [self performSelectorOnMainThread:@selector(_VImMain) withObject:nil waitUntilDone:NO];
     return YES;
 }
@@ -259,18 +301,17 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     CGContextClip(context);
     CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
     CGContextRestoreGState(context);
-    
-#if DEBUG_IOS_DRAWING
-    CGContextSaveGState(context);
-    CGContextSetLineWidth(context, 1.0f);
-    CGFloat line[2] = {2.0f, 1.0f};
-    CGContextSetLineDash(context, 0.0f, line, 2);
-    CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
-    CGContextStrokeRect(context, sourceRect);
-    CGContextSetStrokeColorWithColor(context, [UIColor redColor].CGColor);
-    CGContextStrokeRect(context, targetRect);
-    CGContextRestoreGState(context);
-#endif
+}
+
+CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    int red = (color & 0xFF0000) >> 16;
+    int green = (color & 0x00FF00) >> 8;
+    int blue = color & 0x0000FF;
+    CGFloat rgb[4] = {(float)red/0xFF, (float)green/0xFF, (float)blue/0xFF, 1.0f};
+    CGColorRef cgColor = CGColorCreate(colorSpace, rgb);
+    CGColorSpaceRelease(colorSpace);
+    return cgColor;
 }
 
 int main(int argc, char *argv[]) {
@@ -304,7 +345,7 @@ gui_mch_prepare(int *argc, char **argv)
     // delete it from the arg list.  Such arguments must be ignored in main.c
     // command_line_scan() or Vim will issue an error on startup when that
     // argument is used.
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -315,7 +356,7 @@ gui_mch_prepare(int *argc, char **argv)
     int
 gui_mch_init_check(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -327,7 +368,7 @@ gui_mch_init_check(void)
     int
 gui_mch_init(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
 
     gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
@@ -352,7 +393,7 @@ gui_mch_init(void)
     void
 gui_mch_exit(int rc)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -364,7 +405,7 @@ gui_mch_open(void)
 {
     [gui_ios.window makeKeyAndVisible];
     
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -393,7 +434,7 @@ gui_mch_update(void)
     // that Cmd-. sends SIGINT so it has higher success rate at interrupting
     // Vim than Ctrl-C.
 
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -404,7 +445,7 @@ gui_mch_flush(void)
     // This function is called way too often to be useful as a hint for
     // flushing.  If we were to flush every time it was called the screen would
     // flicker.
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGContextFlush(CGLayerGetContext(gui_ios.layer));
     [gui_ios.view_controller flush];
 }
@@ -422,14 +463,10 @@ gui_mch_flush(void)
     int
 gui_mch_wait_for_chars(int wtime)
 {
-    // NOTE! In all likelihood Vim will take a nap when waitForInput: is
-    // called, so force a flush of the command queue here.
-    printf("%s\n",__func__);  
-    printf("Waiting for %d\n", wtime);
-    [[NSRunLoop currentRunLoop] acceptInputForMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0]];
-    printf("Finished waiting\n");
-
-    return OK;
+    NSDate * expirationDate = wtime > 0 ? [NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0] : [NSDate distantFuture];
+    [[NSRunLoop currentRunLoop] acceptInputForMode:NSDefaultRunLoopMode beforeDate:expirationDate];
+    double delay = [expirationDate timeIntervalSinceNow];
+    return delay < 0 ? FAIL : OK;
 }
 
 
@@ -442,7 +479,7 @@ gui_mch_wait_for_chars(int wtime)
 void
 gui_mch_clear_all(void)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
@@ -458,13 +495,10 @@ gui_mch_clear_all(void)
     void
 gui_mch_clear_block(int row1, int col1, int row2, int col2)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
-#if DEBUG_IOS_DRAWING
-    CGContextSetFillColorWithColor(context, [UIColor purpleColor].CGColor);
-#endif
     CGContextFillRect(context, CGRectMake(FILL_X(col1),
                                           FILL_Y(row1),
                                           FILL_X(col2+1)-FILL_X(col1),
@@ -473,9 +507,10 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
 
 
 void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
-    printf("Draw flags = %d\n", flags);
-    printf("%s\n",__func__);
-    printf("Drawing \"%.*s\"\n", len, s);
+    if (s == NULL || len <= 0) {
+        return;
+    }
+
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
     //FIXME: Move this block somewhere else
@@ -493,8 +528,10 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
 
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
 
-
     NSString * string = [[NSString alloc] initWithBytes:s length:len encoding:NSUTF8StringEncoding];
+    if (string == nil) {
+        return;
+    }
     NSDictionary * attributes = [[NSDictionary alloc] initWithObjectsAndKeys:(id)gui.norm_font, (NSString *)kCTFontAttributeName,
                                  [NSNumber numberWithBool:YES], kCTForegroundColorFromContextAttributeName,
                                  nil];
@@ -514,7 +551,10 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
                                               FILL_Y(row+1)-FILL_Y(row)));
         CGContextRestoreGState(context);
     }
-    CFRelease(line);
+    if (line != NULL) {
+        CFRelease(line);
+    }
+    [attributedString release];
 }
 
 
@@ -525,7 +565,7 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
                                    FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
@@ -551,7 +591,7 @@ gui_mch_delete_lines(int row, int num_lines)
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
                                    FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
@@ -574,8 +614,10 @@ gui_mch_insert_lines(int row, int num_lines)
     void
 gui_mch_set_fg_color(guicolor_T color)
 {
-    printf("%s\n",__func__);
-    gui_ios.fg_color = color;
+    if (gui_ios.fg_color != NULL) {
+        CGColorRelease(gui_ios.fg_color);
+    }
+    gui_ios.fg_color = CGColorCreateFromVimColor(color);
 }
 
 
@@ -585,10 +627,11 @@ gui_mch_set_fg_color(guicolor_T color)
     void
 gui_mch_set_bg_color(guicolor_T color)
 {
-    printf("%s\n",__func__);  
-    gui_ios.bg_color = color;
+    if (gui_ios.bg_color != NULL) {
+        CGColorRelease(gui_ios.bg_color);
+    }
+    gui_ios.bg_color = CGColorCreateFromVimColor(color);
 }
-
 
 /*
  * Set the current text special color (used for underlines).
@@ -596,7 +639,7 @@ gui_mch_set_bg_color(guicolor_T color)
     void
 gui_mch_set_sp_color(guicolor_T color)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -617,7 +660,7 @@ void gui_mch_def_colors() {
     void
 gui_mch_new_colors(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 //    gui.def_back_pixel = gui.back_pixel;
 //    gui.def_norm_pixel = gui.norm_pixel;
 
@@ -629,7 +672,7 @@ gui_mch_new_colors(void)
     void
 gui_mch_invert_rectangle(int r, int c, int nr, int nc)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 // -- Menu ------------------------------------------------------------------
@@ -642,7 +685,7 @@ gui_mch_invert_rectangle(int r, int c, int nr, int nc)
    void
 gui_mch_add_menu(vimmenu_T *menu, int idx)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -652,7 +695,7 @@ gui_mch_add_menu(vimmenu_T *menu, int idx)
     void
 gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -662,7 +705,7 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
     void
 gui_mch_destroy_menu(vimmenu_T *menu)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -675,7 +718,7 @@ gui_mch_menu_grey(vimmenu_T *menu, int grey)
     /* Only update menu if the 'grey' state has changed to avoid having to pass
      * lots of unnecessary data to MacVim.  (Skipping this test makes MacVim
      * pause noticably on mode changes. */
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -685,7 +728,7 @@ gui_mch_menu_grey(vimmenu_T *menu, int grey)
     void
 gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -695,7 +738,7 @@ gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
     void
 gui_mch_show_popupmenu(vimmenu_T *menu)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -705,7 +748,7 @@ gui_mch_show_popupmenu(vimmenu_T *menu)
     void
 gui_make_popup(char_u *path_name, int mouse_pos)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -716,7 +759,7 @@ gui_make_popup(char_u *path_name, int mouse_pos)
 gui_mch_draw_menubar(void)
 {
     // The (main) menu draws itself in Mac OS X.
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -724,13 +767,13 @@ gui_mch_draw_menubar(void)
 gui_mch_enable_menu(int flag)
 {
     // The (main) menu is always enabled in Mac OS X.
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
     void
 gui_mch_set_menu_pos(int x, int y, int w, int h)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     
     /*
      * The menu is always at the top of the screen.
@@ -740,7 +783,7 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
     void
 gui_mch_show_toolbar(int showit)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -756,14 +799,14 @@ gui_mch_show_toolbar(int showit)
 gui_mch_free_font(font)
     GuiFont	font;
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     GuiFont
 gui_mch_retain_font(GuiFont font)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return font;
 }
 
@@ -774,7 +817,7 @@ gui_mch_retain_font(GuiFont font)
     GuiFont
 gui_mch_get_font(char_u *name, int giveErrorIfMissing)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 
     return NOFONT;
 }
@@ -799,7 +842,7 @@ gui_mch_get_fontname(GuiFont font, char_u *name)
  */
     int
 gui_mch_init_font(char_u *font_name, int fontset) {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
 
     NSString * normalizedFontName = @"Courier";
     CGFloat normalizedFontSize = 14.0f;
@@ -851,7 +894,7 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     void
 gui_mch_set_font(GuiFont font)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     // Font selection is done inside MacVim...nothing here to do.
 }
 
@@ -872,14 +915,14 @@ gui_mch_create_scrollbar(
 	scrollbar_T *sb,
 	int orient)	/* SBAR_VERT or SBAR_HORIZ */
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -888,7 +931,7 @@ gui_mch_enable_scrollbar(
 	scrollbar_T	*sb,
 	int		flag)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -900,7 +943,7 @@ gui_mch_set_scrollbar_pos(
 	int w,
 	int h)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -911,7 +954,7 @@ gui_mch_set_scrollbar_thumb(
 	long size,
 	long max)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -924,7 +967,7 @@ gui_mch_set_scrollbar_thumb(
     void
 gui_mch_draw_hollow_cursor(guicolor_T color)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     
     int w = 1;
     
@@ -934,7 +977,9 @@ gui_mch_draw_hollow_cursor(guicolor_T color)
 #endif
     
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
-    CGContextSetStrokeColorWithColor(context, color);
+    CGColorRef cgColor = CGColorCreateFromVimColor(color);
+    CGContextSetStrokeColorWithColor(context, cgColor);
+    CGColorRelease(cgColor);
 
     CGContextStrokeRect(context, CGRectMake(FILL_X(gui.col), FILL_Y(gui.row), w * gui.char_width, gui.char_height));
     [gui_ios.view_controller.view setNeedsDisplay];
@@ -947,7 +992,7 @@ gui_mch_draw_hollow_cursor(guicolor_T color)
     void
 gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     gui_mch_set_fg_color(color);
     
@@ -982,7 +1027,7 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
     void
 gui_mch_set_blinking(long wait, long on, long off)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     gui_ios.blink_wait = wait;
     gui_ios.blink_on   = on;
     gui_ios.blink_off  = off;
@@ -996,7 +1041,7 @@ gui_mch_set_blinking(long wait, long on, long off)
     void
 gui_mch_start_blink(void)
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     if (gui_ios.blink_timer != nil)
         [gui_ios.blink_timer invalidate];
     
@@ -1020,7 +1065,7 @@ gui_mch_start_blink(void)
     void
 gui_mch_stop_blink(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     [gui_ios.blink_timer invalidate];
     
 //    if (gui_ios.blink_state == BLINK_OFF)
@@ -1040,27 +1085,27 @@ gui_mch_stop_blink(void)
     void
 gui_mch_getmouse(int *x, int *y)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 gui_mch_setmouse(int x, int y)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 mch_set_mouse_shape(int shape)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
      void
 gui_mch_mousehide(int hide)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1069,25 +1114,25 @@ gui_mch_mousehide(int hide)
     void
 clip_mch_request_selection(VimClipboard *cbd)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
     void
 clip_mch_set_selection(VimClipboard *cbd)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
    void
 clip_mch_lose_selection(VimClipboard *cbd)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
     int
 clip_mch_own_selection(VimClipboard *cbd)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -1099,28 +1144,28 @@ clip_mch_own_selection(VimClipboard *cbd)
     void
 im_set_position(int row, int col)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 im_set_control(int enable)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 im_set_active(int active)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     int
 im_get_status(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 #endif // defined(USE_IM_CONTROL)
@@ -1210,36 +1255,141 @@ gui_mch_flash(int msec)
 }
 
 
-    guicolor_T
+guicolor_T
 gui_mch_get_color(char_u *name)
 {
-    printf("%s\n",__func__);  
- 
-    static NSDictionary * sColorTable = nil;
-    if (sColorTable == nil) {
-        sColorTable = [[NSMutableDictionary alloc] init];
-
-        char_u * rgbFilePath = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
-        if (rgbFilePath == NULL) {
+    int i;
+    int r, g, b;
+    
+    
+    typedef struct GuiColourTable
+    {
+        char	    *name;
+        guicolor_T     colour;
+    } GuiColourTable;
+    
+    static GuiColourTable table[] =
+    {
+        {"Black",       RGB(0x00, 0x00, 0x00)},
+        {"DarkGray",    RGB(0xA9, 0xA9, 0xA9)},
+        {"DarkGrey",    RGB(0xA9, 0xA9, 0xA9)},
+        {"Gray",        RGB(0xC0, 0xC0, 0xC0)},
+        {"Grey",        RGB(0xC0, 0xC0, 0xC0)},
+        {"LightGray",   RGB(0xD3, 0xD3, 0xD3)},
+        {"LightGrey",   RGB(0xD3, 0xD3, 0xD3)},
+        {"Gray10",      RGB(0x1A, 0x1A, 0x1A)},
+        {"Grey10",      RGB(0x1A, 0x1A, 0x1A)},
+        {"Gray20",      RGB(0x33, 0x33, 0x33)},
+        {"Grey20",      RGB(0x33, 0x33, 0x33)},
+        {"Gray30",      RGB(0x4D, 0x4D, 0x4D)},
+        {"Grey30",      RGB(0x4D, 0x4D, 0x4D)},
+        {"Gray40",      RGB(0x66, 0x66, 0x66)},
+        {"Grey40",      RGB(0x66, 0x66, 0x66)},
+        {"Gray50",      RGB(0x7F, 0x7F, 0x7F)},
+        {"Grey50",      RGB(0x7F, 0x7F, 0x7F)},
+        {"Gray60",      RGB(0x99, 0x99, 0x99)},
+        {"Grey60",      RGB(0x99, 0x99, 0x99)},
+        {"Gray70",      RGB(0xB3, 0xB3, 0xB3)},
+        {"Grey70",      RGB(0xB3, 0xB3, 0xB3)},
+        {"Gray80",      RGB(0xCC, 0xCC, 0xCC)},
+        {"Grey80",      RGB(0xCC, 0xCC, 0xCC)},
+        {"Gray90",      RGB(0xE5, 0xE5, 0xE5)},
+        {"Grey90",      RGB(0xE5, 0xE5, 0xE5)},
+        {"White",       RGB(0xFF, 0xFF, 0xFF)},
+        {"DarkRed",     RGB(0x80, 0x00, 0x00)},
+        {"Red",         RGB(0xFF, 0x00, 0x00)},
+        {"LightRed",    RGB(0xFF, 0xA0, 0xA0)},
+        {"DarkBlue",    RGB(0x00, 0x00, 0x80)},
+        {"Blue",        RGB(0x00, 0x00, 0xFF)},
+        {"LightBlue",   RGB(0xAD, 0xD8, 0xE6)},
+        {"DarkGreen",   RGB(0x00, 0x80, 0x00)},
+        {"Green",       RGB(0x00, 0xFF, 0x00)},
+        {"LightGreen",  RGB(0x90, 0xEE, 0x90)},
+        {"DarkCyan",    RGB(0x00, 0x80, 0x80)},
+        {"Cyan",        RGB(0x00, 0xFF, 0xFF)},
+        {"LightCyan",   RGB(0xE0, 0xFF, 0xFF)},
+        {"DarkMagenta", RGB(0x80, 0x00, 0x80)},
+        {"Magenta",	    RGB(0xFF, 0x00, 0xFF)},
+        {"LightMagenta",RGB(0xFF, 0xA0, 0xFF)},
+        {"Brown",       RGB(0x80, 0x40, 0x40)},
+        {"Yellow",      RGB(0xFF, 0xFF, 0x00)},
+        {"LightYellow", RGB(0xFF, 0xFF, 0xE0)},
+        {"SeaGreen",    RGB(0x2E, 0x8B, 0x57)},
+        {"Orange",      RGB(0xFF, 0xA5, 0x00)},
+        {"Purple",      RGB(0xA0, 0x20, 0xF0)},
+        {"SlateBlue",   RGB(0x6A, 0x5A, 0xCD)},
+        {"Violet",      RGB(0xEE, 0x82, 0xEE)},
+    };
+    
+    /* is name #rrggbb format? */
+    if (name[0] == '#' && STRLEN(name) == 7)
+    {
+        r = hex_digit(name[1]) * 16 + hex_digit(name[2]);
+        g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
+        b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
+        if (r < 0 || g < 0 || b < 0)
             return INVALCOLOR;
-        }
-        NSString* rgbFileContent = [NSString stringWithContentsOfFile:[NSString stringWithUTF8String:(const char *)rgbFilePath]
-                                                             encoding:NSUTF8StringEncoding
-                                                                error:nil];
-        vim_free(rgbFilePath);
+        return RGB(r, g, b);
+    }
+    
+    for (i = 0; i < ARRAY_LENGTH(table); i++)
+    {
+        if (STRICMP(name, table[i].name) == 0)
+            return table[i].colour;
+    }
+    
+    /*
+     * Last attempt. Look in the file "$VIMRUNTIME/rgb.txt".
+     */
+    {
+#define LINE_LEN 100
+        FILE	*fd;
+        char	line[LINE_LEN];
+        char_u	*fname;
         
-        for (NSString * colorLine in [rgbFileContent componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]]) {
-            int pos = 0;
-            int red = 0, green = 0, blue = 0;
-            if (sscanf([colorLine UTF8String], "%d %d %d %n", &red, &green, &blue, &pos) == 3) {
-                const char * colorName = [colorLine UTF8String] + pos;
-                [(NSMutableDictionary *)sColorTable setObject:(id)([UIColor colorWithRed:(CGFloat)red/255.0f green:(CGFloat)green/255.0f blue:(CGFloat)blue/255.0f alpha:1.0f].CGColor)
-                                                       forKey:[[NSString stringWithUTF8String:colorName] lowercaseString]];
+        fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
+        if (fname == NULL)
+            return INVALCOLOR;
+        
+        fd = fopen((char *)fname, "rt");
+        vim_free(fname);
+        if (fd == NULL)
+            return INVALCOLOR;
+        
+        while (!feof(fd))
+        {
+            int	    len;
+            int	    pos;
+            char    *color;
+            
+            fgets(line, LINE_LEN, fd);
+            len = STRLEN(line);
+            
+            if (len <= 1 || line[len-1] != '\n')
+                continue;
+            
+            line[len-1] = '\0';
+            
+            i = sscanf(line, "%d %d %d %n", &r, &g, &b, &pos);
+            if (i != 3)
+                continue;
+            
+            color = line + pos;
+            
+            if (STRICMP(color, name) == 0)
+            {
+                fclose(fd);
+                return (guicolor_T)RGB(r, g, b);
             }
         }
+        
+        fclose(fd);
     }
-    return [sColorTable objectForKey:[[NSString stringWithUTF8String:(const char *)name] lowercaseString]];
+    
+    
+    return INVALCOLOR;
 }
+
 
 
 /*
