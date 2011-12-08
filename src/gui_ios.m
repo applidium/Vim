@@ -30,12 +30,12 @@ static int hex_digit(int c) {
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
 CGColorRef CGColorCreateFromVimColor(guicolor_T color);
-@class VImViewController;
-@class VImTextView;
+@class VimViewController;
+@class VimTextView;
 
 struct {
     UIWindow * window;
-    VImViewController * view_controller;
+    VimViewController * view_controller;
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
@@ -53,13 +53,14 @@ enum blink_state {
 };
 
 #pragma mark -
-#pragma mark VImTextView
+#pragma mark VimTextView
 
-@interface VImTextView : UIView {
+@interface VimTextView : UIView {
 }
+- (void)resizeShell;
 @end
 
-@implementation VImTextView
+@implementation VimTextView
 - (void)dealloc {
     if (gui_ios.layer) {
         CGLayerRelease(gui_ios.layer);
@@ -78,33 +79,38 @@ enum blink_state {
 
 - (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
-    gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
-    gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
+    [self resizeShell];
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
+    [self resizeShell];
+}
+
+- (void)resizeShell {
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
     gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
 }
 @end
 
 #pragma mark -
-#pragma VImViewController
+#pragma VimViewController
 
-@interface VImViewController : UIViewController <UIKeyInput, UITextInputTraits> {
-    VImTextView * _textView;
+@interface VimViewController : UIViewController <UIKeyInput, UITextInputTraits> {
+    VimTextView * _textView;
     BOOL _hasBeenFlushedOnce;
 }
+- (void)resizeShell;
 - (void)flush;
 - (void)blinkCursorTimer:(NSTimer *)timer;
 @end
 
-@implementation VImViewController
+@implementation VimViewController
 
 #pragma mark UIResponder
 - (BOOL)canBecomeFirstResponder {
     return _hasBeenFlushedOnce;
+//    return YES;
 }
 
 - (BOOL)canResignFirstResponder {
@@ -116,7 +122,7 @@ enum blink_state {
     self.view = [[[UIView alloc] initWithFrame:CGRectZero] autorelease];
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     
-    _textView = [[VImTextView alloc] initWithFrame:self.view.bounds];
+    _textView = [[VimTextView alloc] initWithFrame:self.view.bounds];
     _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [self.view addSubview:_textView];
     [_textView release];
@@ -214,6 +220,10 @@ enum blink_state {
     NSLog(@"Did change frame");
 }
 
+- (void)resizeShell {
+    [_textView resizeShell];
+}
+
 - (void)flush {
     _hasBeenFlushedOnce = YES;
     [_textView setNeedsDisplay];
@@ -254,20 +264,26 @@ enum blink_state {
 
 
 #pragma mark -
-#pragma mark VImAppDelegate
+#pragma mark VimAppDelegate
 
-@interface VImAppDelegate : NSObject <UIApplicationDelegate> {
+@interface VimAppDelegate : NSObject <UIApplicationDelegate> {
 }
 @end
 
-@implementation VImAppDelegate
+@implementation VimAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Per Apple's documentation : Performs the specified selector on the application’s main thread during that thread’s next run loop cycle.
-    [self performSelectorOnMainThread:@selector(_VImMain) withObject:nil waitUntilDone:NO];
+    // Per Apple's documentation : Performs the specified selector on the application's main thread during that thread's next run loop cycle.
+    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    gui_ios.view_controller = [[VimViewController alloc] init];
+    gui_ios.window.rootViewController = gui_ios.view_controller;
+    [gui_ios.view_controller release];
+    [gui_ios.window makeKeyAndVisible];
+
+    [self performSelectorOnMainThread:@selector(_VimMain) withObject:nil waitUntilDone:NO];
     return YES;
 }
 
-- (void)_VImMain {
+- (void)_VimMain {
     NSString * vimPath = [[NSBundle mainBundle] resourcePath];
     vim_setenv((char_u *)"VIM", (char_u *)[vimPath UTF8String]);
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[vimPath stringByAppendingPathComponent:@"runtime"] UTF8String]);
@@ -316,7 +332,7 @@ CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
 
 int main(int argc, char *argv[]) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    int retVal = UIApplicationMain(argc, argv, nil, @"VImAppDelegate");
+    int retVal = UIApplicationMain(argc, argv, nil, @"VimAppDelegate");
     [pool release];
     return retVal;
 }
@@ -324,7 +340,7 @@ int main(int argc, char *argv[]) {
 
 
 #pragma mark -
-#pragma mark VIm C functions
+#pragma mark Vim C functions
 
 /*
  * Parse the GUI related command-line arguments.  Any arguments used are
@@ -370,12 +386,6 @@ gui_mch_init(void)
 {
 //    printf("%s\n",__func__);  
     set_option_value((char_u *)"termencoding", 0L, (char_u *)"utf-8", 0);
-
-    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    gui_ios.view_controller = [[VImViewController alloc] init];
-    gui_ios.window.rootViewController = gui_ios.view_controller;
-    gui_ios.window.backgroundColor = [UIColor purpleColor];
-    [gui_ios.view_controller release];
     
     gui_mch_def_colors();
     
@@ -403,7 +413,8 @@ gui_mch_exit(int rc)
     int
 gui_mch_open(void)
 {
-    [gui_ios.window makeKeyAndVisible];
+    [gui_ios.view_controller resizeShell];
+//    [gui_ios.window makeKeyAndVisible];
     
 //    printf("%s\n",__func__);  
     return OK;
