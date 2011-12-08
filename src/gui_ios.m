@@ -1009,7 +1009,7 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
     
     rect = CGRectMake(left, FILL_Y(gui.row), w, h);
     
-    CGContextSetFillColorWithColor(context, color);
+    CGContextSetFillColorWithColor(context, gui_ios.fg_color);
     CGContextFillRect(context, CGRectMake(left, FILL_Y(gui.row), (CGFloat)w, (CGFloat)h));
     [gui_ios.view_controller.view setNeedsDisplay];
 }
