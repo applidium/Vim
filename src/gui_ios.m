@@ -1422,17 +1422,18 @@ gui_mch_get_rgb(guicolor_T pixel)
 
 /*
  * Get the screen dimensions.
- * Allow 10 pixels for horizontal borders, 40 for vertical borders.
- * Is there no way to find out how wide the borders really are?
- * TODO: Add live udate of those value on suspend/resume.
+ * Understandably, Vim doesn't quite like it when the screen size changes
+ * But on the iOS the screen is rotated quite often. So let's just pretend
+ * that the screen is actually square, and large enough to contain the
+ * actual screen in both portrait and landscape orientations.
  */
     void
 gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 {
-    printf("%s\n",__func__);
     CGSize appSize = [[UIScreen mainScreen] applicationFrame].size;
-    *screen_w = appSize.width;
-    *screen_h = appSize.height;
+    int largest_dimension = MAX((int)appSize.width, (int)appSize.height);
+    *screen_w = largest_dimension;
+    *screen_h = largest_dimension;
 }
 
 
