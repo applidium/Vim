@@ -506,9 +506,8 @@ gui_mch_clear_all(void)
     void
 gui_mch_clear_block(int row1, int col1, int row2, int col2)
 {
-//    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
-    
+    gui_mch_set_bg_color(gui.back_pixel);
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGContextFillRect(context, CGRectMake(FILL_X(col1),
                                           FILL_Y(row1),
