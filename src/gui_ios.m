@@ -83,8 +83,8 @@ enum blink_state {
 }
 
 - (void)resizeShell {
+//    NSLog(@"Setting shell size to %d x %d", (int)self.bounds.size.width, (int)self.bounds.size.height);
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
-    gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
 }
 @end
 
