@@ -195,16 +195,28 @@ enum blink_state {
 }
 
 #pragma mark VimViewController
-- (void)click:(UIGestureRecognizer *)sender {
+- (void)click:(UITapGestureRecognizer *)sender {
     [self becomeFirstResponder];
     CGPoint clickLocation = [sender locationInView:sender.view];
     gui_send_mouse_event(MOUSE_LEFT, clickLocation.x, clickLocation.y, 1, 0);
 }
 
-- (void)pan:(UIGestureRecognizer *)sender {
-    [self becomeFirstResponder];
+- (void)pan:(UIPanGestureRecognizer *)sender {
     CGPoint clickLocation = [sender locationInView:sender.view];
-    gui_send_mouse_event(MOUSE_DRAG, clickLocation.x, clickLocation.y, 1, 0);
+    
+    int event = MOUSE_DRAG;
+    switch (sender.state) {
+        case UIGestureRecognizerStateBegan:
+            event = MOUSE_LEFT;
+            break;
+        case UIGestureRecognizerStateEnded:
+            event = MOUSE_RELEASE;
+            break;
+        default:
+            event = MOUSE_DRAG;
+            break;
+    }
+    gui_send_mouse_event(event, clickLocation.x, clickLocation.y, 1, 0);
 }
 
 - (void)keyboardWasShown:(NSNotification *)notification {
