@@ -49,5 +49,7 @@
 	</array>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleBlackOpaque</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>
