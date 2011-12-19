@@ -476,6 +476,7 @@ gui_mch_wait_for_chars(int wtime)
 {
     NSDate * expirationDate = wtime > 0 ? [NSDate dateWithTimeIntervalSinceNow:((NSTimeInterval)wtime)/1000.0] : [NSDate distantFuture];
     [[NSRunLoop currentRunLoop] acceptInputForMode:NSDefaultRunLoopMode beforeDate:expirationDate];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01f]]; // This is a workaround. Without this, you cannot split the UIKeyboard
     double delay = [expirationDate timeIntervalSinceNow];
     return delay < 0 ? FAIL : OK;
 }
