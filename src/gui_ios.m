@@ -132,6 +132,10 @@ enum blink_state {
     [_textView addGestureRecognizer:tapGestureRecognizer];
     [tapGestureRecognizer release];
 
+    UIPanGestureRecognizer * panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
+    [_textView addGestureRecognizer:panGestureRecognizer];
+    [panGestureRecognizer release];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWasShown:)
                                                  name:UIKeyboardDidShowNotification object:nil];
@@ -191,8 +195,16 @@ enum blink_state {
 }
 
 #pragma mark VimViewController
-- (void)click:(id)sender {
+- (void)click:(UIGestureRecognizer *)sender {
     [self becomeFirstResponder];
+    CGPoint clickLocation = [sender locationInView:sender.view];
+    gui_send_mouse_event(MOUSE_LEFT, clickLocation.x, clickLocation.y, 1, 0);
+}
+
+- (void)pan:(UIGestureRecognizer *)sender {
+    [self becomeFirstResponder];
+    CGPoint clickLocation = [sender locationInView:sender.view];
+    gui_send_mouse_event(MOUSE_DRAG, clickLocation.x, clickLocation.y, 1, 0);
 }
 
 - (void)keyboardWasShown:(NSNotification *)notification {
