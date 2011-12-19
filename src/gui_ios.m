@@ -77,11 +77,6 @@ enum blink_state {
     }
 }
 
-- (void)setFrame:(CGRect)frame {
-    [super setFrame:frame];
-    [self resizeShell];
-}
-
 - (void)layoutSubviews {
     [super layoutSubviews];
     [self resizeShell];
