@@ -9,6 +9,7 @@
 #define HAVE_OPENDIR 1
 #define MACOS_X_UNIX 1
 #define ALWAYS_USE_GUI 1
+#define FEAT_GUI_SCROLL_WHEEL_FORCE 1
 
 #ifndef __IPHONE_3_0
 #warning "This project uses features only available in iPhone SDK 3.0 and later."
