@@ -133,8 +133,16 @@ enum blink_state {
     [tapGestureRecognizer release];
 
     UIPanGestureRecognizer * panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
+    panGestureRecognizer.minimumNumberOfTouches = 1;
+    panGestureRecognizer.maximumNumberOfTouches = 1;
     [_textView addGestureRecognizer:panGestureRecognizer];
     [panGestureRecognizer release];
+
+    UIPanGestureRecognizer * scrollGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scroll:)];
+    scrollGestureRecognizer.minimumNumberOfTouches = 2;
+    scrollGestureRecognizer.maximumNumberOfTouches = 2;
+    [_textView addGestureRecognizer:scrollGestureRecognizer];
+    [scrollGestureRecognizer release];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWasShown:)
@@ -217,6 +225,36 @@ enum blink_state {
             break;
     }
     gui_send_mouse_event(event, clickLocation.x, clickLocation.y, 1, 0);
+}
+
+- (void)scroll:(UIPanGestureRecognizer *)sender {
+    CGPoint clickLocation = [sender locationInView:sender.view];
+    CGPoint translation = [sender translationInView:sender.view];
+    static int totalScrollX = 0;
+    static int totalScrollY = 0;
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        totalScrollX = 0;
+        totalScrollY = 0;
+    }
+    int targetScrollX = translation.x / gui.char_width;
+    int targetScrollY = translation.y / gui.char_height;
+
+    while (targetScrollX < totalScrollX) {
+        gui_send_mouse_event(MOUSE_6, clickLocation.x, clickLocation.y, 0, 0);
+        totalScrollX--;
+    }
+    while (targetScrollX > totalScrollX) {
+        gui_send_mouse_event(MOUSE_7, clickLocation.x, clickLocation.y, 0, 0);
+        totalScrollX++;
+    }
+    while (targetScrollY < totalScrollY) {
+        gui_send_mouse_event(MOUSE_5, clickLocation.x, clickLocation.y, 0, 0);
+        totalScrollY--;
+    }
+    while (targetScrollY > totalScrollY) {
+        gui_send_mouse_event(MOUSE_4, clickLocation.x, clickLocation.y, 0, 0);
+        totalScrollY++;
+    }
 }
 
 - (void)keyboardWasShown:(NSNotification *)notification {
@@ -413,6 +451,10 @@ gui_mch_init(void)
     gui_check_colors();
     gui.def_norm_pixel = gui.norm_pixel;
     gui.def_back_pixel = gui.back_pixel;
+
+#ifdef FEAT_GUI_SCROLL_WHEEL_FORCE
+    gui.scroll_wheel_force = 1;
+#endif
 
     return OK;
 }
