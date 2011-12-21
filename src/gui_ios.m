@@ -151,19 +151,9 @@ enum blink_state {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
                                                  name:UIKeyboardWillHideNotification object:nil];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillChangeFrame:)
-                                                 name:UIKeyboardWillChangeFrameNotification object:nil];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardDidChangeFrame:)
-                                                 name:UIKeyboardDidChangeFrameNotification object:nil];
 }
 
 - (void)viewDidUnload {
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidChangeFrameNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidShowNotification object:nil];
 
@@ -267,14 +257,6 @@ enum blink_state {
     CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
     _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
-}
-
-- (void)keyboardWillChangeFrame:(NSNotification *)notification {
-    NSLog(@"Will change frame");
-}
-
-- (void)keyboardDidChangeFrame:(NSNotification *)notification {
-    NSLog(@"Did change frame");
 }
 
 - (void)resizeShell {
@@ -928,17 +910,16 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     CGRect boundingRect = CGRectZero;
     CGGlyph glyph = CTFontGetGlyphWithName(rawFont, (CFStringRef)@"0");
     CTFontGetBoundingRectsForGlyphs(rawFont, kCTFontHorizontalOrientation, &glyph, &boundingRect, 1);
-    
-    
-    NSLog(@"Font bounding box for character 0 : %@", NSStringFromCGRect(boundingRect));
-    NSLog(@"Ascent = %.2f", CTFontGetAscent(rawFont));
-    NSLog(@"Computed height = %.2f", CTFontGetAscent(rawFont) + CTFontGetDescent(rawFont));
-    NSLog(@"Leading = %.2f", CTFontGetLeading(rawFont));
+
+//    NSLog(@"Font bounding box for character 0 : %@", NSStringFromCGRect(boundingRect));
+//    NSLog(@"Ascent = %.2f", CTFontGetAscent(rawFont));
+//    NSLog(@"Computed height = %.2f", CTFontGetAscent(rawFont) + CTFontGetDescent(rawFont));
+//    NSLog(@"Leading = %.2f", CTFontGetLeading(rawFont));
     
     CGSize advances = CGSizeZero;
     
     CTFontGetAdvancesForGlyphs(rawFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
-    NSLog(@"Advances = %@", NSStringFromCGSize(advances));
+//    NSLog(@"Advances = %@", NSStringFromCGSize(advances));
 
     gui.char_ascent = CTFontGetAscent(rawFont);
     gui.char_width = boundingRect.size.width;
@@ -1039,8 +1020,6 @@ gui_mch_set_scrollbar_thumb(
     void
 gui_mch_draw_hollow_cursor(guicolor_T color)
 {
-//    printf("%s\n",__func__);  
-    
     int w = 1;
     
 #ifdef FEAT_MBYTE
@@ -1064,7 +1043,6 @@ gui_mch_draw_hollow_cursor(guicolor_T color)
     void
 gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 {
-//    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     gui_mch_set_fg_color(color);
     
@@ -1256,7 +1234,7 @@ im_get_status(void)
     int
 gui_mch_adjust_charheight(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -1264,7 +1242,7 @@ gui_mch_adjust_charheight(void)
     void
 gui_mch_beep(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1297,7 +1275,7 @@ gui_mch_browse(
     char_u *initdir,
     char_u *filter)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return NULL;    
 }
 #endif /* FEAT_BROWSE */
@@ -1314,7 +1292,7 @@ gui_mch_dialog(
     char_u	*textfield,
     int         ex_cmd)     // UNUSED
 {
-    printf("%s\n",__func__);
+//    printf("%s\n",__func__);
     return OK;
 }
 
@@ -1322,7 +1300,7 @@ gui_mch_dialog(
     void
 gui_mch_flash(int msec)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     
 }
 
@@ -1470,7 +1448,7 @@ gui_mch_get_color(char_u *name)
     long_u
 gui_mch_get_rgb(guicolor_T pixel)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     
     // This is only implemented so that vim can guess the correct value for
     // 'background' (which otherwise defaults to 'dark'); it is not used for
@@ -1504,7 +1482,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
     int
 gui_mch_haskey(char_u *name)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -1515,7 +1493,7 @@ gui_mch_haskey(char_u *name)
     void
 gui_mch_iconify(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     
 }
 
@@ -1527,7 +1505,7 @@ gui_mch_iconify(void)
     void
 gui_mch_set_foreground(void)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 #endif
 
@@ -1556,7 +1534,7 @@ gui_mch_set_shellsize(
     void
 gui_mch_set_winpos(int x, int y)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1566,7 +1544,7 @@ gui_mch_set_winpos(int x, int y)
     int
 gui_mch_get_winpos(int *x, int *y)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
     return OK;
 }
 
@@ -1574,7 +1552,7 @@ gui_mch_get_winpos(int *x, int *y)
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1586,7 +1564,7 @@ gui_mch_set_text_area_pos(int x, int y, int w, int h)
     void
 gui_mch_settitle(char_u *title, char_u *icon)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 #endif
 
@@ -1594,7 +1572,7 @@ gui_mch_settitle(char_u *title, char_u *icon)
     void
 gui_mch_toggle_tearoffs(int enable)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1602,21 +1580,21 @@ gui_mch_toggle_tearoffs(int enable)
     void
 gui_mch_enter_fullscreen(int fuoptions_flags, guicolor_T bg)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 gui_mch_leave_fullscreen()
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
     void
 gui_mch_fuopt_update()
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 
@@ -1627,20 +1605,20 @@ gui_mch_fuopt_update()
     void
 gui_mch_drawsign(int row, int col, int typenr)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
     void *
 gui_mch_register_sign(char_u *signfile)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
    return NULL;
 }
 
     void
 gui_mch_destroy_sign(void *sign)
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 #endif // FEAT_SIGN_ICONS
@@ -1658,7 +1636,7 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
     void	(*mesgCB)__ARGS((BalloonEval *, int));
     void	*clientData;
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 
     return NULL;
 }
@@ -1667,14 +1645,14 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
 gui_mch_enable_beval_area(beval)
     BalloonEval	*beval;
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
     void
 gui_mch_disable_beval_area(beval)
     BalloonEval	*beval;
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 /*
@@ -1685,7 +1663,7 @@ gui_mch_post_balloon(beval, mesg)
     BalloonEval	*beval;
     char_u	*mesg;
 {
-    printf("%s\n",__func__);  
+//    printf("%s\n",__func__);  
 }
 
 #endif // FEAT_BEVAL
