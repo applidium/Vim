@@ -330,6 +330,7 @@ enum blink_state {
     NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     if (paths.count > 0) {
         vim_setenv((char_u *)"HOME", (char_u *)[[paths objectAtIndex:0] UTF8String]);
+        [[NSFileManager defaultManager] changeCurrentDirectoryPath:[paths objectAtIndex:0]];
     }
 
     char * argv[] = { "vim" };
