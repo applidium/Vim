@@ -568,10 +568,9 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
 
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
 
-    //FIXME: Move this block somewhere else
-    CGContextSetShouldAntialias(context, NO);
-    CGContextSetAllowsAntialiasing(context, NO);
-    CGContextSetShouldSmoothFonts(context, NO);
+    CGContextSetShouldAntialias(context, p_antialias);
+    CGContextSetAllowsAntialiasing(context, p_antialias);
+    CGContextSetShouldSmoothFonts(context, p_antialias);
 
     CGContextSetCharacterSpacing(context, 0.0f);
     CGContextSetTextDrawingMode(context, kCGTextFill); 
