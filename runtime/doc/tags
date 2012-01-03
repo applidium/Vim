@@ -6583,6 +6583,9 @@ i<	motion.txt	/*i<*
 i>	motion.txt	/*i>*
 iB	motion.txt	/*iB*
 iBus	gui.txt	/*iBus*
+iOS	os_ios.txt	/*iOS*
+iPad	os_ios.txt	/*iPad*
+iPhone	os_ios.txt	/*iPhone*
 iW	motion.txt	/*iW*
 i[	motion.txt	/*i[*
 i]	motion.txt	/*i]*
@@ -6780,6 +6783,10 @@ intro	intro.txt	/*intro*
 intro.txt	intro.txt	/*intro.txt*
 inverse	syntax.txt	/*inverse*
 invert()	eval.txt	/*invert()*
+ios	os_ios.txt	/*ios*
+ios-general	os_ios.txt	/*ios-general*
+ios-itunes	os_ios.txt	/*ios-itunes*
+ios-ui	os_ios.txt	/*ios-ui*
 ip	motion.txt	/*ip*
 iquote	motion.txt	/*iquote*
 is	motion.txt	/*is*
@@ -7506,6 +7513,7 @@ os_390.txt	os_390.txt	/*os_390.txt*
 os_amiga.txt	os_amiga.txt	/*os_amiga.txt*
 os_beos.txt	os_beos.txt	/*os_beos.txt*
 os_dos.txt	os_dos.txt	/*os_dos.txt*
+os_ios.txt	os_ios.txt	/*os_ios.txt*
 os_mac.txt	os_mac.txt	/*os_mac.txt*
 os_mint.txt	os_mint.txt	/*os_mint.txt*
 os_msdos.txt	os_msdos.txt	/*os_msdos.txt*
