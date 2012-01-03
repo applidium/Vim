@@ -1,0 +1,51 @@
+*os_ios.txt*    For Vim version 7.3.  Last change: 2012 Jan 03
+
+		  VIM REFERENCE MANUAL    by Applidium
+
+					*ios* *iOS* *iPhone* *iPad*
+
+This file documents the particularities of the iOS version of Vim.
+
+NOTE: The virtual keyboard on iOS doesn't have an Esc key. The Esc key has
+been mapped to the backslash key. You can customize this to fit your taste.
+
+1. General                      |ios-general|
+2. User interface               |ios-ui|
+2. iTunes files sharing         |ios-itunes|
+
+Vim on the iOS has been made possible by Applidium, http://applidium.com
+
+==============================================================================
+1. General	               				*ios-general*
+
+Vim on iOS behaves much like other unix versions, but some restrictions apply:
+ - Vim is running in a sandbox. You can only edit files within the $HOME
+   directory. Other files are accessible read-only.
+ - Unfortunately, Vim cannot start (nor ship with) any external binary. This
+   is a limitation of the iOS SDK, and cannot be worked around.
+
+==============================================================================
+2. User interface	        			*ios-ui*
+
+The iOS virtual keyboard lacks many keys (Esc, Control, Meta, Alt to name a
+few). Some people make the decision to add an extra row of keys, but we
+decided that Vim was flexible enough to work with only the system keyboard.
+This leaves more screen real-estate for the actual text.
+
+Unfortunately, without an escape key it's not possible to leave insert mode.
+That's why by default the backslash key ('\') is mapped to the 'Esc' key.
+You're free to overwrite this setting by unmapping the backslash key.
+
+Mouse events are also fully supported. Clicking and panning with a single
+finger will generate click and drag events. Panning with two fingers will
+generate scrollwheel events (horizontal and vertical).
+
+==============================================================================
+3. iTunes file sharing	        			*ios-itunes*
+
+Getting files in or out of Vim is currently possible thanks to iTunes. Using a
+simple drag'n'drop gesture, you can add (or remove) files from your $HOME
+directory straight from iTunes. Just navigate to your iOS device, go in the
+'Apps' tab, and select 'Vim' at the bottom of the window.
+
+ vim:tw=78:ts=8:ft=help:norl:
