@@ -1,7 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4 ft=objc:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
- *				MacVim GUI port by Bjorn Winckler
+ *				   iOS port by Romain Goyet
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -10,7 +10,7 @@
 /*
  * gui_ios.m
  *
- * Hooks for the Vim gui code.  Mainly passes control on to MMBackend.
+ * Support for the iOS GUI. Most of the iOS code resides in this file.
  */
 
 #import "vim.h"
@@ -391,17 +391,6 @@ int main(int argc, char *argv[]) {
     void
 gui_mch_prepare(int *argc, char **argv)
 {
-    // NOTE! Vim expects this method to remove args that it handles from the
-    // arg list but if the process then forks then these arguments will not
-    // reach the child process due to the way forking is handled on Mac OS X.
-    //
-    // Thus, only delete arguments that imply that no forking is done.
-    //
-    // If you add an argument that does not imply no forking, then do not
-    // delete it from the arg list.  Such arguments must be ignored in main.c
-    // command_line_scan() or Vim will issue an error on startup when that
-    // argument is used.
-//    printf("%s\n",__func__);  
 }
 
 
@@ -769,10 +758,6 @@ gui_mch_destroy_menu(vimmenu_T *menu)
     void
 gui_mch_menu_grey(vimmenu_T *menu, int grey)
 {
-    /* Only update menu if the 'grey' state has changed to avoid having to pass
-     * lots of unnecessary data to MacVim.  (Skipping this test makes MacVim
-     * pause noticably on mode changes. */
-//    printf("%s\n",__func__);  
 }
 
 
@@ -812,16 +797,12 @@ gui_make_popup(char_u *path_name, int mouse_pos)
     void
 gui_mch_draw_menubar(void)
 {
-    // The (main) menu draws itself in Mac OS X.
-//    printf("%s\n",__func__);  
 }
 
 
     void
 gui_mch_enable_menu(int flag)
 {
-    // The (main) menu is always enabled in Mac OS X.
-//    printf("%s\n",__func__);  
 }
 
     void
@@ -953,7 +934,6 @@ gui_mch_init_font(char_u *font_name, int fontset) {
 gui_mch_set_font(GuiFont font)
 {
 //    printf("%s\n",__func__);  
-    // Font selection is done inside MacVim...nothing here to do.
 }
 
 
