@@ -3653,9 +3653,16 @@ intro_message(colon)
 	N_("Help poor children in Uganda!"),
 	N_("type  :help iccf<Enter>       for information "),
 	"",
-	N_("type  :q<Enter>               to exit         "),
+#ifdef FEAT_GUI_IOS
+    N_("type  :help<Enter>            for on-line help"),
+    N_("type  :help ios<Enter>        for iOS help    "),
+    "",
+    N_("Note: <Esc> is remapped to the backslash key  "),
+#else
+    N_("type  :q<Enter>               to exit         "),
 	N_("type  :help<Enter>  or  <F1>  for on-line help"),
 	N_("type  :help version7<Enter>   for version info"),
+#endif
 	NULL,
 	"",
 	N_("Running in Vi compatible mode"),
