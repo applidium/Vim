@@ -902,10 +902,15 @@ gui_mch_init_font(char_u *font_name, int fontset) {
     NSString * normalizedFontName = @"Courier";
     CGFloat normalizedFontSize = 14.0f;
     if (font_name != NULL) {
-        normalizedFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
+        NSString * sourceFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
+        NSRange separatorRange = [sourceFontName rangeOfString:@":h"];
+        if (separatorRange.location != NSNotFound) {
+            normalizedFontName = [sourceFontName substringToIndex:separatorRange.location];
+            normalizedFontSize = [[sourceFontName substringFromIndex:separatorRange.location+separatorRange.length] floatValue];
+        }
+        [sourceFontName release];
     }
     CTFontRef rawFont = CTFontCreateWithName((CFStringRef)normalizedFontName, normalizedFontSize, &CGAffineTransformIdentity);
-    [normalizedFontName release];
 
     
     CGRect boundingRect = CGRectZero;
