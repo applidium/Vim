@@ -218,6 +218,9 @@ enum blink_state {
 }
 
 - (void)scroll:(UIPanGestureRecognizer *)sender {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [self resignFirstResponder];
+    }
     CGPoint clickLocation = [sender locationInView:sender.view];
     CGPoint translation = [sender translationInView:sender.view];
     static int totalScrollX = 0;
