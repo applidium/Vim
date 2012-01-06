@@ -881,6 +881,9 @@ gui_mch_init_font(char_u *font_name, int fontset) {
 
     NSString * normalizedFontName = @"Courier";
     CGFloat normalizedFontSize = 14.0f;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        normalizedFontSize = 12.0f;
+    }
     if (font_name != NULL) {
         NSString * sourceFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
         NSRange separatorRange = [sourceFontName rangeOfString:@":h"];
