@@ -38,7 +38,8 @@ You're free to overwrite this setting by unmapping the backslash key.
 
 Mouse events are also fully supported. Clicking and panning with a single
 finger will generate click and drag events. Panning with two fingers will
-generate scrollwheel events (horizontal and vertical).
+generate scrollwheel events (horizontal and vertical). When scrolling on the
+iPhone, the keyboard will be hidden to make more room for the text.
 
 ==============================================================================
 3. iTunes file sharing	        			*ios-itunes*
