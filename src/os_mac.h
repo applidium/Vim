@@ -261,7 +261,7 @@
 #endif
 
 #ifndef HAVE_CONFIG_H
-# ifdef __APPLE_CC__
+# if defined(__APPLE_CC__) && defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
 /* Assuming compiling for MacOS X */
 /* Trying to take advantage of the prebinding */
 #  define HAVE_TGETENT
