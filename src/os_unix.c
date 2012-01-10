@@ -3933,7 +3933,9 @@ mch_set_shellsize()
 	 * undefined, check the output of configure.  It could probably not
 	 * find a ncurses, termcap or termlib library.
 	 */
-	term_set_winsize((int)Rows, (int)Columns);
+#if defined(HAVE_TGETENT)
+       term_set_winsize((int)Rows, (int)Columns);
+#endif
 	out_flush();
 	screen_start();			/* don't know where cursor is now */
     }
