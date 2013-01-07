@@ -68,6 +68,7 @@
 		7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2A147FCFC900908FBE /* VimIcon72.png */; };
 		7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2B147FCFC900908FBE /* VimIcon114.png */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
+		7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AD12B22169ACF73005BBE2E /* default-568h@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -622,6 +623,7 @@
 		7A992E011422933000075221 /* xxd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xxd; sourceTree = "<group>"; };
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
 		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		7AD12B22169ACF73005BBE2E /* default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "default-568h@2x.png"; sourceTree = "<group>"; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1307,6 +1309,7 @@
 				7A8CAA29147FCFC900908FBE /* VimIcon57.png */,
 				7A8CAA2A147FCFC900908FBE /* VimIcon72.png */,
 				7A8CAA2B147FCFC900908FBE /* VimIcon114.png */,
+				7AD12B22169ACF73005BBE2E /* default-568h@2x.png */,
 				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
@@ -1369,6 +1372,7 @@
 				7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */,
 				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
 				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
+				7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
