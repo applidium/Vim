@@ -51,5 +51,27 @@
 	<string>UIStatusBarStyleBlackOpaque</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Text File</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.text</string>
+			</array>
+			<key>CFBundleTypeIconFiles</key>
+			<array>
+				<string>VimTypeIcon-22x29.png</string>
+				<string>VimTypeIcon-22x29@2x.png</string>
+				<string>VimTypeIcon-64.png</string>
+				<string>VimTypeIcon-64@2x.png</string>
+				<string>VimTypeIcon-320.png</string>
+				<string>VimTypeIcon-320@2x.png</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

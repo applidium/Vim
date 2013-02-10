@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5300A2BD16C74D5000E4A131 /* VimTypeIcon-22x29@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2B616C74D5000E4A131 /* VimTypeIcon-22x29@2x.png */; };
+		5300A2BE16C74D5000E4A131 /* VimTypeIcon-22x29.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2B716C74D5000E4A131 /* VimTypeIcon-22x29.png */; };
+		5300A2BF16C74D5000E4A131 /* VimTypeIcon-64.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2B816C74D5000E4A131 /* VimTypeIcon-64.png */; };
+		5300A2C016C74D5000E4A131 /* VimTypeIcon-64@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2B916C74D5000E4A131 /* VimTypeIcon-64@2x.png */; };
+		5300A2C116C74D5000E4A131 /* VimTypeIcon-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2BA16C74D5000E4A131 /* VimTypeIcon-320.png */; };
+		5300A2C216C74D5000E4A131 /* VimTypeIcon-320@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5300A2BB16C74D5000E4A131 /* VimTypeIcon-320@2x.png */; };
 		7A68CADA1422952B0019E159 /* blowfish.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6B1422932F00075221 /* blowfish.c */; };
 		7A68CADC1422952C0019E159 /* buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6C1422932F00075221 /* buffer.c */; };
 		7A68CADD142295440019E159 /* charset.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6D1422932F00075221 /* charset.c */; };
@@ -72,6 +78,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5300A2B616C74D5000E4A131 /* VimTypeIcon-22x29@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-22x29@2x.png"; sourceTree = "<group>"; };
+		5300A2B716C74D5000E4A131 /* VimTypeIcon-22x29.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-22x29.png"; sourceTree = "<group>"; };
+		5300A2B816C74D5000E4A131 /* VimTypeIcon-64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-64.png"; sourceTree = "<group>"; };
+		5300A2B916C74D5000E4A131 /* VimTypeIcon-64@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-64@2x.png"; sourceTree = "<group>"; };
+		5300A2BA16C74D5000E4A131 /* VimTypeIcon-320.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-320.png"; sourceTree = "<group>"; };
+		5300A2BB16C74D5000E4A131 /* VimTypeIcon-320@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "VimTypeIcon-320@2x.png"; sourceTree = "<group>"; };
 		7A31B10E142BA1CE006D816D /* gui_ios.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_ios.pro; sourceTree = "<group>"; };
 		7A68CB0E1422A0720019E159 /* libm.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libm.dylib; path = usr/lib/libm.dylib; sourceTree = SDKROOT; };
 		7A68CB101422A09D0019E159 /* libcurses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcurses.dylib; path = usr/lib/libcurses.dylib; sourceTree = SDKROOT; };
@@ -1306,6 +1318,12 @@
 		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
 			isa = PBXGroup;
 			children = (
+				5300A2B716C74D5000E4A131 /* VimTypeIcon-22x29.png */,
+				5300A2B616C74D5000E4A131 /* VimTypeIcon-22x29@2x.png */,
+				5300A2B816C74D5000E4A131 /* VimTypeIcon-64.png */,
+				5300A2B916C74D5000E4A131 /* VimTypeIcon-64@2x.png */,
+				5300A2BA16C74D5000E4A131 /* VimTypeIcon-320.png */,
+				5300A2BB16C74D5000E4A131 /* VimTypeIcon-320@2x.png */,
 				7A8CAA29147FCFC900908FBE /* VimIcon57.png */,
 				7A8CAA2A147FCFC900908FBE /* VimIcon72.png */,
 				7A8CAA2B147FCFC900908FBE /* VimIcon114.png */,
@@ -1373,6 +1391,12 @@
 				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
 				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
 				7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */,
+				5300A2BD16C74D5000E4A131 /* VimTypeIcon-22x29@2x.png in Resources */,
+				5300A2BE16C74D5000E4A131 /* VimTypeIcon-22x29.png in Resources */,
+				5300A2BF16C74D5000E4A131 /* VimTypeIcon-64.png in Resources */,
+				5300A2C016C74D5000E4A131 /* VimTypeIcon-64@2x.png in Resources */,
+				5300A2C116C74D5000E4A131 /* VimTypeIcon-320.png in Resources */,
+				5300A2C216C74D5000E4A131 /* VimTypeIcon-320@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
