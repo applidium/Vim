@@ -1,5 +1,8 @@
 README.txt for version 7.3 of Vim: Vi IMproved.
 
+<a href="https://www.cisimple.com/jobs/0tgl5k59mk6u0a70y"><img src='https://www.cisimple.com/jobs/0tgl5k59mk6u0a70y/build_status.png'/></a>
+
+Continuous Integration provided by [cisimple](https://www.cisimple.com).
 
 WHAT IS VIM
 
