@@ -36,6 +36,7 @@ CGColorRef CGColorCreateFromVimColor(guicolor_T color);
 struct {
     UIWindow * window;
     VimViewController * view_controller;
+    CGRect dirtyRect;
     CGLayerRef layer;
     CGColorRef fg_color;
     CGColorRef bg_color;
@@ -71,7 +72,16 @@ enum blink_state {
 
 - (void)drawRect:(CGRect)rect {
     if (gui_ios.layer != NULL) {
-        CGContextDrawLayerAtPoint(UIGraphicsGetCurrentContext(), CGPointZero, gui_ios.layer);
+        if(!CGRectEqualToRect(rect, CGRectZero)) {
+            CGContextRef context = UIGraphicsGetCurrentContext();
+            CGContextSaveGState(context);
+            CGContextBeginPath(context);
+            CGContextAddRect(context, rect);
+            CGContextClip(context);
+            CGContextDrawLayerAtPoint(context, rect.origin, gui_ios.layer);
+            CGContextRestoreGState(context);
+            gui_ios.dirtyRect = CGRectZero;
+        }
     } else {
         gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
     }
@@ -95,12 +105,15 @@ enum blink_state {
     VimTextView * _textView;
     BOOL _hasBeenFlushedOnce;
 }
+@property (nonatomic, readonly) VimTextView * textView;
 - (void)resizeShell;
 - (void)flush;
 - (void)blinkCursorTimer:(NSTimer *)timer;
 @end
 
 @implementation VimViewController
+
+@synthesize textView = _textView;
 
 #pragma mark UIResponder
 - (BOOL)canBecomeFirstResponder {
@@ -175,7 +188,7 @@ enum blink_state {
 
 - (void)insertText:(NSString *)text {
     add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
-    [_textView setNeedsDisplay];
+    [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 - (void)deleteBackward {
@@ -268,7 +281,7 @@ enum blink_state {
 
 - (void)flush {
     _hasBeenFlushedOnce = YES;
-    [_textView setNeedsDisplay];
+    [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 - (void)blinkCursorTimer:(NSTimer *)timer {
@@ -298,7 +311,7 @@ enum blink_state {
                                                              userInfo:nil
                                                               repeats:NO];
     }
-    [_textView setNeedsDisplay];
+    [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 @end
@@ -359,6 +372,7 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
     CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, destinationRect);
     CGContextRestoreGState(context);
 }
 
@@ -533,6 +547,7 @@ gui_mch_clear_all(void)
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
     CGSize size = CGLayerGetSize(gui_ios.layer);
     CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
+    gui_ios.dirtyRect = gui_ios.view_controller.textView.bounds;
 }
 
 
@@ -546,10 +561,12 @@ gui_mch_clear_block(int row1, int col1, int row2, int col2)
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     gui_mch_set_bg_color(gui.back_pixel);
     CGContextSetFillColorWithColor(context, gui_ios.bg_color);
-    CGContextFillRect(context, CGRectMake(FILL_X(col1),
-                                          FILL_Y(row1),
-                                          FILL_X(col2+1)-FILL_X(col1),
-                                          FILL_Y(row2+1)-FILL_Y(row1)));
+    CGRect rect = CGRectMake(FILL_X(col1),
+                             FILL_Y(row1),
+                             FILL_X(col2+1)-FILL_X(col1),
+                             FILL_Y(row2+1)-FILL_Y(row1));
+    CGContextFillRect(context, rect);
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, rect);
 }
 
 
@@ -601,6 +618,11 @@ void gui_mch_draw_string(int row, int col, char_u *s, int len, int flags) {
         CFRelease(line);
     }
     [attributedString release];
+    CGRect rect = CGRectMake(FILL_X(col),
+                             FILL_Y(row),
+                             FILL_X(col+len)-FILL_X(col),
+                             FILL_Y(row+1)-FILL_Y(row));
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, rect);
 }
 
 
@@ -1022,9 +1044,10 @@ gui_mch_draw_hollow_cursor(guicolor_T color)
     CGColorRef cgColor = CGColorCreateFromVimColor(color);
     CGContextSetStrokeColorWithColor(context, cgColor);
     CGColorRelease(cgColor);
-
-    CGContextStrokeRect(context, CGRectMake(FILL_X(gui.col), FILL_Y(gui.row), w * gui.char_width, gui.char_height));
-    [gui_ios.view_controller.view setNeedsDisplay];
+    CGRect rect = CGRectMake(FILL_X(gui.col), FILL_Y(gui.row), w * gui.char_width, gui.char_height);
+    CGContextStrokeRect(context, rect);
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, rect);
+    [gui_ios.view_controller.view setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 
@@ -1037,7 +1060,6 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
     gui_mch_set_fg_color(color);
     
-    CGRect rect;
     int    left;
     
 #ifdef FEAT_RIGHTLEFT
@@ -1048,11 +1070,11 @@ gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 #endif
         left = FILL_X(gui.col);
     
-    rect = CGRectMake(left, FILL_Y(gui.row), w, h);
-    
     CGContextSetFillColorWithColor(context, gui_ios.fg_color);
-    CGContextFillRect(context, CGRectMake(left, FILL_Y(gui.row), (CGFloat)w, (CGFloat)h));
-    [gui_ios.view_controller.view setNeedsDisplay];
+    CGRect rect = CGRectMake(left, FILL_Y(gui.row), (CGFloat)w, (CGFloat)h);
+    CGContextFillRect(context, rect);
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, rect);
+    [gui_ios.view_controller.view setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 
