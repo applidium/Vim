@@ -636,12 +636,12 @@ gui_mch_delete_lines(int row, int num_lines)
 //    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
-                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_X(gui.scroll_region_right+1) - FILL_X(gui.scroll_region_left),
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
 
     CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
-                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_X(gui.scroll_region_right+1) - FILL_X(gui.scroll_region_left),
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
 
     CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
@@ -662,12 +662,12 @@ gui_mch_insert_lines(int row, int num_lines)
 //    printf("%s\n",__func__);
     CGRect sourceRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row),
-                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_X(gui.scroll_region_right+1) - FILL_X(gui.scroll_region_left),
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
 
     CGRect targetRect = CGRectMake(FILL_X(gui.scroll_region_left),
                                    FILL_Y(row + num_lines),
-                                   FILL_X(gui.scroll_region_right) - FILL_X(gui.scroll_region_left),
+                                   FILL_X(gui.scroll_region_right+1) - FILL_X(gui.scroll_region_left),
                                    FILL_Y(gui.scroll_region_bot+1) - FILL_Y(row + num_lines));
     
     CGLayerCopyRectToRect(gui_ios.layer, sourceRect, targetRect);
