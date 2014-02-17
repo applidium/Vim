@@ -127,10 +127,10 @@ enum blink_state {
 
 #pragma mark UIViewController
 - (void)loadView {
-    self.view = [[[UIView alloc] initWithFrame:CGRectZero] autorelease];
+    self.view = [[[UIView alloc] initWithFrame:gui_ios.window.bounds] autorelease];
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    
-    _textView = [[VimTextView alloc] initWithFrame:self.view.bounds];
+    CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : [UIApplication sharedApplication].statusBarFrame.size.height;
+    _textView = [[VimTextView alloc] initWithFrame:CGRectMake(0.0f, statusBarOffset, self.view.bounds.size.width, self.view.bounds.size.height - statusBarOffset)];
     _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [self.view addSubview:_textView];
     [_textView release];
@@ -266,13 +266,19 @@ enum blink_state {
 - (void)keyboardWasShown:(NSNotification *)notification {
     CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
-    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
+    _textView.frame = CGRectMake(_textView.frame.origin.x,
+                                 _textView.frame.origin.y,
+                                 _textView.frame.size.width,
+                                 keyboardRectInView.origin.y);
 }
 
 - (void)keyboardWillBeHidden:(NSNotification *)notification {
     CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect keyboardRectInView = [self.view.window convertRect:keyboardRect toView:_textView];
-    _textView.frame = CGRectMake(0.0f, 0.0f, _textView.frame.size.width, keyboardRectInView.origin.y);
+    _textView.frame = CGRectMake(_textView.frame.origin.x,
+                                 _textView.frame.origin.y,
+                                 _textView.frame.size.width,
+                                 keyboardRectInView.origin.y);
 }
 
 - (void)resizeShell {
@@ -316,8 +322,6 @@ enum blink_state {
 
 @end
 
-
-
 #pragma mark -
 #pragma mark VimAppDelegate
 
@@ -328,7 +332,7 @@ enum blink_state {
 @implementation VimAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Per Apple's documentation : Performs the specified selector on the application's main thread during that thread's next run loop cycle.
-    gui_ios.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    gui_ios.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     gui_ios.view_controller = [[VimViewController alloc] init];
     gui_ios.window.rootViewController = gui_ios.view_controller;
     [gui_ios.view_controller release];
