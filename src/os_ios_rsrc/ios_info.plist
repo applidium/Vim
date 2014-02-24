@@ -12,6 +12,16 @@
 	<string></string>
 	<key>CFBundleIconFiles</key>
 	<array>
+		<string>VimIcon120</string>
+		<string>VimIcon57.png</string>
+		<string>VimIcon72.png</string>
+		<string>VimIcon114.png</string>
+	</array>
+	<key>CFBundleIconFiles~ipad</key>
+	<array>
+		<string>VimIcon152</string>
+		<string>VimIcon76</string>
+		<string>VimIcon120</string>
 		<string>VimIcon57.png</string>
 		<string>VimIcon72.png</string>
 		<string>VimIcon114.png</string>
