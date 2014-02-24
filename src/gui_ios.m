@@ -129,7 +129,12 @@ enum blink_state {
 - (void)loadView {
     self.view = [[[UIView alloc] initWithFrame:gui_ios.window.bounds] autorelease];
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : [UIApplication sharedApplication].statusBarFrame.size.height;
+
+    CGFloat statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
+    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
+        statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
+    }
+    CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : statusBarHeight;
     _textView = [[VimTextView alloc] initWithFrame:CGRectMake(0.0f, statusBarOffset, self.view.bounds.size.width, self.view.bounds.size.height - statusBarOffset)];
     _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     [self.view addSubview:_textView];
