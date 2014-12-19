@@ -206,6 +206,10 @@ enum blink_state {
     return UITextAutocapitalizationTypeNone;
 }
 
+- (UITextAutocorrectionType)autocorrectionType {
+    return UITextAutocorrectionTypeNo;
+}
+
 - (UIKeyboardType)keyboardType {
     return UIKeyboardTypeDefault;
 }
