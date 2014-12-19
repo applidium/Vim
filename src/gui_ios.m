@@ -131,7 +131,8 @@ enum blink_state {
     self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
 
     CGFloat statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
+    // Status bar frame is not interface-oriented before iOS 8
+    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation) && (NSFoundationVersionNumber <= NSFoundationVersionNumber_iOS_7_1)) {
         statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
     }
     CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : statusBarHeight;
