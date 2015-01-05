@@ -187,6 +187,14 @@ enum blink_state {
     return YES;
 }
 
+- (BOOL)prefersStatusBarHidden {
+    return NO;
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    return UIStatusBarStyleLightContent;
+}
+
 #pragma mark UIKeyInput
 - (BOOL)hasText {
     return YES;
