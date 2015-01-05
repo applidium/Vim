@@ -101,11 +101,13 @@ enum blink_state {
 #pragma mark -
 #pragma VimViewController
 
-@interface VimViewController : UIViewController <UIKeyInput, UITextInputTraits> {
+@interface VimViewController : UIViewController <UIKeyInput, UITextInput, UITextInputTraits> {
     VimTextView * _textView;
     BOOL _hasBeenFlushedOnce;
 }
 @property (nonatomic, readonly) VimTextView * textView;
+@property (nonatomic, copy) NSDictionary * markedTextStyle;
+@property (nonatomic, assign) id <UITextInputDelegate> inputDelegate;
 - (void)resizeShell;
 - (void)flush;
 - (void)blinkCursorTimer:(NSTimer *)timer;
@@ -208,6 +210,97 @@ enum blink_state {
 - (void)deleteBackward {
     char escapeString[] = {BS, 0};
     [self insertText:[NSString stringWithUTF8String:escapeString]];
+}
+
+#pragma mark UITextInput
+- (NSString *)textInRange:(UITextRange *)range {
+    return nil;
+}
+
+- (void)replaceRange:(UITextRange *)range withText:(NSString *)text {
+}
+
+- (UITextRange *)selectedTextRange {
+    return nil;
+}
+
+- (void)setSelectedTextRange:(UITextRange *)selectedTextRange {
+}
+
+- (UITextRange *)markedTextRange {
+    return nil;
+}
+
+- (void)setMarkedText:(NSString *)markedText selectedRange:(NSRange)selectedRange {
+}
+
+- (void)unmarkText {
+}
+
+- (UITextPosition *)beginningOfDocument {
+    return nil;
+}
+
+- (UITextPosition *)endOfDocument {
+    return nil;
+}
+
+- (UITextRange *)textRangeFromPosition:(UITextPosition *)fromPosition toPosition:(UITextPosition *)toPosition {
+    return nil;
+}
+
+- (UITextPosition *)positionFromPosition:(UITextPosition *)position offset:(NSInteger)offset {
+    return nil;
+}
+- (UITextPosition *)positionFromPosition:(UITextPosition *)position inDirection:(UITextLayoutDirection)direction offset:(NSInteger)offset {
+    return nil;
+}
+
+- (NSComparisonResult)comparePosition:(UITextPosition *)position toPosition:(UITextPosition *)other {
+    return NSOrderedSame;
+}
+- (NSInteger)offsetFromPosition:(UITextPosition *)from toPosition:(UITextPosition *)toPosition {
+    return 0;
+}
+
+- (id <UITextInputTokenizer>)tokenizer {
+    return nil;
+}
+
+- (UITextPosition *)positionWithinRange:(UITextRange *)range farthestInDirection:(UITextLayoutDirection)direction {
+    return nil;
+}
+- (UITextRange *)characterRangeByExtendingPosition:(UITextPosition *)position inDirection:(UITextLayoutDirection)direction {
+    return nil;
+}
+
+- (UITextWritingDirection)baseWritingDirectionForPosition:(UITextPosition *)position inDirection:(UITextStorageDirection)direction {
+    return UITextWritingDirectionNatural;
+}
+
+- (void)setBaseWritingDirection:(UITextWritingDirection)writingDirection forRange:(UITextRange *)range {
+}
+
+- (CGRect)firstRectForRange:(UITextRange *)range {
+    return CGRectZero;
+}
+- (CGRect)caretRectForPosition:(UITextPosition *)position {
+    return CGRectZero;
+}
+- (NSArray *)selectionRectsForRange:(UITextRange *)range {
+    return nil;
+}
+
+- (UITextPosition *)closestPositionToPoint:(CGPoint)point {
+    return nil;
+}
+
+- (UITextPosition *)closestPositionToPoint:(CGPoint)point withinRange:(UITextRange *)range {
+    return nil;
+}
+
+- (UITextRange *)characterRangeAtPoint:(CGPoint)point {
+    return nil;
 }
 
 #pragma mark UITextInputTraits
