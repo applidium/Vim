@@ -30,6 +30,8 @@ static int hex_digit(int c) {
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
 CGColorRef CGColorCreateFromVimColor(guicolor_T color);
+CGFloat CGContextGetScale(void);
+CGRect CGRectApplyScreenScale(CGRect rect);
 @class VimViewController;
 @class VimTextView;
 
@@ -75,6 +77,9 @@ enum blink_state {
         if(!CGRectEqualToRect(rect, CGRectZero)) {
             CGContextRef context = UIGraphicsGetCurrentContext();
             CGContextSaveGState(context);
+            CGFloat scale = CGContextGetScale();
+            CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
+            rect = CGRectApplyScreenScale(rect);
             CGContextBeginPath(context);
             CGContextAddRect(context, rect);
             CGContextClip(context);
@@ -83,7 +88,12 @@ enum blink_state {
             gui_ios.dirtyRect = CGRectZero;
         }
     } else {
-        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
+        CGFloat size = MAX(CGRectGetHeight([UIScreen mainScreen].bounds), CGRectGetWidth([UIScreen mainScreen].bounds));
+        size *= CGContextGetScale();
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(size, size), nil);
+        CGContextRef context = CGLayerGetContext(gui_ios.layer);
+        CGFloat scale = CGContextGetScale();
+        CGContextScaleCTM(context, scale, scale);
     }
 }
 
@@ -93,7 +103,6 @@ enum blink_state {
 }
 
 - (void)resizeShell {
-//    NSLog(@"Setting shell size to %d x %d", (int)self.bounds.size.width, (int)self.bounds.size.height);
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
 @end
@@ -475,6 +484,9 @@ enum blink_state {
 #pragma mark Helper C functions
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
+    sourceRect = CGRectApplyScreenScale(sourceRect);
+    targetRect = CGRectApplyScreenScale(targetRect);
+    
     CGContextRef context = CGLayerGetContext(layer);
     
     CGRect destinationRect = targetRect;
@@ -482,7 +494,8 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
     
     CGContextSaveGState(context);
-    
+    CGFloat scale = CGContextGetScale();
+    CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
@@ -500,6 +513,18 @@ CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
     CGColorRef cgColor = CGColorCreate(colorSpace, rgb);
     CGColorSpaceRelease(colorSpace);
     return cgColor;
+}
+
+CGFloat CGContextGetScale(void) {
+    return [UIScreen mainScreen].scale;
+}
+
+CGRect CGRectApplyScreenScale(CGRect rect) {
+    CGFloat scale = CGContextGetScale();
+    return CGRectMake(rect.origin.x * scale,
+                      rect.origin.y * scale,
+                      rect.size.width * scale,
+                      rect.size.height * scale);
 }
 
 int main(int argc, char *argv[]) {
