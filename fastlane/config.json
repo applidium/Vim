@@ -29,11 +29,9 @@
 	"extensions": [],
 	"laneConfigs": [{
 		"name": "store",
-		"distributionType": "appstore",
-		"bundles": {
-			"overrideInPlist": true
-		}
-	}, {
+		"distributionType": "appstore"
+	}, 
+	{
 		"name": "inhouse",
 		"distributionType": "enterprise",
 		"codeSigning": {
