@@ -1,0 +1,1 @@
+iPad: Fixed issue when launched in landscape mode
