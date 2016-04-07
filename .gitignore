@@ -4,3 +4,13 @@
 *.xcodeproj/*.perspectivev3
 *.xcodeproj/project.xcworkspace/
 *.xcodeproj/xcuserdata/
+
+
+# fastlane specific
+fastlane/report.xml
+
+# deliver temporary files
+fastlane/Preview.html
+
+# scan temporary files
+fastlane/test_output

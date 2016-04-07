@@ -1,0 +1,84 @@
+{
+	"globalConfig": {
+		"workspace": null,
+		"xcodeproj": "Vim.xcodeproj",
+		"hockeyApiToken": "f2c0bd7767da492ca34c14684864a6e9"
+	},
+	"apps": [{
+		"name": "Vim",
+		"XcodeTarget": "Vim",
+		"bundles": {
+			"mainApp": "com.applidium.Vim",
+			"extensions": []
+		},
+		"codeSigning": {
+			"appleId": "devices@applidium.com",
+			"teamId": "LL36D6ZV57",
+			"teamName": "APPLIDIUM",
+			"useMatchForCodesign": true,
+			"matchGit": "ssh://git@scm.applidium.net/ADSigningAssets"
+		},
+		"iTunesConnect": {
+			"appleIdItunesConnect": "nicolas.braun@applidium.com"
+		},
+		"hockeyApp": {
+			"Debug": "ca277374ba8c4f21a3d660496fe47b94",
+			"Release": "ca277374ba8c4f21a3d660496fe47b94"
+		}
+	}],
+	"extensions": [],
+	"laneConfigs": [{
+		"name": "store",
+		"distributionType": "appstore",
+		"bundles": {
+			"overrideInPlist": true
+		}
+	}, {
+		"name": "inhouse",
+		"distributionType": "enterprise",
+		"codeSigning": {
+			"appleId": "devices@applidium.com",
+			"teamId": "U5M7X5V6ZG",
+			"teamName": "Whiteroom SARL",
+			"useMatchForCodesign": true,
+			"matchGit": "ssh://git@scm.applidium.net/ADSigningAssetsWhiteroom"
+		},
+		"bundles": {
+			"overrideInPlist": false,
+			"mainApp": "*"
+		}
+	}, {
+		"name": "dev",
+		"distributionType": "development",
+		"bundles": {
+			"overrideInPlist": true
+		}
+	}, {
+		"name": "adhoc",
+		"distributionType": "adhoc",
+		"bundles": {
+			"overrideInPlist": true
+		}
+	}, {
+		"name": "inhousetest",
+		"distributionType": "enterprise",
+		"codeSigning": {
+			"appleId": "devices@applidium.com",
+			"teamId": "U5M7X5V6ZG",
+			"teamName": "Whiteroom SARL",
+			"useMatchForCodesign": true,
+			"matchGit": "ssh://git@scm.applidium.net/ADSigningAssetsWhiteroom"
+		},
+		"bundles": {
+			"overrideInPlist": true,
+			"mainApp": "com.applidium.pushtest",
+			"extensions": [{
+				"id": 0,
+				"bundle": "com.applidium.pushtest.watchkitapp"
+			}, {
+				"id": 1,
+				"bundle": "com.applidium.pushtest.watchkitextension"
+			}]
+		}
+	}]
+}
