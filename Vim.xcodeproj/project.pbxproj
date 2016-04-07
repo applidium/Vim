@@ -66,7 +66,7 @@
 		7A8CAA28147FAC2E00908FBE /* vimrc in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA1D147FA3D100908FBE /* vimrc */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
 		EC48055F1A44372700EC7BA9 /* LaunchFile.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC48055E1A44372700EC7BA9 /* LaunchFile.xib */; };
-		F8B5CCDB1CB6510D00D2C396 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */; };
+		F8EB82991CB683AD0045E609 /* Icons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8EB82981CB683AD0045E609 /* Icons.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -621,7 +621,7 @@
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 		EC48055E1A44372700EC7BA9 /* LaunchFile.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchFile.xib; sourceTree = "<group>"; };
-		F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		F8EB82981CB683AD0045E609 /* Icons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Icons.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -676,7 +676,6 @@
 			children = (
 				7A7B1FA6142FBE2E00A537BD /* runtime */,
 				7A992B561422932F00075221 /* src */,
-				F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */,
 			);
 			path = Vim;
 			sourceTree = "<group>";
@@ -1303,6 +1302,7 @@
 		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
 			isa = PBXGroup;
 			children = (
+				F8EB82981CB683AD0045E609 /* Icons.xcassets */,
 				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
@@ -1362,7 +1362,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
-				F8B5CCDB1CB6510D00D2C396 /* Images.xcassets in Resources */,
+				F8EB82991CB683AD0045E609 /* Icons.xcassets in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
 				EC48055F1A44372700EC7BA9 /* LaunchFile.xib in Resources */,
 			);
