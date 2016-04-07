@@ -64,12 +64,9 @@
 		7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A71941C14228FA500B62000 /* CoreGraphics.framework */; };
 		7A8CAA27147FAC1600908FBE /* runtime in Resources */ = {isa = PBXBuildFile; fileRef = 7A7B1FA6142FBE2E00A537BD /* runtime */; };
 		7A8CAA28147FAC2E00908FBE /* vimrc in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA1D147FA3D100908FBE /* vimrc */; };
-		7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA29147FCFC900908FBE /* VimIcon57.png */; };
-		7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2A147FCFC900908FBE /* VimIcon72.png */; };
-		7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2B147FCFC900908FBE /* VimIcon114.png */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
-		7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AD12B22169ACF73005BBE2E /* default-568h@2x.png */; };
 		EC48055F1A44372700EC7BA9 /* LaunchFile.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC48055E1A44372700EC7BA9 /* LaunchFile.xib */; };
+		F8B5CCDB1CB6510D00D2C396 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -82,9 +79,6 @@
 		7A71941C14228FA500B62000 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		7A7B1FA6142FBE2E00A537BD /* runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; path = runtime; sourceTree = SOURCE_ROOT; };
 		7A8CAA1D147FA3D100908FBE /* vimrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vimrc; sourceTree = "<group>"; };
-		7A8CAA29147FCFC900908FBE /* VimIcon57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon57.png; sourceTree = "<group>"; };
-		7A8CAA2A147FCFC900908FBE /* VimIcon72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon72.png; sourceTree = "<group>"; };
-		7A8CAA2B147FCFC900908FBE /* VimIcon114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VimIcon114.png; sourceTree = "<group>"; };
 		7A992B5C1422932F00075221 /* arabic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arabic.c; sourceTree = "<group>"; };
 		7A992B5D1422932F00075221 /* arabic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arabic.h; sourceTree = "<group>"; };
 		7A992B5E1422932F00075221 /* ascii.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ascii.h; sourceTree = "<group>"; };
@@ -624,10 +618,10 @@
 		7A992E011422933000075221 /* xxd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xxd; sourceTree = "<group>"; };
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
 		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		7AD12B22169ACF73005BBE2E /* default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "default-568h@2x.png"; sourceTree = "<group>"; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 		EC48055E1A44372700EC7BA9 /* LaunchFile.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchFile.xib; sourceTree = "<group>"; };
+		F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -682,6 +676,7 @@
 			children = (
 				7A7B1FA6142FBE2E00A537BD /* runtime */,
 				7A992B561422932F00075221 /* src */,
+				F8B5CCDA1CB6510D00D2C396 /* Images.xcassets */,
 			);
 			path = Vim;
 			sourceTree = "<group>";
@@ -1308,10 +1303,6 @@
 		7AE20BB1142B8D7E00848B40 /* os_ios_rsrc */ = {
 			isa = PBXGroup;
 			children = (
-				7A8CAA29147FCFC900908FBE /* VimIcon57.png */,
-				7A8CAA2A147FCFC900908FBE /* VimIcon72.png */,
-				7A8CAA2B147FCFC900908FBE /* VimIcon114.png */,
-				7AD12B22169ACF73005BBE2E /* default-568h@2x.png */,
 				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
@@ -1371,12 +1362,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
+				F8B5CCDB1CB6510D00D2C396 /* Images.xcassets in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
-				7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */,
-				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
-				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
 				EC48055F1A44372700EC7BA9 /* LaunchFile.xib in Resources */,
-				7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1489,6 +1477,7 @@
 		7A71943B14228FA500B62000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
@@ -1506,6 +1495,7 @@
 		7A71943C14228FA500B62000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
