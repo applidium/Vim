@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4BAB752E1EF8DFA600F4A1D6 /* EscapeKeyListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BAB752D1EF8DFA500F4A1D6 /* EscapeKeyListener.framework */; };
 		7A68CADA1422952B0019E159 /* blowfish.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6B1422932F00075221 /* blowfish.c */; };
 		7A68CADC1422952C0019E159 /* buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6C1422932F00075221 /* buffer.c */; };
 		7A68CADD142295440019E159 /* charset.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B6D1422932F00075221 /* charset.c */; };
@@ -72,6 +73,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4BAB752D1EF8DFA500F4A1D6 /* EscapeKeyListener.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = EscapeKeyListener.framework; sourceTree = "<group>"; };
 		7A31B10E142BA1CE006D816D /* gui_ios.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_ios.pro; sourceTree = "<group>"; };
 		7A68CB0E1422A0720019E159 /* libm.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libm.dylib; path = usr/lib/libm.dylib; sourceTree = SDKROOT; };
 		7A68CB101422A09D0019E159 /* libcurses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcurses.dylib; path = usr/lib/libcurses.dylib; sourceTree = SDKROOT; };
@@ -636,6 +638,7 @@
 				7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */,
 				7A68CB111422A09D0019E159 /* libcurses.dylib in Frameworks */,
 				7A68CB0F1422A0720019E159 /* libm.dylib in Frameworks */,
+				4BAB752E1EF8DFA600F4A1D6 /* EscapeKeyListener.framework in Frameworks */,
 				7A71941914228FA500B62000 /* UIKit.framework in Frameworks */,
 				7A71941B14228FA500B62000 /* Foundation.framework in Frameworks */,
 				7A71941D14228FA500B62000 /* CoreGraphics.framework in Frameworks */,
@@ -648,6 +651,7 @@
 		7A71940914228FA500B62000 = {
 			isa = PBXGroup;
 			children = (
+				4BAB752D1EF8DFA500F4A1D6 /* EscapeKeyListener.framework */,
 				7A71941E14228FA500B62000 /* Vim */,
 				7A71941714228FA500B62000 /* Frameworks */,
 				7A71941514228FA500B62000 /* Products */,
@@ -1486,6 +1490,10 @@
 		7A71943B14228FA500B62000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
@@ -1493,6 +1501,7 @@
 					"${SRCROOT}/src/proto",
 				);
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1501,6 +1510,10 @@
 		7A71943C14228FA500B62000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
@@ -1508,6 +1521,7 @@
 					"${SRCROOT}/src/proto",
 				);
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
