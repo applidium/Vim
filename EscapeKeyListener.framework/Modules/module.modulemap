@@ -1,0 +1,6 @@
+framework module EscapeKeyListener {
+  umbrella header "EscapeKeyListener.h"
+
+  export *
+  module * { export * }
+}

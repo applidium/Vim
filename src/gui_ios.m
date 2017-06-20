@@ -15,6 +15,7 @@
 
 #import "vim.h"
 #import <UIKit/UIKit.h>
+#import <EscapeKeyListener/EscapeKeyListener.h>
 
 #define RGB(r,g,b)	((r) << 16) + ((g) << 8) + (b)
 #define ARRAY_LENGTH(a) (sizeof(a) / sizeof(a[0]))
@@ -77,6 +78,7 @@ enum blink_state {
             CGContextSaveGState(context);
             CGContextBeginPath(context);
             CGContextAddRect(context, rect);
+            CGContextScaleCTM(context, 1.0/[UIScreen mainScreen].scale, 1.0/[UIScreen mainScreen].scale);
             CGContextClip(context);
             CGContextDrawLayerAtPoint(context, rect.origin, gui_ios.layer);
             CGContextRestoreGState(context);
@@ -84,6 +86,7 @@ enum blink_state {
         }
     } else {
         gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
+        
     }
 }
 
@@ -94,7 +97,7 @@ enum blink_state {
 
 - (void)resizeShell {
 //    NSLog(@"Setting shell size to %d x %d", (int)self.bounds.size.width, (int)self.bounds.size.height);
-    gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
+    gui_resize_shell(self.bounds.size.width*[UIScreen mainScreen].scale, self.bounds.size.height*[UIScreen mainScreen].scale);
 }
 @end
 
@@ -169,6 +172,14 @@ enum blink_state {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
                                                  name:UIKeyboardWillHideNotification object:nil];
+    
+    KeyboardEventManager *manager = [KeyboardEventManager sharedKeyboardEventManager];
+    [manager addObserver:ESC_CODE block:^(BOOL isDown) {
+        char_u c = 27;
+        add_to_input_buf(&c, sizeof(c));
+        [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
+    }];
+    
 }
 
 - (void)viewDidUnload {
@@ -397,6 +408,7 @@ CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
 }
 
 int main(int argc, char *argv[]) {
+    Class app = [UIApplication class];
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     int retVal = UIApplicationMain(argc, argv, nil, @"VimAppDelegate");
     [pool release];
@@ -914,9 +926,9 @@ gui_mch_init_font(char_u *font_name, int fontset) {
 //    printf("%s\n",__func__);
 
     NSString * normalizedFontName = @"Courier";
-    CGFloat normalizedFontSize = 14.0f;
+    CGFloat normalizedFontSize = 14.0f*[UIScreen mainScreen].scale;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        normalizedFontSize = 12.0f;
+        normalizedFontSize = 12.0f*[UIScreen mainScreen].scale;
     }
     if (font_name != NULL) {
         NSString * sourceFontName = [[NSString alloc] initWithUTF8String:(const char *)font_name];
