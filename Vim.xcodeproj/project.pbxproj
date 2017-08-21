@@ -69,6 +69,12 @@
 		7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2B147FCFC900908FBE /* VimIcon114.png */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
 		7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AD12B22169ACF73005BBE2E /* default-568h@2x.png */; };
+		EC8336781F4B2AED0068351A /* crypt_zip.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336761F4B2AED0068351A /* crypt_zip.c */; };
+		EC8336791F4B2AED0068351A /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336771F4B2AED0068351A /* crypt.c */; };
+		EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367A1F4B2B040068351A /* crypt_zip.pro */; };
+		EC83367F1F4B2B040068351A /* crypt.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367B1F4B2B040068351A /* crypt.pro */; };
+		EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */; };
+		EC8336811F4B2B040068351A /* os_beos.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367D1F4B2B040068351A /* os_beos.pro */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -414,7 +420,7 @@
 		7A992D2C1422932F00075221 /* test22.ok */ = {isa = PBXFileReference; lastKnownFileType = text; path = test22.ok; sourceTree = "<group>"; };
 		7A992D2D1422932F00075221 /* test23.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = test23.in; sourceTree = "<group>"; };
 		7A992D2E1422932F00075221 /* test23.ok */ = {isa = PBXFileReference; lastKnownFileType = text; path = test23.ok; sourceTree = "<group>"; };
-		7A992D2F1422932F00075221 /* test24.in */ = {isa = PBXFileReference; lastKnownFileType = file; path = test24.in; sourceTree = "<group>"; };
+		7A992D2F1422932F00075221 /* test24.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = test24.in; sourceTree = "<group>"; };
 		7A992D301422932F00075221 /* test24.ok */ = {isa = PBXFileReference; lastKnownFileType = text; path = test24.ok; sourceTree = "<group>"; };
 		7A992D311422932F00075221 /* test25.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = test25.in; sourceTree = "<group>"; };
 		7A992D321422932F00075221 /* test25.ok */ = {isa = PBXFileReference; lastKnownFileType = text; path = test25.ok; sourceTree = "<group>"; };
@@ -626,6 +632,13 @@
 		7AD12B22169ACF73005BBE2E /* default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "default-568h@2x.png"; sourceTree = "<group>"; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
+		EC8336751F4B2AED0068351A /* alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alloc.h; sourceTree = "<group>"; };
+		EC8336761F4B2AED0068351A /* crypt_zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt_zip.c; sourceTree = "<group>"; };
+		EC8336771F4B2AED0068351A /* crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt.c; sourceTree = "<group>"; };
+		EC83367A1F4B2B040068351A /* crypt_zip.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crypt_zip.pro; sourceTree = "<group>"; };
+		EC83367B1F4B2B040068351A /* crypt.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crypt.pro; sourceTree = "<group>"; };
+		EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_gtk_gresources.pro; sourceTree = "<group>"; };
+		EC83367D1F4B2B040068351A /* os_beos.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = os_beos.pro; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -687,6 +700,9 @@
 		7A992B561422932F00075221 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				EC8336751F4B2AED0068351A /* alloc.h */,
+				EC8336761F4B2AED0068351A /* crypt_zip.c */,
+				EC8336771F4B2AED0068351A /* crypt.c */,
 				7A992B5C1422932F00075221 /* arabic.c */,
 				7A992B5D1422932F00075221 /* arabic.h */,
 				7A992B5E1422932F00075221 /* ascii.h */,
@@ -963,6 +979,10 @@
 		7A992C981422932F00075221 /* proto */ = {
 			isa = PBXGroup;
 			children = (
+				EC83367A1F4B2B040068351A /* crypt_zip.pro */,
+				EC83367B1F4B2B040068351A /* crypt.pro */,
+				EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */,
+				EC83367D1F4B2B040068351A /* os_beos.pro */,
 				7A992C991422932F00075221 /* blowfish.pro */,
 				7A31B10E142BA1CE006D816D /* gui_ios.pro */,
 				7A992C9A1422932F00075221 /* buffer.pro */,
@@ -1367,11 +1387,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */,
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
+				EC83367F1F4B2B040068351A /* crypt.pro in Resources */,
+				EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
 				7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */,
 				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
 				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
+				EC8336811F4B2B040068351A /* os_beos.pro in Resources */,
 				7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1389,6 +1413,7 @@
 				7A68CAF914229E440019E159 /* normal.c in Sources */,
 				7A68CAFA14229E440019E159 /* ops.c in Sources */,
 				7A68CAFB14229E440019E159 /* option.c in Sources */,
+				EC8336791F4B2AED0068351A /* crypt.c in Sources */,
 				7A68CAFE14229E440019E159 /* os_unix.c in Sources */,
 				7A68CAFF14229E440019E159 /* popupmnu.c in Sources */,
 				7A68CB0014229E440019E159 /* pty.c in Sources */,
@@ -1403,6 +1428,7 @@
 				7A68CB0914229E440019E159 /* term.c in Sources */,
 				7A68CB0A14229E440019E159 /* ui.c in Sources */,
 				7A68CB0B14229E440019E159 /* undo.c in Sources */,
+				EC8336781F4B2AED0068351A /* crypt_zip.c in Sources */,
 				7A68CB0C14229E440019E159 /* window.c in Sources */,
 				7A68CAE7142295830019E159 /* fileio.c in Sources */,
 				7A68CAE8142295830019E159 /* fold.c in Sources */,
