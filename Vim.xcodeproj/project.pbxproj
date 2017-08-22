@@ -75,6 +75,10 @@
 		EC83367F1F4B2B040068351A /* crypt.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367B1F4B2B040068351A /* crypt.pro */; };
 		EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */; };
 		EC8336811F4B2B040068351A /* os_beos.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367D1F4B2B040068351A /* os_beos.pro */; };
+		EC83368F1F4B33B80068351A /* channel.c in Sources */ = {isa = PBXBuildFile; fileRef = EC83368C1F4B33B80068351A /* channel.c */; };
+		EC8336911F4B33B80068351A /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = EC83368E1F4B33B80068351A /* json.c */; };
+		EC8336941F4B33C70068351A /* channel.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC8336921F4B33C70068351A /* channel.pro */; };
+		EC8336951F4B33C70068351A /* json.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC8336931F4B33C70068351A /* json.pro */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -639,6 +643,10 @@
 		EC83367B1F4B2B040068351A /* crypt.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crypt.pro; sourceTree = "<group>"; };
 		EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui_gtk_gresources.pro; sourceTree = "<group>"; };
 		EC83367D1F4B2B040068351A /* os_beos.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = os_beos.pro; sourceTree = "<group>"; };
+		EC83368C1F4B33B80068351A /* channel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = channel.c; sourceTree = "<group>"; };
+		EC83368E1F4B33B80068351A /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
+		EC8336921F4B33C70068351A /* channel.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = channel.pro; sourceTree = "<group>"; };
+		EC8336931F4B33C70068351A /* json.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = json.pro; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -700,6 +708,8 @@
 		7A992B561422932F00075221 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				EC83368C1F4B33B80068351A /* channel.c */,
+				EC83368E1F4B33B80068351A /* json.c */,
 				EC8336751F4B2AED0068351A /* alloc.h */,
 				EC8336761F4B2AED0068351A /* crypt_zip.c */,
 				EC8336771F4B2AED0068351A /* crypt.c */,
@@ -979,6 +989,8 @@
 		7A992C981422932F00075221 /* proto */ = {
 			isa = PBXGroup;
 			children = (
+				EC8336921F4B33C70068351A /* channel.pro */,
+				EC8336931F4B33C70068351A /* json.pro */,
 				EC83367A1F4B2B040068351A /* crypt_zip.pro */,
 				EC83367B1F4B2B040068351A /* crypt.pro */,
 				EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */,
@@ -1388,9 +1400,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */,
+				EC8336951F4B33C70068351A /* json.pro in Resources */,
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
 				EC83367F1F4B2B040068351A /* crypt.pro in Resources */,
 				EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */,
+				EC8336941F4B33C70068351A /* channel.pro in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
 				7A8CAA2C147FCFC900908FBE /* VimIcon57.png in Resources */,
 				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
@@ -1442,8 +1456,10 @@
 				7A68CAF0142295830019E159 /* mbyte.c in Sources */,
 				7A68CAF1142295830019E159 /* memfile.c in Sources */,
 				7A68CAF2142295830019E159 /* memline.c in Sources */,
+				EC8336911F4B33B80068351A /* json.c in Sources */,
 				7A68CAF3142295830019E159 /* menu.c in Sources */,
 				7A68CAF4142295830019E159 /* message.c in Sources */,
+				EC83368F1F4B33B80068351A /* channel.c in Sources */,
 				7A68CAF5142295830019E159 /* misc1.c in Sources */,
 				7A68CAF6142295830019E159 /* misc2.c in Sources */,
 				7A68CAF7142295830019E159 /* move.c in Sources */,
