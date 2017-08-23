@@ -1,7 +1,8 @@
 {
   "global_config": {
     "workspace": null,
-    "xcodeproj": "Vim.xcodeproj"
+    "xcodeproj": "Vim.xcodeproj",
+    "hockeyapp_api_token": "f2c0bd7767da492ca34c14684864a6e9"
   },
   "apps": [{
     "target": "Vim",
