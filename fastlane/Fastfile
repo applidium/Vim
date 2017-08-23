@@ -1,0 +1,3 @@
+import_from_git(url: 'git@scm.applidium.net:ADFastlane.git',
+               path: 'ios/fastlane/Fastfile',
+               branch: 'v4.0.+')
