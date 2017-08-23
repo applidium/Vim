@@ -1,6 +1,6 @@
 {
   "global_config": {
-    "workspace": "Vim.xcworkspace",
+    "workspace": null,
     "xcodeproj": "Vim.xcodeproj"
   },
   "apps": [{
