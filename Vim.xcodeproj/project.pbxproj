@@ -1535,6 +1535,7 @@
 					"${SRCROOT}/src/proto",
 				);
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1550,6 +1551,7 @@
 					"${SRCROOT}/src/proto",
 				);
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
