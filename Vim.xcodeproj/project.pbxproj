@@ -1535,6 +1535,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LL36D6ZV57;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
@@ -1545,6 +1546,7 @@
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1553,6 +1555,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LL36D6ZV57;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
@@ -1563,6 +1566,7 @@
 				INFOPLIST_FILE = src/os_ios_rsrc/ios_info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Distribution;
