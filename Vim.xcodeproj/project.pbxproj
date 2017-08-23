@@ -68,7 +68,6 @@
 		7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2A147FCFC900908FBE /* VimIcon72.png */; };
 		7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA2B147FCFC900908FBE /* VimIcon114.png */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
-		7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AD12B22169ACF73005BBE2E /* default-568h@2x.png */; };
 		EC8336781F4B2AED0068351A /* crypt_zip.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336761F4B2AED0068351A /* crypt_zip.c */; };
 		EC8336791F4B2AED0068351A /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336771F4B2AED0068351A /* crypt.c */; };
 		EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367A1F4B2B040068351A /* crypt_zip.pro */; };
@@ -79,6 +78,7 @@
 		EC8336911F4B33B80068351A /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = EC83368E1F4B33B80068351A /* json.c */; };
 		EC8336941F4B33C70068351A /* channel.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC8336921F4B33C70068351A /* channel.pro */; };
 		EC8336951F4B33C70068351A /* json.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC8336931F4B33C70068351A /* json.pro */; };
+		EC83369E1F4DB3C00068351A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC83369D1F4DB3C00068351A /* LaunchScreen.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -633,7 +633,6 @@
 		7A992E011422933000075221 /* xxd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = xxd; sourceTree = "<group>"; };
 		7A992E021422933000075221 /* xxd.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xxd.c; sourceTree = "<group>"; };
 		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		7AD12B22169ACF73005BBE2E /* default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "default-568h@2x.png"; sourceTree = "<group>"; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
 		EC8336751F4B2AED0068351A /* alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alloc.h; sourceTree = "<group>"; };
@@ -647,6 +646,7 @@
 		EC83368E1F4B33B80068351A /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
 		EC8336921F4B33C70068351A /* channel.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = channel.pro; sourceTree = "<group>"; };
 		EC8336931F4B33C70068351A /* json.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = json.pro; sourceTree = "<group>"; };
+		EC83369D1F4DB3C00068351A /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1341,10 +1341,10 @@
 				7A8CAA29147FCFC900908FBE /* VimIcon57.png */,
 				7A8CAA2A147FCFC900908FBE /* VimIcon72.png */,
 				7A8CAA2B147FCFC900908FBE /* VimIcon114.png */,
-				7AD12B22169ACF73005BBE2E /* default-568h@2x.png */,
 				7A8CAA1D147FA3D100908FBE /* vimrc */,
 				7AE20BB2142B8D7E00848B40 /* ios_info.plist */,
 				7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */,
+				EC83369D1F4DB3C00068351A /* LaunchScreen.xib */,
 			);
 			path = os_ios_rsrc;
 			sourceTree = "<group>";
@@ -1403,6 +1403,7 @@
 				EC8336951F4B33C70068351A /* json.pro in Resources */,
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
 				EC83367F1F4B2B040068351A /* crypt.pro in Resources */,
+				EC83369E1F4DB3C00068351A /* LaunchScreen.xib in Resources */,
 				EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */,
 				EC8336941F4B33C70068351A /* channel.pro in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
@@ -1410,7 +1411,6 @@
 				7A8CAA2D147FCFC900908FBE /* VimIcon72.png in Resources */,
 				7A8CAA2E147FCFC900908FBE /* VimIcon114.png in Resources */,
 				EC8336811F4B2B040068351A /* os_beos.pro in Resources */,
-				7AD12B23169ACF73005BBE2E /* default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

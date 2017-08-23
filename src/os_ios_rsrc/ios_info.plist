@@ -46,6 +46,8 @@
 	<true/>
 	<key>UILaunchImageFile</key>
 	<string>default</string>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIStatusBarStyle</key>
