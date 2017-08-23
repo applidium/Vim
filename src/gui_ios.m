@@ -136,17 +136,18 @@ enum blink_state {
 
 #pragma mark UIViewController
 - (void)loadView {
-    self.view = [[[UIView alloc] initWithFrame:gui_ios.window.bounds] autorelease];
-    self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-
-    CGFloat statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
-        statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
-    }
-    CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : statusBarHeight;
-    _textView = [[VimTextView alloc] initWithFrame:CGRectMake(0.0f, statusBarOffset, self.view.bounds.size.width, self.view.bounds.size.height - statusBarOffset)];
-    _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    self.view = [[[UIView alloc] init] autorelease];
+    _textView = [[VimTextView alloc] init];
+    _textView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_textView];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.topLayoutGuide attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeTop multiplier:1.0 constant:0.0]];
+     [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0.0]];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0.0]];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeRight multiplier:1.0 constant:0.0]];
     [_textView release];
 
     _hasBeenFlushedOnce = NO;
@@ -178,6 +179,11 @@ enum blink_state {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
                                                  name:UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController setNavigationBarHidden:YES];
 }
 
 - (void)viewDidUnload {
@@ -348,7 +354,7 @@ enum blink_state {
     // Per Apple's documentation : Performs the specified selector on the application's main thread during that thread's next run loop cycle.
     gui_ios.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     gui_ios.view_controller = [[VimViewController alloc] init];
-    gui_ios.window.rootViewController = gui_ios.view_controller;
+    gui_ios.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:gui_ios.view_controller];
     [gui_ios.view_controller release];
     [gui_ios.window makeKeyAndVisible];
 
