@@ -1,0 +1,34 @@
+{
+  "global_config": {
+    "workspace": "Vim.xcworkspace",
+    "xcodeproj": "Vim.xcodeproj"
+  },
+  "apps": [{
+    "target": "Vim",
+    "inhouse": false,
+    "bundles": {
+      "main_app": "com.applidium.Vim",
+      "extensions": []
+    },
+    "code_signing": {
+      "apple_id": "fastlane@applidium.com",
+      "team_id": "LL36D6ZV57",
+      "team_name": "APPLIDIUM",
+      "match_git": "ssh://git@scm.applidium.net/ADSigningAssets",
+      "match_branch": "master"
+    },
+    "itunes_connect": {
+      "apple_id": "fastlane@applidium.com",
+      "team_id": "221586",
+      "itc_provider": "221586"
+    },
+    "hockeyapp": {
+      "Debug": null,
+      "Distribution": "ca277374ba8c4f21a3d660496fe47b94"
+    },
+    "applidium_bundles": {
+      "main_app": "com.applidium.Vim",
+      "extensions": []
+    }
+  }]
+}
