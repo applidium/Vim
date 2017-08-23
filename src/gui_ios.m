@@ -78,12 +78,22 @@ enum blink_state {
             CGContextBeginPath(context);
             CGContextAddRect(context, rect);
             CGContextClip(context);
+            CGFloat scale = [UIScreen mainScreen].scale;
+            CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
             CGContextDrawLayerAtPoint(context, rect.origin, gui_ios.layer);
             CGContextRestoreGState(context);
             gui_ios.dirtyRect = CGRectZero;
         }
     } else {
-        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
+        CGFloat shellSize = MAX(CGRectGetHeight([UIScreen mainScreen].bounds),
+                                CGRectGetWidth([UIScreen mainScreen].bounds));
+        CGFloat scale = [UIScreen mainScreen].scale;
+        shellSize *= scale;
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(),
+                                                 CGSizeMake(shellSize, shellSize),
+                                                 nil);
+        CGContextRef context = CGLayerGetContext(gui_ios.layer);
+        CGContextScaleCTM(context, scale, scale);
     }
 }
 
@@ -93,7 +103,6 @@ enum blink_state {
 }
 
 - (void)resizeShell {
-//    NSLog(@"Setting shell size to %d x %d", (int)self.bounds.size.width, (int)self.bounds.size.height);
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
 @end
