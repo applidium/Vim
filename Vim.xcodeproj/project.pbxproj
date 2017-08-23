@@ -1528,6 +1528,7 @@
 		7A71943B14228FA500B62000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
@@ -1544,6 +1545,7 @@
 		7A71943C14228FA500B62000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
