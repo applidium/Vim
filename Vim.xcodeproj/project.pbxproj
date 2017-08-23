@@ -1376,6 +1376,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
+				TargetAttributes = {
+					7A71941314228FA500B62000 = {
+						DevelopmentTeam = LL36D6ZV57;
+					};
+				};
 			};
 			buildConfigurationList = 7A71940E14228FA500B62000 /* Build configuration list for PBXProject "Vim" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1500,12 +1505,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				PROVISIONING_PROFILE_SPECIFIER = "$(PROFILE_UDID)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		7A71943914228FA500B62000 /* Release */ = {
+		7A71943914228FA500B62000 /* Distribution */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -1518,17 +1524,18 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "$(PROFILE_UDID)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
-			name = Release;
+			name = Distribution;
 		};
 		7A71943B14228FA500B62000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				DEVELOPMENT_TEAM = LL36D6ZV57;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
@@ -1542,10 +1549,11 @@
 			};
 			name = Debug;
 		};
-		7A71943C14228FA500B62000 /* Release */ = {
+		7A71943C14228FA500B62000 /* Distribution */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				DEVELOPMENT_TEAM = LL36D6ZV57;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/os_ios_rsrc/ios_prefix.pch;
 				HEADER_SEARCH_PATHS = (
@@ -1557,7 +1565,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
-			name = Release;
+			name = Distribution;
 		};
 /* End XCBuildConfiguration section */
 
@@ -1566,19 +1574,19 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943814228FA500B62000 /* Debug */,
-				7A71943914228FA500B62000 /* Release */,
+				7A71943914228FA500B62000 /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Distribution;
 		};
 		7A71943A14228FA500B62000 /* Build configuration list for PBXNativeTarget "Vim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7A71943B14228FA500B62000 /* Debug */,
-				7A71943C14228FA500B62000 /* Release */,
+				7A71943C14228FA500B62000 /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Distribution;
 		};
 /* End XCConfigurationList section */
 	};
