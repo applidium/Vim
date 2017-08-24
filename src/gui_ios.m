@@ -225,6 +225,10 @@ enum blink_state {
     return UIKeyboardTypeDefault;
 }
 
+- (UITextAutocorrectionType)autocorrectionType {
+    return UITextAutocorrectionTypeNo;
+}
+
 #pragma mark VimViewController
 - (void)click:(UITapGestureRecognizer *)sender {
     [self becomeFirstResponder];
