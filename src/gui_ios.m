@@ -349,36 +349,84 @@ enum blink_state {
 #pragma mark -
 #pragma mark VimAppDelegate
 
-@interface VimAppDelegate : NSObject <UIApplicationDelegate> {
-}
+@interface VimAppDelegate : NSObject <UIApplicationDelegate>
+@property (nonatomic, readonly, nullable) NSString * homePath;
 @end
 
 @implementation VimAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Per Apple's documentation : Performs the specified selector on the application's main thread during that thread's next run loop cycle.
+
+    NSURL* url = nil;
+    if (launchOptions && launchOptions.count) {
+        // Someone asked us to restart the application
+        // Need to extract the URL to open
+        url = [launchOptions valueForKey:UIApplicationLaunchOptionsURLKey];
+    }
+
     gui_ios.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     gui_ios.view_controller = [[VimViewController alloc] init];
     gui_ios.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:gui_ios.view_controller];
     [gui_ios.view_controller release];
     [gui_ios.window makeKeyAndVisible];
 
-    [self performSelectorOnMainThread:@selector(_VimMain) withObject:nil waitUntilDone:NO];
+    [self performSelectorOnMainThread:@selector(_VimMain:) withObject:url waitUntilDone:NO];
     return YES;
 }
 
-- (void)_VimMain {
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    if (![gui_ios.view_controller canBecomeFirstResponder]) { return NO; }
+    NSString* urlString = url.absoluteString;
+    if (!url.isFileURL) { return NO; }
+    // Find "Documents/" in the urlString.
+    NSRange position = [urlString rangeOfString:@"Documents/"];
+    if (position.location == NSNotFound) { return NO; }
+    position.location += position.length;
+    position.length = [urlString length] - position.location;
+    NSString* fileName = [urlString substringWithRange:position];
+    char command[255];
+    sprintf(command, "tabedit %s", [fileName UTF8String]);
+    do_cmdline_cmd((char_u *)command);
+    command[0] = Ctrl_L;
+    command[1] = 0x0;
+    add_to_input_buf((char_u *)command, 1);
+    return YES;
+}
+
+- (void)_VimMain:(NSURL *)url {
     NSString * vimPath = [[NSBundle mainBundle] resourcePath];
     vim_setenv((char_u *)"VIM", (char_u *)[vimPath UTF8String]);
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[vimPath stringByAppendingPathComponent:@"runtime"] UTF8String]);
 
-    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    if (paths.count > 0) {
-        vim_setenv((char_u *)"HOME", (char_u *)[[paths objectAtIndex:0] UTF8String]);
-        [[NSFileManager defaultManager] changeCurrentDirectoryPath:[paths objectAtIndex:0]];
+    NSString * homePath = self.homePath;
+    if (homePath != nil) {
+        vim_setenv((char_u *)"HOME", (char_u *)homePath.UTF8String);
+        [[NSFileManager defaultManager] changeCurrentDirectoryPath:homePath];
+    }
+    char * argv[2] = { "vim", nil};
+    int numArgs = 1;
+    if (url.isFileURL && homePath != nil) {
+        NSString* urlString = url.absoluteString;
+        NSRange position = [urlString rangeOfString:homePath];
+        if (position.location != NSNotFound) {
+            position.location += position.length;
+            position.length = [urlString length] - position.location;
+            NSString * fileName = [urlString substringWithRange:position];
+            char fileNameChar[fileName.length];
+            strncpy(fileNameChar, fileName.UTF8String, fileName.length);
+            argv[1] = fileNameChar;
+            numArgs += 1;
+        }
     }
 
-    char * argv[] = { "vim" };
-    VimMain(1, argv);
+    VimMain(numArgs, argv);
+}
+
+#pragma mark - Private
+
+- (NSString *)homePath {
+    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    return paths.firstObject;
 }
 @end
 
