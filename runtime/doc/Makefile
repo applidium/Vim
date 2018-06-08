@@ -32,7 +32,6 @@ DOCS = \
 	ft_ada.txt \
 	ft_sql.txt \
 	gui.txt \
-	gui_w16.txt \
 	gui_w32.txt \
 	gui_x11.txt \
 	hangulin.txt \
@@ -143,6 +142,7 @@ DOCS = \
 	version5.txt \
 	version6.txt \
 	version7.txt \
+	version8.txt \
 	vi_diff.txt \
 	visual.txt \
 	windows.txt \
@@ -167,7 +167,6 @@ HTMLS = \
 	ft_ada.html \
 	ft_sql.html \
 	gui.html \
-	gui_w16.html \
 	gui_w32.html \
 	gui_x11.html \
 	hangulin.html \
@@ -277,6 +276,7 @@ HTMLS = \
 	version5.html \
 	version6.html \
 	version7.html \
+	version8.html \
 	vi_diff.html \
 	vimindex.html \
 	visual.html \
@@ -387,9 +387,6 @@ hebrew.txt:
 
 russian.txt:
 	touch russian.txt
-
-gui_w16.txt:
-	touch gui_w16.txt
 
 gui_w32.txt:
 	touch gui_w32.txt

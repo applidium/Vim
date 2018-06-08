@@ -43,6 +43,7 @@ void gui_mch_set_scrollbar_thumb (scrollbar_T *sb, long val, long size, long max
 void gui_mch_draw_hollow_cursor (guicolor_T color);
 void gui_mch_draw_part_cursor (int w, int h, guicolor_T color);
 void gui_mch_set_blinking (long wait, long on, long off);
+int gui_mch_is_blink_off(void);
 void gui_mch_start_blink (void);
 void gui_mch_stop_blink (void);
 void gui_mch_getmouse (int *x, int *y);

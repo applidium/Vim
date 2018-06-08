@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 7.4.  Last change: 2016 Jan 10
+*help.txt*	For Vim version 7.4.  Last change: 2016 Mar 31
 
 			VIM - main help file
 									 k
@@ -155,7 +155,6 @@ Special issues ~
 
 GUI ~
 |gui.txt|	Graphical User Interface (GUI)
-|gui_w16.txt|	Windows 3.1 GUI
 |gui_w32.txt|	Win32 GUI
 |gui_x11.txt|	X11 GUI
 
@@ -165,7 +164,6 @@ Interfaces ~
 |if_mzsch.txt|	MzScheme interface
 |if_perl.txt|	Perl interface
 |if_pyth.txt|	Python interface
-|if_sniff.txt|	SNiFF+ interface
 |if_tcl.txt|	Tcl interface
 |if_ole.txt|	OLE automation interface for Win32
 |if_ruby.txt|	Ruby interface
@@ -180,6 +178,7 @@ Versions ~
 |version5.txt|	Differences between Vim version 4.6 and 5.x
 |version6.txt|	Differences between Vim version 5.7 and 6.x
 |version7.txt|	Differences between Vim version 6.4 and 7.x
+|version8.txt|	Differences between Vim version 7.4 and 8.x
 						*sys-file-list*
 Remarks about specific systems ~
 |os_390.txt|	OS/390 Unix

@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -79,7 +79,7 @@ static mapblock_T	*first_abbr = NULL; /* first entry in abbrlist */
 static int		KeyNoremap = 0;	    /* remapping flags */
 
 /*
- * variables used by vgetorpeek() and flush_buffers()
+ * Variables used by vgetorpeek() and flush_buffers().
  *
  * typebuf.tb_buf[] contains all characters that are not consumed yet.
  * typebuf.tb_buf[typebuf.tb_off] is the first valid character.
@@ -129,6 +129,7 @@ static int	vgetorpeek(int);
 static void	map_free(mapblock_T **);
 static void	validate_maphash(void);
 static void	showmap(mapblock_T *mp, int local);
+static int	inchar(char_u *buf, int maxlen, long wait_time, int tb_change_cnt);
 #ifdef FEAT_EVAL
 static char_u	*eval_map_expr(char_u *str, int c);
 #endif
@@ -1356,8 +1357,6 @@ static int old_mouse_row;	/* mouse_row related to old_char */
 static int old_mouse_col;	/* mouse_col related to old_char */
 #endif
 
-#if defined(FEAT_EVAL) || defined(FEAT_EX_EXTRA) || defined(PROTO)
-
 /*
  * Save all three kinds of typeahead, so that the user must type at a prompt.
  */
@@ -1406,7 +1405,6 @@ restore_typeahead(tasave_T *tp)
     set_input_buf(tp->save_inputbuf);
 # endif
 }
-#endif
 
 /*
  * Open a new script file for the ":source!" command.
@@ -1526,7 +1524,7 @@ before_blocking(void)
     updatescript(0);
 #ifdef FEAT_EVAL
     if (may_garbage_collect)
-	garbage_collect();
+	garbage_collect(FALSE);
 #endif
 }
 
@@ -1574,7 +1572,7 @@ vgetc(void)
     /* Do garbage collection when garbagecollect() was called previously and
      * we are now at the toplevel. */
     if (may_garbage_collect && want_garbage_collect)
-	garbage_collect();
+	garbage_collect(FALSE);
 #endif
 
     /*
@@ -1680,15 +1678,6 @@ vgetc(void)
 		c = CSI;
 #endif
 	}
-#ifdef MSDOS
-	/*
-	 * If K_NUL was typed, it is replaced by K_NUL, 3 in mch_inchar().
-	 * Delete the 3 here.
-	 */
-	else if (c == K_NUL && vpeekc() == 3)
-	    (void)vgetorpeek(TRUE);
-#endif
-
 	/* a keypad or special function key was not mapped, use it like
 	 * its ASCII equivalent */
 	switch (c)
@@ -1891,6 +1880,12 @@ char_avail(void)
 {
     int	    retval;
 
+#ifdef FEAT_EVAL
+    /* When test_disable_char_avail(1) was called pretend there is no
+     * typeahead. */
+    if (disable_char_avail_for_testing)
+	return FALSE;
+#endif
     ++no_mapping;
     retval = vpeekc();
     --no_mapping;
@@ -1924,7 +1919,7 @@ vungetc(int c)
  *	This may do a blocking wait if "advance" is TRUE.
  *
  * if "advance" is TRUE (vgetc()):
- *	really get the character.
+ *	Really get the character.
  *	KeyTyped is set to TRUE in the case the user typed the key.
  *	KeyStuffed is TRUE if the character comes from the stuff buffer.
  * if "advance" is FALSE (vpeekc()):
@@ -1981,11 +1976,7 @@ vgetorpeek(int advance)
      * Using ":normal" can also do this, but it saves the typeahead buffer,
      * thus it should be OK.  But don't get a key from the user then.
      */
-    if (vgetc_busy > 0
-#ifdef FEAT_EX_EXTRA
-	    && ex_normal_busy == 0
-#endif
-	    )
+    if (vgetc_busy > 0 && ex_normal_busy == 0)
 	return NUL;
 
     local_State = get_real_state();
@@ -2605,9 +2596,7 @@ vgetorpeek(int advance)
 			&& typebuf.tb_len == 1
 			&& typebuf.tb_buf[typebuf.tb_off] == ESC
 			&& !no_mapping
-#ifdef FEAT_EX_EXTRA
 			&& ex_normal_busy == 0
-#endif
 			&& typebuf.tb_maplen == 0
 			&& (State & INSERT)
 			&& (p_timeout
@@ -2729,12 +2718,11 @@ vgetorpeek(int advance)
 		    continue;
 		}
 
-#ifdef FEAT_EX_EXTRA
 		if (ex_normal_busy > 0)
 		{
-# ifdef FEAT_CMDWIN
+#ifdef FEAT_CMDWIN
 		    static int tc = 0;
-# endif
+#endif
 
 		    /* No typeahead left and inside ":normal".  Must return
 		     * something to avoid getting stuck.  When an incomplete
@@ -2753,19 +2741,18 @@ vgetorpeek(int advance)
 		    if (p_im && (State & INSERT))
 			c = Ctrl_L;
 		    else if ((State & CMDLINE)
-# ifdef FEAT_CMDWIN
+#ifdef FEAT_CMDWIN
 			    || (cmdwin_type > 0 && tc == ESC)
-# endif
+#endif
 			    )
 			c = Ctrl_C;
 		    else
 			c = ESC;
-# ifdef FEAT_CMDWIN
+#ifdef FEAT_CMDWIN
 		    tc = c;
-# endif
+#endif
 		    break;
 		}
-#endif
 
 /*
  * get a character: 3. from the user - update display
@@ -2955,7 +2942,7 @@ vgetorpeek(int advance)
  *  Return the number of obtained characters.
  *  Return -1 when end of input script reached.
  */
-    int
+    static int
 inchar(
     char_u	*buf,
     int		maxlen,
@@ -3073,7 +3060,7 @@ inchar(
     if (typebuf_changed(tb_change_cnt))
 	return 0;
 
-    return fix_input_buffer(buf, len, script_char >= 0);
+    return fix_input_buffer(buf, len);
 }
 
 /*
@@ -3082,10 +3069,7 @@ inchar(
  * Returns the new length.
  */
     int
-fix_input_buffer(
-    char_u	*buf,
-    int		len,
-    int		script)		/* TRUE when reading from a script */
+fix_input_buffer(char_u *buf, int len)
 {
     int		i;
     char_u	*p = buf;
@@ -3096,7 +3080,6 @@ fix_input_buffer(
      * Replace	     NUL by K_SPECIAL KS_ZERO	 KE_FILLER
      * Replace K_SPECIAL by K_SPECIAL KS_SPECIAL KE_FILLER
      * Replace       CSI by K_SPECIAL KS_EXTRA   KE_CSI
-     * Don't replace K_SPECIAL when reading a script file.
      */
     for (i = len; --i >= 0; ++p)
     {
@@ -3119,7 +3102,7 @@ fix_input_buffer(
 	}
 	else
 #endif
-	if (p[0] == NUL || (p[0] == K_SPECIAL && !script
+	if (p[0] == NUL || (p[0] == K_SPECIAL
 #ifdef FEAT_AUTOCMD
 		    /* timeout may generate K_CURSORHOLD */
 		    && (i < 2 || p[1] != KS_EXTRA || p[2] != (int)KE_CURSORHOLD)
@@ -4004,6 +3987,9 @@ showmap(
     int		len = 1;
     char_u	*mapchars;
 
+    if (message_filtered(mp->m_keys) && message_filtered(mp->m_str))
+	return;
+
     if (msg_didout || msg_silent != 0)
     {
 	msg_putchar('\n');
@@ -4638,18 +4624,14 @@ eval_map_expr(
     /* Forbid changing text or using ":normal" to avoid most of the bad side
      * effects.  Also restore the cursor position. */
     ++textlock;
-#ifdef FEAT_EX_EXTRA
     ++ex_normal_lock;
-#endif
     set_vim_var_char(c);  /* set v:char to the typed character */
     save_cursor = curwin->w_cursor;
     save_msg_col = msg_col;
     save_msg_row = msg_row;
     p = eval_to_string(expr, NULL, FALSE);
     --textlock;
-#ifdef FEAT_EX_EXTRA
     --ex_normal_lock;
-#endif
     curwin->w_cursor = save_cursor;
     msg_col = save_msg_col;
     msg_row = save_msg_row;
@@ -4679,8 +4661,16 @@ vim_strsave_escape_csi(
     char_u	*res;
     char_u	*s, *d;
 
-    /* Need a buffer to hold up to three times as much. */
-    res = alloc((unsigned)(STRLEN(p) * 3) + 1);
+    /* Need a buffer to hold up to three times as much.  Four in case of an
+     * illegal utf-8 byte:
+     * 0xc0 -> 0xc3 0x80 -> 0xc3 K_SPECIAL KS_SPECIAL KE_FILLER */
+    res = alloc((unsigned)(STRLEN(p) *
+#ifdef FEAT_MBYTE
+			4
+#else
+			3
+#endif
+			    ) + 1);
     if (res != NULL)
     {
 	d = res;
@@ -4695,22 +4685,10 @@ vim_strsave_escape_csi(
 	    }
 	    else
 	    {
-#ifdef FEAT_MBYTE
-		int len  = mb_char2len(PTR2CHAR(s));
-		int len2 = mb_ptr2len(s);
-#endif
 		/* Add character, possibly multi-byte to destination, escaping
-		 * CSI and K_SPECIAL. */
+		 * CSI and K_SPECIAL. Be careful, it can be an illegal byte! */
 		d = add_char2buf(PTR2CHAR(s), d);
-#ifdef FEAT_MBYTE
-		while (len < len2)
-		{
-		    /* add following combining char */
-		    d = add_char2buf(PTR2CHAR(s + len), d);
-		    len += mb_char2len(PTR2CHAR(s + len));
-		}
-#endif
-		mb_ptr_adv(s);
+		s += MB_CPTR2LEN(s);
 	    }
 	}
 	*d = NUL;
@@ -5250,7 +5228,7 @@ check_map(
 }
 #endif
 
-#if defined(MSDOS) || defined(MSWIN) || defined(MACOS)
+#if defined(MSWIN) || defined(MACOS)
 
 #define VIS_SEL	(VISUAL+SELECTMODE)	/* abbreviation */
 
@@ -5263,7 +5241,7 @@ static struct initmap
     int		mode;
 } initmappings[] =
 {
-#if defined(MSDOS) || defined(MSWIN)
+#if defined(MSWIN)
 	/* Use the Windows (CUA) keybindings. */
 # ifdef FEAT_GUI
 	/* paste, copy and cut */
@@ -5283,17 +5261,6 @@ static struct initmap
 
 	/* paste, copy and cut */
 #  ifdef FEAT_CLIPBOARD
-#   ifdef DJGPP
-	{(char_u *)"\316\122 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
-	{(char_u *)"\316\122 \"-d\"*P", VIS_SEL},   /* SHIFT-Insert is "-d"*P */
-	{(char_u *)"\316\122 \022\017*", INSERT},  /* SHIFT-Insert is ^R^O* */
-	{(char_u *)"\316\222 \"*y", VIS_SEL},	    /* CTRL-Insert is "*y */
-#    if 0 /* Shift-Del produces the same code as Del */
-	{(char_u *)"\316\123 \"*d", VIS_SEL},	    /* SHIFT-Del is "*d */
-#    endif
-	{(char_u *)"\316\223 \"*d", VIS_SEL},	    /* CTRL-Del is "*d */
-	{(char_u *)"\030 \"-d", VIS_SEL},	    /* CTRL-X is "-d */
-#   else
 	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
 	{(char_u *)"\316\324 \"-d\"*P", VIS_SEL},   /* SHIFT-Insert is "-d"*P */
 	{(char_u *)"\316\324 \022\017*", INSERT},  /* SHIFT-Insert is ^R^O* */
@@ -5301,7 +5268,6 @@ static struct initmap
 	{(char_u *)"\316\327 \"*d", VIS_SEL},	    /* SHIFT-Del is "*d */
 	{(char_u *)"\316\330 \"*d", VIS_SEL},	    /* CTRL-Del is "*d */
 	{(char_u *)"\030 \"-d", VIS_SEL},	    /* CTRL-X is "-d */
-#   endif
 #  else
 	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
 	{(char_u *)"\316\324 \"-dP", VIS_SEL},	    /* SHIFT-Insert is "-dP */
@@ -5334,16 +5300,15 @@ static struct initmap
     void
 init_mappings(void)
 {
-#if defined(MSDOS) || defined(MSWIN) ||defined(MACOS)
+#if defined(MSWIN) ||defined(MACOS)
     int		i;
 
-    for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
+    for (i = 0; i < (int)(sizeof(initmappings) / sizeof(struct initmap)); ++i)
 	add_map(initmappings[i].arg, initmappings[i].mode);
 #endif
 }
 
-#if defined(MSDOS) || defined(MSWIN) \
-	|| defined(FEAT_CMDWIN) || defined(MACOS) || defined(PROTO)
+#if defined(MSWIN) || defined(FEAT_CMDWIN) || defined(MACOS) || defined(PROTO)
 /*
  * Add a mapping "map" for mode "mode".
  * Need to put string in allocated memory, because do_map() will modify it.

@@ -1173,6 +1173,12 @@ gui_mch_set_blinking(long wait, long on, long off)
 }
 
 
+    int
+gui_mch_is_blink_off(void)
+{
+    return gui_ios.blink_state == BLINK_OFF;
+}
+
 /*
  * Start the cursor blinking.  If it was already blinking, this restarts the
  * waiting time and shows the cursor.

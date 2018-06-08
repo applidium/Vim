@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -571,7 +571,7 @@ transchar(int c)
 		    (c >= ' ' && c <= '~')
 #endif
 #ifdef FEAT_FKMAP
-			|| F_ischar(c)
+			|| (p_altkeymap && F_ischar(c))
 #endif
 		)) || (c < 256 && vim_isprintc_strict(c)))
     {
@@ -822,14 +822,11 @@ vim_strnsize(char_u *s, int len)
     else \
 	return ptr2cells(p);
 
-#if defined(FEAT_VREPLACE) || defined(FEAT_EX_EXTRA) || defined(FEAT_GUI) \
-	|| defined(FEAT_VIRTUALEDIT) || defined(PROTO)
     int
 chartabsize(char_u *p, colnr_T col)
 {
     RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, p, col)
 }
-#endif
 
 #ifdef FEAT_LINEBREAK
     static int
@@ -1096,7 +1093,7 @@ win_lbr_chartabsize(
 	    && vim_isbreak(c)
 	    && !vim_isbreak(s[1])
 	    && wp->w_p_wrap
-# ifdef FEAT_VERTSPLIT
+# ifdef FEAT_WINDOWS
 	    && wp->w_width != 0
 # endif
        )
@@ -1253,10 +1250,10 @@ in_win_border(win_T *wp, colnr_T vcol)
     int		width1;		/* width of first line (after line number) */
     int		width2;		/* width of further lines */
 
-#ifdef FEAT_VERTSPLIT
+# ifdef FEAT_WINDOWS
     if (wp->w_width == 0)	/* there is no border */
 	return FALSE;
-#endif
+# endif
     width1 = W_WIDTH(wp) - win_col_off(wp);
     if ((int)vcol < width1 - 1)
 	return FALSE;
@@ -1568,7 +1565,6 @@ skiphex(char_u *q)
 }
 #endif
 
-#if defined(FEAT_EX_EXTRA) || defined(PROTO)
 /*
  * skip to bin digit (or NUL after the string)
  */
@@ -1607,7 +1603,6 @@ skiptohex(char_u *q)
 	++p;
     return p;
 }
-#endif
 
 /*
  * Variant of isdigit() that can handle characters > 0x100.
@@ -1766,8 +1761,7 @@ skiptowhite(char_u *p)
     return p;
 }
 
-#if defined(FEAT_LISTCMDS) || defined(FEAT_SIGNS) || defined(FEAT_SNIFF) \
-	|| defined(PROTO)
+#if defined(FEAT_LISTCMDS) || defined(FEAT_SIGNS) || defined(PROTO)
 /*
  * skiptowhite_esc: Like skiptowhite(), but also skip escaped chars
  */
@@ -1842,14 +1836,14 @@ vim_str2nr(
 				       is bin */
     int			*len,	    /* return: detected length of number */
     int			what,	    /* what numbers to recognize */
-    long		*nptr,	    /* return: signed result */
-    unsigned long	*unptr,	    /* return: unsigned result */
+    varnumber_T		*nptr,	    /* return: signed result */
+    uvarnumber_T	*unptr,	    /* return: unsigned result */
     int			maxlen)     /* max length of string to check */
 {
     char_u	    *ptr = start;
     int		    pre = 0;		/* default is decimal */
     int		    negative = FALSE;
-    unsigned long   un = 0;
+    uvarnumber_T    un = 0;
     int		    n;
 
     if (ptr[0] == '-')
@@ -1918,7 +1912,7 @@ vim_str2nr(
 	/* octal */
 	while ('0' <= *ptr && *ptr <= '7')
 	{
-	    un = 8 * un + (unsigned long)(*ptr - '0');
+	    un = 8 * un + (uvarnumber_T)(*ptr - '0');
 	    ++ptr;
 	    if (n++ == maxlen)
 		break;
@@ -1931,7 +1925,7 @@ vim_str2nr(
 	    n += 2;	    /* skip over "0x" */
 	while (vim_isxdigit(*ptr))
 	{
-	    un = 16 * un + (unsigned long)hex2nr(*ptr);
+	    un = 16 * un + (uvarnumber_T)hex2nr(*ptr);
 	    ++ptr;
 	    if (n++ == maxlen)
 		break;
@@ -1942,7 +1936,7 @@ vim_str2nr(
 	/* decimal */
 	while (VIM_ISDIGIT(*ptr))
 	{
-	    un = 10 * un + (unsigned long)(*ptr - '0');
+	    un = 10 * un + (uvarnumber_T)(*ptr - '0');
 	    ++ptr;
 	    if (n++ == maxlen)
 		break;
@@ -1956,9 +1950,9 @@ vim_str2nr(
     if (nptr != NULL)
     {
 	if (negative)   /* account for leading '-' for decimal numbers */
-	    *nptr = -(long)un;
+	    *nptr = -(varnumber_T)un;
 	else
-	    *nptr = (long)un;
+	    *nptr = (varnumber_T)un;
     }
     if (unptr != NULL)
 	*unptr = un;

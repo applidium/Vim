@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -35,19 +35,8 @@
 # ifdef AMIGA
 #  include "os_amiga.pro"
 # endif
-# if defined(UNIX) || defined(__EMX__) || defined(VMS)
+# if defined(UNIX) || defined(VMS)
 #  include "os_unix.pro"
-# endif
-# if defined(MSDOS) || defined(WIN16)
-#  include "os_msdos.pro"
-# endif
-# ifdef WIN16
-   typedef LPSTR LPWSTR;
-   typedef LPCSTR LPCWSTR;
-   typedef int LPBOOL;
-#  include "os_win16.pro"
-#  include "os_mswin.pro"
-#  include "winclip.pro"
 # endif
 # ifdef WIN3264
 #  include "os_win32.pro"
@@ -78,10 +67,12 @@ extern int _stricoll(char *a, char *b);
 # ifdef FEAT_CSCOPE
 #  include "if_cscope.pro"
 # endif
+# include "dict.pro"
 # include "diff.pro"
 # include "digraph.pro"
 # include "edit.pro"
 # include "eval.pro"
+# include "evalfunc.pro"
 # include "ex_cmds.pro"
 # include "ex_cmds2.pro"
 # include "ex_docmd.pro"
@@ -96,6 +87,7 @@ extern int _stricoll(char *a, char *b);
 # include "hardcopy.pro"
 # include "hashtab.pro"
 # include "json.pro"
+# include "list.pro"
 # include "main.pro"
 # include "mark.pro"
 # include "memfile.pro"
@@ -103,10 +95,14 @@ extern int _stricoll(char *a, char *b);
 # ifdef FEAT_MENU
 #  include "menu.pro"
 # endif
+# ifdef FEAT_FKMAP
+#  include "farsi.pro"
+# endif
+# ifdef FEAT_ARABIC
+#  include "arabic.pro"
+# endif
 
-# if !defined MESSAGE_FILE || defined(HAVE_STDARG_H)
-    /* These prototypes cannot be produced automatically and conflict with
-     * the old-style prototypes in message.c. */
+/* These prototypes cannot be produced automatically. */
 int
 #  ifdef __BORLANDC__
 _RTLENTRYF
@@ -131,10 +127,7 @@ _RTLENTRYF
 #  endif
 vim_snprintf(char *, size_t, char *, ...);
 
-#  if defined(HAVE_STDARG_H)
 int vim_vsnprintf(char *str, size_t str_m, char *fmt, va_list ap, typval_T *tvs);
-#  endif
-# endif
 
 # include "message.pro"
 # include "misc1.pro"
@@ -165,6 +158,7 @@ void qsort(void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void 
 # endif
 # include "search.pro"
 # include "spell.pro"
+# include "spellfile.pro"
 # include "syntax.pro"
 # include "tag.pro"
 # include "term.pro"
@@ -173,6 +167,7 @@ void qsort(void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void 
 # endif
 # include "ui.pro"
 # include "undo.pro"
+# include "userfunc.pro"
 # include "version.pro"
 # include "window.pro"
 
@@ -209,7 +204,7 @@ void qsort(void *base, size_t elm_count, size_t elm_size, int (*cmp)(const void 
 # ifdef FEAT_NETBEANS_INTG
 #  include "netbeans.pro"
 # endif
-# ifdef FEAT_CHANNEL
+# ifdef FEAT_JOB_CHANNEL
 #  include "channel.pro"
 # endif
 
@@ -223,9 +218,6 @@ extern int putenv(const char *string);		/* from pty.c */
 #   ifdef USE_VIMPTY_GETENV
 extern char_u *vimpty_getenv(const char_u *string);	/* from pty.c */
 #   endif
-#  endif
-#  ifdef FEAT_GUI_W16
-#   include "gui_w16.pro"
 #  endif
 #  ifdef FEAT_GUI_W32
 #   include "gui_w32.pro"

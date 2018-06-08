@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -17,5 +17,5 @@ typedef enum {
 	aid_qf_namebuf,
 	aid_qf_errmsg,
 	aid_qf_pattern,
-	aid_last,
+	aid_last
 } alloc_id_T;

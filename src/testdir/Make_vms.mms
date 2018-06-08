@@ -4,7 +4,7 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@polarhome.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2015 Dec 28
+# Last change:  2016 Aug 04
 #
 # This has been tested on VMS 6.2 to 8.3 on DEC Alpha, VAX and IA64.
 # Edit the lines in the Configuration section below to select.
@@ -104,12 +104,12 @@ SCRIPT = $(SCRIPTS_ALL) $(SCRIPTS_MORE3)
 # On ODS-2 tests fail. 
 
 .IFDEF WANT_GUI
-SCRIPT_GUI = test16.out
+SCRIPT_GUI = 
 GUI_OPTION = -g
 .ENDIF
 
 .IFDEF WANT_UNIX
-SCRIPT_UNIX = test10.out test12.out test17.out test25.out test27.out test49.out test73.out
+SCRIPT_UNIX = test12.out test17.out test25.out test27.out test49.out test73.out
 .ENDIF
 
 .IFDEF WANT_WIN
@@ -163,7 +163,7 @@ SCRIPT_PYTHON = test86.out test87.out
 	-@ write sys$output "                "$*" "
 	-@ write sys$output "-----------------------------------------------"
 	-@ !run the test
-	-@ create/term/wait/nodetach mcr $(VIMPROG) $(GUI_OPTION) -u vms.vim -U NONE --noplugin -s dotest.in $*.in
+	-@ create/term/wait/nodetach mcr $(VIMPROG) $(GUI_OPTION) -u vms.vim $(NO_PLUGIN) -s dotest.in $*.in
 	-@ !analyse the result
 	-@ directory /size/date test.out
 	-@ if "''F$SEARCH("test.out.*")'" .NES. "" then rename/nolog test.out $*.out 

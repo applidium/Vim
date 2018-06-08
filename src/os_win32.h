@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -48,9 +48,6 @@
 #endif
 #ifndef HAVE_FCNTL_H
 # define HAVE_FCNTL_H
-#endif
-#ifndef HAVE_STDARG_H
-# define HAVE_STDARG_H
 #endif
 #define HAVE_QSORT
 #define HAVE_ST_MODE		/* have stat.st_mode */

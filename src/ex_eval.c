@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -432,7 +432,7 @@ get_exception_string(
 
     if (type == ET_ERROR)
     {
-	*should_free = FALSE;
+	*should_free = TRUE;
 	mesg = ((struct msglist *)value)->throw_msg;
 	if (cmdname != NULL && *cmdname != NUL)
 	{
@@ -489,7 +489,7 @@ get_exception_string(
     else
     {
 	*should_free = FALSE;
-	ret = (char_u *) value;
+	ret = (char_u *)value;
     }
 
     return ret;
@@ -1562,7 +1562,11 @@ ex_catch(exarg_T *eap)
 		}
 		save_cpo  = p_cpo;
 		p_cpo = (char_u *)"";
+		/* Disable error messages, it will make current_exception
+		 * invalid. */
+		++emsg_off;
 		regmatch.regprog = vim_regcomp(pat, RE_MAGIC + RE_STRING);
+		--emsg_off;
 		regmatch.rm_ic = FALSE;
 		if (end != NULL)
 		    *end = save_char;
