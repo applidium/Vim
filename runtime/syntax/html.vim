@@ -1,9 +1,11 @@
 " Vim syntax file
-" Language:	HTML
-" Maintainer:	Claudio Fleiner <claudio@fleiner.com>
-" URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:	2015 Jan 07
-"		included patch from David Felix
+" Language:             HTML
+" Maintainer:           Jorge Maldonado Ventura <jorgesumle@freakspot.net>
+" Previous Maintainer:  Claudio Fleiner <claudio@fleiner.com>
+" Repository:           https://notabug.org/jorgesumle/vim-html-syntax
+" Last Change:          2017 Dec 16
+" Included patch from Jorge Maldonado Ventura to add the dialog element
+"
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -44,14 +46,22 @@ syn keyword htmlTagName contained cite code dd dfn dir div dl dt font
 syn keyword htmlTagName contained form hr html img
 syn keyword htmlTagName contained input isindex kbd li link map menu
 syn keyword htmlTagName contained meta ol option param pre p samp span
-syn keyword htmlTagName contained select small strike sub sup
+syn keyword htmlTagName contained select small sub sup
 syn keyword htmlTagName contained table td textarea th tr tt ul var xmp
 syn match htmlTagName contained "\<\(b\|i\|u\|h[1-6]\|em\|strong\|head\|body\|title\)\>"
 
 " new html 4.0 tags
 syn keyword htmlTagName contained abbr acronym bdo button col label
-syn keyword htmlTagName contained colgroup del fieldset iframe ins legend
+syn keyword htmlTagName contained colgroup fieldset iframe ins legend
 syn keyword htmlTagName contained object optgroup q s tbody tfoot thead
+
+" new html 5 tags
+syn keyword htmlTagName contained article aside audio bdi canvas data
+syn keyword htmlTagName contained datalist details embed figcaption figure
+syn keyword htmlTagName contained footer header hgroup keygen main mark
+syn keyword htmlTagName contained menuitem meter nav output picture
+syn keyword htmlTagName contained progress rb rp rt rtc ruby section
+syn keyword htmlTagName contained slot source template time track video wbr
 
 " legal arg names
 syn keyword htmlArg contained action
@@ -87,6 +97,19 @@ syn keyword htmlArg contained multiple nohref nowrap object profile readonly
 syn keyword htmlArg contained rules scheme scope span standby style
 syn keyword htmlArg contained summary tabindex valuetype version
 
+" html 5 arg names
+syn keyword htmlArg contained allowfullscreen async autocomplete autofocus
+syn keyword htmlArg contained autoplay challenge contenteditable contextmenu
+syn keyword htmlArg contained controls crossorigin default dialog dirname
+syn keyword htmlArg contained download draggable dropzone form formaction
+syn keyword htmlArg contained formenctype formmethod formnovalidate formtarget
+syn keyword htmlArg contained hidden high icon inputmode keytype kind list loop
+syn keyword htmlArg contained low max min minlength muted nonce novalidate open
+syn keyword htmlArg contained optimum pattern placeholder poster preload
+syn keyword htmlArg contained radiogroup required reversed sandbox spellcheck
+syn keyword htmlArg contained sizes srcset srcdoc srclang step title translate
+syn keyword htmlArg contained typemustmatch
+
 " special characters
 syn match htmlSpecialChar "&#\=[0-9A-Za-z]\{1,8};"
 
@@ -112,6 +135,9 @@ syn match htmlPreProcAttrName contained "\(expr\|errmsg\|sizefmt\|timefmt\|var\|
 if !exists("html_no_rendering")
   " rendering
   syn cluster htmlTop contains=@Spell,htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,@htmlPreproc
+
+  syn region htmlStrike start="<del\>" end="</del>"me=e-6 contains=@htmlTop
+  syn region htmlStrike start="<strike\>" end="</strike>"me=e-9 contains=@htmlTop
 
   syn region htmlBold start="<b\>" end="</b>"me=e-4 contains=@htmlTop,htmlBoldUnderline,htmlBoldItalic
   syn region htmlBold start="<strong\>" end="</strong>"me=e-9 contains=@htmlTop,htmlBoldUnderline,htmlBoldItalic
@@ -246,6 +272,11 @@ if !exists("html_no_rendering")
     hi def htmlUnderline           term=underline cterm=underline gui=underline
     hi def htmlUnderlineItalic     term=italic,underline cterm=italic,underline gui=italic,underline
     hi def htmlItalic              term=italic cterm=italic gui=italic
+    if v:version > 800 || v:version == 800 && has("patch1038")
+        hi def htmlStrike              term=strikethrough cterm=strikethrough gui=strikethrough
+    else
+        hi def htmlStrike              term=underline cterm=underline gui=underline
+    endif
   endif
 endif
 

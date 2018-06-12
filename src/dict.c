@@ -47,6 +47,16 @@ dict_alloc(void)
     return d;
 }
 
+    dict_T *
+dict_alloc_lock(int lock)
+{
+    dict_T *d = dict_alloc();
+
+    if (d != NULL)
+	d->dv_lock = lock;
+    return d;
+}
+
 /*
  * Allocate an empty dict for a return value.
  * Returns OK or FAIL.
@@ -54,23 +64,32 @@ dict_alloc(void)
     int
 rettv_dict_alloc(typval_T *rettv)
 {
-    dict_T	*d = dict_alloc();
+    dict_T	*d = dict_alloc_lock(0);
 
     if (d == NULL)
 	return FAIL;
 
-    rettv->vval.v_dict = d;
-    rettv->v_type = VAR_DICT;
-    rettv->v_lock = 0;
-    ++d->dv_refcount;
+    rettv_dict_set(rettv, d);
     return OK;
+}
+
+/*
+ * Set a dictionary as the return value
+ */
+    void
+rettv_dict_set(typval_T *rettv, dict_T *d)
+{
+    rettv->v_type = VAR_DICT;
+    rettv->vval.v_dict = d;
+    if (d != NULL)
+	++d->dv_refcount;
 }
 
 /*
  * Free a Dictionary, including all non-container items it contains.
  * Ignores the reference count.
  */
-    static void
+    void
 dict_free_contents(dict_T *d)
 {
     int		todo;
@@ -88,11 +107,12 @@ dict_free_contents(dict_T *d)
 	     * something recursive causing trouble. */
 	    di = HI2DI(hi);
 	    hash_remove(&d->dv_hashtab, hi);
-	    clear_tv(&di->di_tv);
-	    vim_free(di);
+	    dictitem_free(di);
 	    --todo;
 	}
     }
+
+    /* The hashtab is still locked, it has to be re-initialized anyway */
     hash_clear(&d->dv_hashtab);
 }
 
@@ -214,7 +234,7 @@ dictitem_remove(dict_T *dict, dictitem_T *item)
 
     hi = hash_find(&dict->dv_hashtab, item->di_key);
     if (HASHITEM_EMPTY(hi))
-	EMSG2(_(e_intern2), "dictitem_remove()");
+	internal_error("dictitem_remove()");
     else
 	hash_remove(&dict->dv_hashtab, hi);
     dictitem_free(item);
@@ -357,12 +377,12 @@ dict_add_list(dict_T *d, char *key, list_T *list)
     item->di_tv.v_lock = 0;
     item->di_tv.v_type = VAR_LIST;
     item->di_tv.vval.v_list = list;
+    ++list->lv_refcount;
     if (dict_add(d, item) == FAIL)
     {
 	dictitem_free(item);
 	return FAIL;
     }
-    ++list->lv_refcount;
     return OK;
 }
 
@@ -381,12 +401,12 @@ dict_add_dict(dict_T *d, char *key, dict_T *dict)
     item->di_tv.v_lock = 0;
     item->di_tv.v_type = VAR_DICT;
     item->di_tv.vval.v_dict = dict;
+    ++dict->dv_refcount;
     if (dict_add(d, item) == FAIL)
     {
 	dictitem_free(item);
 	return FAIL;
     }
-    ++dict->dv_refcount;
     return OK;
 }
 
@@ -647,11 +667,7 @@ failret:
 
     *arg = skipwhite(*arg + 1);
     if (evaluate)
-    {
-	rettv->v_type = VAR_DICT;
-	rettv->vval.v_dict = d;
-	++d->dv_refcount;
-    }
+	rettv_dict_set(rettv, d);
 
     return OK;
 }
@@ -838,6 +854,25 @@ dict_list(typval_T *argvars, typval_T *rettv, int what)
 		copy_tv(&di->di_tv, &li2->li_tv);
 	    }
 	}
+    }
+}
+
+/*
+ * Make each item in the dict readonly (not the value of the item).
+ */
+    void
+dict_set_items_ro(dict_T *di)
+{
+    int		todo = (int)di->dv_hashtab.ht_used;
+    hashitem_T	*hi;
+
+    /* Set readonly */
+    for (hi = di->dv_hashtab.ht_array; todo > 0 ; ++hi)
+    {
+	if (HASHITEM_EMPTY(hi))
+	    continue;
+	--todo;
+	HI2DI(hi)->di_flags |= DI_FLAGS_RO | DI_FLAGS_FIX;
     }
 }
 

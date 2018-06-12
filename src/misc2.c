@@ -165,13 +165,11 @@ coladvance2(
     else
     {
 #ifdef FEAT_VIRTUALEDIT
-	int width = W_WIDTH(curwin) - win_col_off(curwin);
+	int width = curwin->w_width - win_col_off(curwin);
 
 	if (finetune
 		&& curwin->w_p_wrap
-# ifdef FEAT_WINDOWS
 		&& curwin->w_width != 0
-# endif
 		&& wcol >= (colnr_T)width)
 	{
 	    csize = linetabsize(line);
@@ -196,7 +194,7 @@ coladvance2(
 	    /* Count a tab for what it's worth (if list mode not on) */
 #ifdef FEAT_LINEBREAK
 	    csize = win_lbr_chartabsize(curwin, line, ptr, col, &head);
-	    mb_ptr_adv(ptr);
+	    MB_PTR_ADV(ptr);
 #else
 	    csize = lbr_chartabsize_adv(line, &ptr, col);
 #endif
@@ -312,7 +310,7 @@ coladvance2(
 	    int b = (int)wcol - (int)col;
 
 	    /* The difference between wcol and col is used to set coladd. */
-	    if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
+	    if (b > 0 && b < (MAXCOL - 2 * curwin->w_width))
 		pos->coladd = b;
 
 	    col += b;
@@ -350,24 +348,29 @@ inc_cursor(void)
     int
 inc(pos_T *lp)
 {
-    char_u  *p = ml_get_pos(lp);
+    char_u  *p;
 
-    if (*p != NUL)	/* still within line, move to next char (may be NUL) */
+    /* when searching position may be set to end of a line */
+    if (lp->col != MAXCOL)
     {
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
+	p = ml_get_pos(lp);
+	if (*p != NUL)	/* still within line, move to next char (may be NUL) */
 	{
-	    int l = (*mb_ptr2len)(p);
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		int l = (*mb_ptr2len)(p);
 
-	    lp->col += l;
-	    return ((p[l] != NUL) ? 0 : 2);
-	}
+		lp->col += l;
+		return ((p[l] != NUL) ? 0 : 2);
+	    }
 #endif
-	lp->col++;
+	    lp->col++;
 #ifdef FEAT_VIRTUALEDIT
-	lp->coladd = 0;
+	    lp->coladd = 0;
 #endif
-	return ((p[1] != NUL) ? 0 : 2);
+	    return ((p[1] != NUL) ? 0 : 2);
+	}
     }
     if (lp->lnum != curbuf->b_ml.ml_line_count)     /* there is a next line */
     {
@@ -403,7 +406,7 @@ incl(pos_T *lp)
     int
 dec_cursor(void)
 {
- return dec(&curwin->w_cursor);
+    return dec(&curwin->w_cursor);
 }
 
     int
@@ -414,8 +417,21 @@ dec(pos_T *lp)
 #ifdef FEAT_VIRTUALEDIT
     lp->coladd = 0;
 #endif
-    if (lp->col > 0)		/* still within line */
+    if (lp->col == MAXCOL)
     {
+	/* past end of line */
+	p = ml_get(lp->lnum);
+	lp->col = (colnr_T)STRLEN(p);
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    lp->col -= (*mb_head_off)(p, p + lp->col);
+#endif
+	return 0;
+    }
+
+    if (lp->col > 0)
+    {
+	/* still within line */
 	lp->col--;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -426,8 +442,10 @@ dec(pos_T *lp)
 #endif
 	return 0;
     }
-    if (lp->lnum > 1)		/* there is a prior line */
+
+    if (lp->lnum > 1)
     {
+	/* there is a prior line */
 	lp->lnum--;
 	p = ml_get(lp->lnum);
 	lp->col = (colnr_T)STRLEN(p);
@@ -437,7 +455,9 @@ dec(pos_T *lp)
 #endif
 	return 1;
     }
-    return -1;			/* at start of file */
+
+    /* at start of file */
+    return -1;
 }
 
 /*
@@ -605,7 +625,21 @@ check_cursor_col_win(win_T *win)
     else if (ve_flags == VE_ALL)
     {
 	if (oldcoladd > win->w_cursor.col)
+	{
 	    win->w_cursor.coladd = oldcoladd - win->w_cursor.col;
+
+	    /* Make sure that coladd is not more than the char width.
+	     * Not for the last character, coladd is then used when the cursor
+	     * is actually after the last character. */
+	    if (win->w_cursor.col + 1 < len && win->w_cursor.coladd > 0)
+	    {
+		int cs, ce;
+
+		getvcol(win, &win->w_cursor, &cs, NULL, &ce);
+		if (win->w_cursor.coladd > ce - cs)
+		    win->w_cursor.coladd = ce - cs;
+	    }
+	}
 	else
 	    /* avoid weird number when there is a miscalculation or overflow */
 	    win->w_cursor.coladd = 0;
@@ -650,7 +684,7 @@ leftcol_changed(void)
     int		retval = FALSE;
 
     changed_cline_bef_curs();
-    lastcol = curwin->w_leftcol + W_WIDTH(curwin) - curwin_col_off() - 1;
+    lastcol = curwin->w_leftcol + curwin->w_width - curwin_col_off() - 1;
     validate_virtcol();
 
     /*
@@ -918,7 +952,7 @@ lalloc(long_u size, int message)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
-	EMSGN(_("E341: Internal error: lalloc(%ld, )"), size);
+	IEMSGN(_("E341: Internal error: lalloc(%ld, )"), size);
 	return NULL;
     }
 
@@ -970,7 +1004,7 @@ lalloc(long_u size, int message)
 	    break;
 	releasing = TRUE;
 
-	clear_sb_text();	      /* free any scrollback text */
+	clear_sb_text(TRUE);	      /* free any scrollback text */
 	try_again = mf_release_all(); /* release as many blocks as possible */
 
 	releasing = FALSE;
@@ -1065,23 +1099,23 @@ free_all_mem(void)
 	return;
     entered_free_all_mem = TRUE;
 
-# ifdef FEAT_AUTOCMD
     /* Don't want to trigger autocommands from here on. */
     block_autocmds();
-# endif
 
-# ifdef FEAT_WINDOWS
     /* Close all tabs and windows.  Reset 'equalalways' to avoid redraws. */
     p_ea = FALSE;
     if (first_tabpage->tp_next != NULL)
 	do_cmdline_cmd((char_u *)"tabonly!");
-    if (firstwin != lastwin)
+    if (!ONE_WINDOW)
 	do_cmdline_cmd((char_u *)"only!");
-# endif
 
 # if defined(FEAT_SPELL)
     /* Free all spell info. */
     spell_free_all();
+# endif
+
+#if defined(FEAT_INS_EXPAND) && defined(FEAT_BEVAL_TERM)
+    ui_remove_balloon();
 # endif
 
 # if defined(FEAT_USR_CMDS)
@@ -1121,11 +1155,8 @@ free_all_mem(void)
 # endif
 
     /* Obviously named calls. */
-# if defined(FEAT_AUTOCMD)
     free_all_autocmds();
-# endif
     clear_termcodes();
-    free_all_options();
     free_all_marks();
     alist_clear(&global_alist);
     free_homedir();
@@ -1148,7 +1179,7 @@ free_all_mem(void)
 # ifdef FEAT_DIFF
     diff_clear(curtab);
 # endif
-    clear_sb_text();	      /* free any scrollback text */
+    clear_sb_text(TRUE);	      /* free any scrollback text */
 
     /* Free some global vars. */
     vim_free(username);
@@ -1183,10 +1214,11 @@ free_all_mem(void)
     /* Close all script inputs. */
     close_all_scripts();
 
-#if defined(FEAT_WINDOWS)
     /* Destroy all windows.  Must come before freeing buffers. */
     win_free_all();
-#endif
+
+    /* Free all option values.  Must come after closing windows. */
+    free_all_options();
 
     /* Free all buffers.  Reset 'autochdir' to avoid accessing things that
      * were freed already. */
@@ -1224,10 +1256,8 @@ free_all_mem(void)
 
     reset_last_sourcing();
 
-#ifdef FEAT_WINDOWS
     free_tabpage(first_tabpage);
     first_tabpage = NULL;
-#endif
 
 # ifdef UNIX
     /* Machine-specific free. */
@@ -1418,9 +1448,9 @@ vim_strsave_shellescape(char_u *string, int do_special, int do_newline)
 
     /* First count the number of extra bytes required. */
     length = (unsigned)STRLEN(string) + 3;  /* two quotes and a trailing NUL */
-    for (p = string; *p != NUL; mb_ptr_adv(p))
+    for (p = string; *p != NUL; MB_PTR_ADV(p))
     {
-# if defined(WIN32) || defined(DOS)
+# ifdef WIN32
 	if (!p_ssl)
 	{
 	    if (*p == '"')
@@ -1451,7 +1481,7 @@ vim_strsave_shellescape(char_u *string, int do_special, int do_newline)
 	d = escaped_string;
 
 	/* add opening quote */
-# if defined(WIN32) || defined(DOS)
+# ifdef WIN32
 	if (!p_ssl)
 	    *d++ = '"';
 	else
@@ -1460,7 +1490,7 @@ vim_strsave_shellescape(char_u *string, int do_special, int do_newline)
 
 	for (p = string; *p != NUL; )
 	{
-# if defined(WIN32) || defined(DOS)
+# ifdef WIN32
 	    if (!p_ssl)
 	    {
 		if (*p == '"')
@@ -1503,7 +1533,7 @@ vim_strsave_shellescape(char_u *string, int do_special, int do_newline)
 	}
 
 	/* add terminating quote and finish with a NUL */
-# if defined(WIN32) || defined(DOS)
+# ifdef WIN32
 	if (!p_ssl)
 	    *d++ = '"';
 	else
@@ -1592,17 +1622,26 @@ strup_save(char_u *orig)
 		char_u	*s;
 
 		c = utf_ptr2char(p);
+		l = utf_ptr2len(p);
+		if (c == 0)
+		{
+		    /* overlong sequence, use only the first byte */
+		    c = *p;
+		    l = 1;
+		}
 		uc = utf_toupper(c);
 
 		/* Reallocate string when byte count changes.  This is rare,
 		 * thus it's OK to do another malloc()/free(). */
-		l = utf_ptr2len(p);
 		newl = utf_char2len(uc);
 		if (newl != l)
 		{
 		    s = alloc((unsigned)STRLEN(res) + 1 + newl - l);
 		    if (s == NULL)
-			break;
+		    {
+			vim_free(res);
+			return NULL;
+		    }
 		    mch_memmove(s, res, p - res);
 		    STRCPY(s + (p - res) + newl, p + l);
 		    p = s + (p - res);
@@ -1625,6 +1664,75 @@ strup_save(char_u *orig)
 
     return res;
 }
+
+/*
+ * Make string "s" all lower-case and return it in allocated memory.
+ * Handles multi-byte characters as well as possible.
+ * Returns NULL when out of memory.
+ */
+    char_u *
+strlow_save(char_u *orig)
+{
+    char_u	*p;
+    char_u	*res;
+
+    res = p = vim_strsave(orig);
+
+    if (res != NULL)
+	while (*p != NUL)
+	{
+# ifdef FEAT_MBYTE
+	    int		l;
+
+	    if (enc_utf8)
+	    {
+		int	c, lc;
+		int	newl;
+		char_u	*s;
+
+		c = utf_ptr2char(p);
+		l = utf_ptr2len(p);
+		if (c == 0)
+		{
+		    /* overlong sequence, use only the first byte */
+		    c = *p;
+		    l = 1;
+		}
+		lc = utf_tolower(c);
+
+		/* Reallocate string when byte count changes.  This is rare,
+		 * thus it's OK to do another malloc()/free(). */
+		newl = utf_char2len(lc);
+		if (newl != l)
+		{
+		    s = alloc((unsigned)STRLEN(res) + 1 + newl - l);
+		    if (s == NULL)
+		    {
+			vim_free(res);
+			return NULL;
+		    }
+		    mch_memmove(s, res, p - res);
+		    STRCPY(s + (p - res) + newl, p + l);
+		    p = s + (p - res);
+		    vim_free(res);
+		    res = s;
+		}
+
+		utf_char2bytes(lc, p);
+		p += newl;
+	    }
+	    else if (has_mbyte && (l = (*mb_ptr2len)(p)) > 1)
+		p += l;		/* skip multi-byte character */
+	    else
+# endif
+	    {
+		*p = TOLOWER_LOC(*p); /* note that tolower() can be a macro */
+		p++;
+	    }
+	}
+
+    return res;
+}
 #endif
 
 /*
@@ -1636,7 +1744,7 @@ del_trailing_spaces(char_u *ptr)
     char_u	*q;
 
     q = ptr + STRLEN(ptr);
-    while (--q > ptr && vim_iswhite(q[0]) && q[-1] != '\\' && q[-1] != Ctrl_V)
+    while (--q > ptr && VIM_ISWHITE(q[0]) && q[-1] != '\\' && q[-1] != Ctrl_V)
 	*q = NUL;
 }
 
@@ -1653,7 +1761,7 @@ vim_strncpy(char_u *to, char_u *from, size_t len)
 
 /*
  * Like strcat(), but make sure the result fits in "tosize" bytes and is
- * always NUL terminated.
+ * always NUL terminated. "from" and "to" may overlap.
  */
     void
 vim_strcat(char_u *to, char_u *from, size_t tosize)
@@ -1667,7 +1775,7 @@ vim_strcat(char_u *to, char_u *from, size_t tosize)
 	to[tosize - 1] = NUL;
     }
     else
-	STRCPY(to + tolen, from);
+	mch_memmove(to + tolen, from, fromlen + 1);
 }
 
 /*
@@ -1715,6 +1823,8 @@ copy_option_part(
  * Replacement for free() that ignores NULL pointers.
  * Also skip free() when exiting for sure, this helps when we caught a deadly
  * signal that was caused by a crash in free().
+ * If you want to set NULL after calling this function, you should use
+ * VIM_CLEAR() instead.
  */
     void
 vim_free(void *x)
@@ -1737,55 +1847,6 @@ vim_memset(void *ptr, int c, size_t size)
     while (size-- > 0)
 	*p++ = c;
     return ptr;
-}
-#endif
-
-#ifdef VIM_MEMCMP
-/*
- * Return zero when "b1" and "b2" are the same for "len" bytes.
- * Return non-zero otherwise.
- */
-    int
-vim_memcmp(void *b1, void *b2, size_t len)
-{
-    char_u  *p1 = (char_u *)b1, *p2 = (char_u *)b2;
-
-    for ( ; len > 0; --len)
-    {
-	if (*p1 != *p2)
-	    return 1;
-	++p1;
-	++p2;
-    }
-    return 0;
-}
-#endif
-
-/* skipped when generating prototypes, the prototype is in vim.h */
-#ifdef VIM_MEMMOVE
-/*
- * Version of memmove() that handles overlapping source and destination.
- * For systems that don't have a function that is guaranteed to do that (SYSV).
- */
-    void
-mch_memmove(void *src_arg, void *dst_arg, size_t len)
-{
-    /*
-     * A void doesn't have a size, we use char pointers.
-     */
-    char *dst = dst_arg, *src = src_arg;
-
-					/* overlap, copy backwards */
-    if (dst > src && dst < src + len)
-    {
-	src += len;
-	dst += len;
-	while (len-- > 0)
-	    *--dst = *--src;
-    }
-    else				/* copy forwards */
-	while (len-- > 0)
-	    *dst++ = *src++;
 }
 #endif
 
@@ -1857,7 +1918,7 @@ vim_strchr(char_u *string, int c)
     {
 	while (*p != NUL)
 	{
-	    int l = (*mb_ptr2len)(p);
+	    int l = utfc_ptr2len(p);
 
 	    /* Avoid matching an illegal byte here. */
 	    if (utf_ptr2char(p) == c && l > 1)
@@ -1933,7 +1994,7 @@ vim_strrchr(char_u *string, int c)
     {
 	if (*p == c)
 	    retval = p;
-	mb_ptr_adv(p);
+	MB_PTR_ADV(p);
     }
     return retval;
 }
@@ -1954,7 +2015,7 @@ vim_strpbrk(char_u *s, char_u *charset)
     {
 	if (vim_strchr(charset, *s) != NULL)
 	    return s;
-	mb_ptr_adv(s);
+	MB_PTR_ADV(s);
     }
     return NULL;
 }
@@ -2082,7 +2143,7 @@ ga_concat_strings(garray_T *gap, char *sep)
     return s;
 }
 
-#if defined(FEAT_VIMINFO) || defined(PROTO)
+#if defined(FEAT_VIMINFO) || defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Make a copy of string "p" and add it to "gap".
  * When out of memory nothing changes.
@@ -2112,7 +2173,7 @@ ga_concat(garray_T *gap, char_u *s)
 {
     int    len;
 
-    if (s == NULL)
+    if (s == NULL || *s == NUL)
 	return;
     len = (int)STRLEN(s);
     if (ga_grow(gap, len) == OK)
@@ -2177,12 +2238,13 @@ static struct modmasktable
     {MOD_MASK_MULTI_CLICK,	MOD_MASK_2CLICK,	(char_u)'2'},
     {MOD_MASK_MULTI_CLICK,	MOD_MASK_3CLICK,	(char_u)'3'},
     {MOD_MASK_MULTI_CLICK,	MOD_MASK_4CLICK,	(char_u)'4'},
-#ifdef MACOS
+#ifdef MACOS_X
     {MOD_MASK_CMD,		MOD_MASK_CMD,		(char_u)'D'},
 #endif
     /* 'A' must be the last one */
     {MOD_MASK_ALT,		MOD_MASK_ALT,		(char_u)'A'},
     {0, 0, NUL}
+    /* NOTE: when adding an entry, update MAX_KEY_NAME_LEN! */
 };
 
 /*
@@ -2315,6 +2377,8 @@ static struct key_name_entry
     {K_XDOWN,		(char_u *)"xDown"},
     {K_XLEFT,		(char_u *)"xLeft"},
     {K_XRIGHT,		(char_u *)"xRight"},
+    {K_PS,		(char_u *)"PasteStart"},
+    {K_PE,		(char_u *)"PasteEnd"},
 
     {K_F1,		(char_u *)"F1"},
     {K_F2,		(char_u *)"F2"},
@@ -2418,12 +2482,14 @@ static struct key_name_entry
 #endif
 #ifdef FEAT_MOUSE_SGR
     {K_SGR_MOUSE,	(char_u *)"SgrMouse"},
+    {K_SGR_MOUSERELEASE, (char_u *)"SgrMouseRelelase"},
 #endif
     {K_LEFTMOUSE,	(char_u *)"LeftMouse"},
     {K_LEFTMOUSE_NM,	(char_u *)"LeftMouseNM"},
     {K_LEFTDRAG,	(char_u *)"LeftDrag"},
     {K_LEFTRELEASE,	(char_u *)"LeftRelease"},
     {K_LEFTRELEASE_NM,	(char_u *)"LeftReleaseNM"},
+    {K_MOUSEMOVE,	(char_u *)"MouseMove"},
     {K_MIDDLEMOUSE,	(char_u *)"MiddleMouse"},
     {K_MIDDLEDRAG,	(char_u *)"MiddleDrag"},
     {K_MIDDLERELEASE,	(char_u *)"MiddleRelease"},
@@ -2450,6 +2516,7 @@ static struct key_name_entry
     {K_PLUG,		(char_u *)"Plug"},
     {K_CURSORHOLD,	(char_u *)"CursorHold"},
     {0,			NULL}
+    /* NOTE: When adding a long name update MAX_KEY_NAME_LEN. */
 };
 
 #define KEY_NAMES_TABLE_LEN (sizeof(key_names_table) / sizeof(struct key_name_entry))
@@ -2485,7 +2552,7 @@ static struct mousetable
     {(int)KE_X2DRAG,		MOUSE_X2,	FALSE,	TRUE},
     {(int)KE_X2RELEASE,		MOUSE_X2,	FALSE,	FALSE},
     /* DRAG without CLICK */
-    {(int)KE_IGNORE,		MOUSE_RELEASE,	FALSE,	TRUE},
+    {(int)KE_MOUSEMOVE,		MOUSE_RELEASE,	FALSE,	TRUE},
     /* RELEASE without CLICK */
     {(int)KE_IGNORE,		MOUSE_RELEASE,	FALSE,	FALSE},
     {0,				0,		0,	0},
@@ -2678,8 +2745,13 @@ get_special_key_name(int c, int modifiers)
     }
     else		/* use name of special key */
     {
-	STRCPY(string + idx, key_names_table[table_idx].name);
-	idx = (int)STRLEN(string);
+	size_t len = STRLEN(key_names_table[table_idx].name);
+
+	if (len + idx + 2 <= MAX_KEY_NAME_LEN)
+	{
+	    STRCPY(string + idx, key_names_table[table_idx].name);
+	    idx += (int)len;
+	}
     }
     string[idx++] = '>';
     string[idx] = NUL;
@@ -2892,7 +2964,7 @@ extract_modifiers(int key, int *modp)
 {
     int	modifiers = *modp;
 
-#ifdef MACOS
+#ifdef MACOS_X
     /* Command-key really special, no fancynest */
     if (!(modifiers & MOD_MASK_CMD))
 #endif
@@ -2919,7 +2991,7 @@ extract_modifiers(int key, int *modp)
 	if (key == 0)
 	    key = K_ZERO;
     }
-#ifdef MACOS
+#ifdef MACOS_X
     /* Command-key really special, no fancynest */
     if (!(modifiers & MOD_MASK_CMD))
 #endif
@@ -3089,7 +3161,7 @@ get_fileformat_force(
     int		c;
 
     if (eap != NULL && eap->force_ff != 0)
-	c = eap->cmd[eap->force_ff];
+	c = eap->force_ff;
     else
     {
 	if ((eap != NULL && eap->force_bin != 0)
@@ -3135,11 +3207,9 @@ set_fileformat(
 	set_string_option_direct((char_u *)"ff", -1, (char_u *)p,
 						     OPT_FREE | opt_flags, 0);
 
-#ifdef FEAT_WINDOWS
     /* This may cause the buffer to become (un)modified. */
     check_status(curbuf);
     redraw_tabline = TRUE;
-#endif
 #ifdef FEAT_TITLE
     need_maketitle = TRUE;	    /* set window title later */
 #endif
@@ -3312,8 +3382,7 @@ same_directory(char_u *f1, char_u *f2)
 }
 
 #if defined(FEAT_SESSION) || defined(MSWIN) || defined(FEAT_GUI_MAC) \
-	|| ((defined(FEAT_GUI_GTK)) \
-			&& ( defined(FEAT_WINDOWS) || defined(FEAT_DND)) ) \
+	|| defined(FEAT_GUI_GTK) \
 	|| defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) \
 	|| defined(PROTO)
 /*
@@ -3322,13 +3391,18 @@ same_directory(char_u *f1, char_u *f2)
  * Return OK or FAIL.
  */
     int
-vim_chdirfile(char_u *fname)
+vim_chdirfile(char_u *fname, char *trigger_autocmd UNUSED)
 {
     char_u	dir[MAXPATHL];
+    int		res;
 
     vim_strncpy(dir, fname, MAXPATHL - 1);
     *gettail_sep(dir) = NUL;
-    return mch_chdir((char *)dir) == 0 ? OK : FAIL;
+    res = mch_chdir((char *)dir) == 0 ? OK : FAIL;
+    if (res == OK && trigger_autocmd != NULL)
+	apply_autocmds(EVENT_DIRCHANGED, (char_u *)trigger_autocmd,
+							   dir, FALSE, curbuf);
+    return res;
 }
 #endif
 
@@ -3338,8 +3412,8 @@ vim_chdirfile(char_u *fname)
  * Used for systems where stat() ignores a trailing slash on a file name.
  * The Vim code assumes a trailing slash is only ignored for a directory.
  */
-    int
-illegal_slash(char *name)
+    static int
+illegal_slash(const char *name)
 {
     if (name[0] == NUL)
 	return FALSE;	    /* no file name is not illegal */
@@ -3348,6 +3422,17 @@ illegal_slash(char *name)
     if (mch_isdir((char_u *)name))
 	return FALSE;	    /* trailing slash for a directory */
     return TRUE;
+}
+
+/*
+ * Special implementation of mch_stat() for Solaris.
+ */
+    int
+vim_stat(const char *name, stat_T *stp)
+{
+    /* On Solaris stat() accepts "file/" as if it was "file".  Return -1 if
+     * the name ends in "/" and it's not a directory. */
+    return illegal_slash(name) ? -1 : stat(name, stp);
 }
 #endif
 
@@ -3446,11 +3531,12 @@ parse_shape_opt(int what)
 	while (*modep != NUL)
 	{
 	    colonp = vim_strchr(modep, ':');
-	    if (colonp == NULL)
+	    commap = vim_strchr(modep, ',');
+
+	    if (colonp == NULL || (commap != NULL && commap < colonp))
 		return (char_u *)N_("E545: Missing colon");
 	    if (colonp == modep)
 		return (char_u *)N_("E546: Illegal mode");
-	    commap = vim_strchr(modep, ',');
 
 	    /*
 	     * Repeat for all mode's before the colon.
@@ -3675,10 +3761,8 @@ get_shape_idx(int mouse)
     }
     if (mouse && drag_status_line)
 	return SHAPE_IDX_SDRAG;
-# ifdef FEAT_WINDOWS
     if (mouse && drag_sep_line)
 	return SHAPE_IDX_VDRAG;
-# endif
 #endif
     if (!mouse && State == SHOWMATCH)
 	return SHAPE_IDX_SM;
@@ -4599,13 +4683,23 @@ vim_findfile(void *search_ctx_arg)
 		if (!vim_isAbsName(stackp->ffs_fix_path)
 						&& search_ctx->ffsc_start_dir)
 		{
-		    STRCPY(file_path, search_ctx->ffsc_start_dir);
-		    add_pathsep(file_path);
+		    if (STRLEN(search_ctx->ffsc_start_dir) + 1 < MAXPATHL)
+		    {
+			STRCPY(file_path, search_ctx->ffsc_start_dir);
+			add_pathsep(file_path);
+		    }
+		    else
+			goto fail;
 		}
 
 		/* append the fix part of the search path */
-		STRCAT(file_path, stackp->ffs_fix_path);
-		add_pathsep(file_path);
+		if (STRLEN(file_path) + STRLEN(stackp->ffs_fix_path) + 1 < MAXPATHL)
+		{
+		    STRCAT(file_path, stackp->ffs_fix_path);
+		    add_pathsep(file_path);
+		}
+		else
+		    goto fail;
 
 #ifdef FEAT_PATH_EXTRA
 		rest_of_wildcards = stackp->ffs_wc_path;
@@ -4622,7 +4716,10 @@ vim_findfile(void *search_ctx_arg)
 			if (*p > 0)
 			{
 			    (*p)--;
-			    file_path[len++] = '*';
+			    if (len + 1 < MAXPATHL)
+				file_path[len++] = '*';
+			    else
+				goto fail;
 			}
 
 			if (*p == 0)
@@ -4650,7 +4747,10 @@ vim_findfile(void *search_ctx_arg)
 		     */
 		    while (*rest_of_wildcards
 			    && !vim_ispathsep(*rest_of_wildcards))
-			file_path[len++] = *rest_of_wildcards++;
+			if (len + 1 < MAXPATHL)
+			    file_path[len++] = *rest_of_wildcards++;
+			else
+			    goto fail;
 
 		    file_path[len] = NUL;
 		    if (vim_ispathsep(*rest_of_wildcards))
@@ -4711,9 +4811,15 @@ vim_findfile(void *search_ctx_arg)
 
 			/* prepare the filename to be checked for existence
 			 * below */
-			STRCPY(file_path, stackp->ffs_filearray[i]);
-			add_pathsep(file_path);
-			STRCAT(file_path, search_ctx->ffsc_file_to_search);
+			if (STRLEN(stackp->ffs_filearray[i]) + 1
+				+ STRLEN(search_ctx->ffsc_file_to_search) < MAXPATHL)
+			{
+			    STRCPY(file_path, stackp->ffs_filearray[i]);
+			    add_pathsep(file_path);
+			    STRCAT(file_path, search_ctx->ffsc_file_to_search);
+			}
+			else
+			    goto fail;
 
 			/*
 			 * Try without extra suffix and then with suffixes
@@ -4886,9 +4992,15 @@ vim_findfile(void *search_ctx_arg)
 	    if (*search_ctx->ffsc_start_dir == 0)
 		break;
 
-	    STRCPY(file_path, search_ctx->ffsc_start_dir);
-	    add_pathsep(file_path);
-	    STRCAT(file_path, search_ctx->ffsc_fix_path);
+	    if (STRLEN(search_ctx->ffsc_start_dir) + 1
+		    + STRLEN(search_ctx->ffsc_fix_path) < MAXPATHL)
+	    {
+		STRCPY(file_path, search_ctx->ffsc_start_dir);
+		add_pathsep(file_path);
+		STRCAT(file_path, search_ctx->ffsc_fix_path);
+	    }
+	    else
+		goto fail;
 
 	    /* create a new stack entry */
 	    sptr = ff_create_stack_element(file_path,
@@ -4902,6 +5014,7 @@ vim_findfile(void *search_ctx_arg)
     }
 #endif
 
+fail:
     vim_free(file_path);
     return NULL;
 }
@@ -5060,8 +5173,8 @@ ff_wc_equal(char_u *s1, char_u *s2)
 	prev2 = prev1;
 	prev1 = c1;
 
-        i += MB_PTR2LEN(s1 + i);
-        j += MB_PTR2LEN(s2 + j);
+	i += MB_PTR2LEN(s1 + i);
+	j += MB_PTR2LEN(s2 + j);
     }
     return s1[i] == s2[j];
 }
@@ -5779,7 +5892,7 @@ pathcmp(const char *p, const char *q, int maxlen)
 	    if (c2 == NUL)  /* full match */
 		return 0;
 	    s = q;
-            i = j;
+	    i = j;
 	    break;
 	}
 
@@ -5862,10 +5975,7 @@ pathcmp(const char *p, const char *q, int maxlen)
 #define EXTRASIZE 5		/* increment to add to env. size */
 
 static int  envsize = -1;	/* current size of environment */
-#ifndef MACOS_CLASSIC
-extern
-#endif
-       char **environ;		/* the global which is your env. */
+extern char **environ;		/* the global which is your env. */
 
 static int  findenv(char *name); /* look for a name in the env. */
 static int  newenv(void);	/* copy env. from stack to heap */
@@ -5937,19 +6047,14 @@ newenv(void)
     char    **env, *elem;
     int	    i, esize;
 
-#ifdef MACOS
-    /* for Mac a new, empty environment is created */
-    i = 0;
-#else
     for (i = 0; environ[i]; i++)
 	;
-#endif
+
     esize = i + EXTRASIZE + 1;
     env = (char **)alloc((unsigned)(esize * sizeof (elem)));
     if (env == NULL)
 	return -1;
 
-#ifndef MACOS
     for (i = 0; environ[i]; i++)
     {
 	elem = (char *)alloc((unsigned)(strlen(environ[i]) + 1));
@@ -5958,7 +6063,6 @@ newenv(void)
 	env[i] = elem;
 	strcpy(elem, environ[i]);
     }
-#endif
 
     env[i] = 0;
     environ = env;
@@ -5982,6 +6086,9 @@ moreenv(void)
 }
 
 # ifdef USE_VIMPTY_GETENV
+/*
+ * Used for mch_getenv() for Mac.
+ */
     char_u *
 vimpty_getenv(const char_u *string)
 {
@@ -6019,7 +6126,6 @@ filewritable(char_u *fname)
 #if defined(UNIX) || defined(VMS)
     perm = mch_getperm(fname);
 #endif
-#ifndef MACOS_CLASSIC /* TODO: get either mch_writable or mch_access */
     if (
 # ifdef WIN3264
 	    mch_writable(fname) &&
@@ -6030,7 +6136,6 @@ filewritable(char_u *fname)
 # endif
 	    mch_access((char *)fname, W_OK) == 0
        )
-#endif
     {
 	++retval;
 	if (mch_isdir(fname))
@@ -6040,88 +6145,86 @@ filewritable(char_u *fname)
 }
 #endif
 
-/*
- * Print an error message with one or two "%s" and one or two string arguments.
- * This is not in message.c to avoid a warning for prototypes.
- */
-    int
-emsg3(char_u *s, char_u *a1, char_u *a2)
-{
-    if (emsg_not_now())
-	return TRUE;		/* no error messages at the moment */
-    vim_snprintf((char *)IObuff, IOSIZE, (char *)s, a1, a2);
-    return emsg(IObuff);
-}
-
-/*
- * Print an error message with one "%ld" and one long int argument.
- * This is not in message.c to avoid a warning for prototypes.
- */
-    int
-emsgn(char_u *s, long n)
-{
-    if (emsg_not_now())
-	return TRUE;		/* no error messages at the moment */
-    vim_snprintf((char *)IObuff, IOSIZE, (char *)s, n);
-    return emsg(IObuff);
-}
-
 #if defined(FEAT_SPELL) || defined(FEAT_PERSISTENT_UNDO) || defined(PROTO)
 /*
  * Read 2 bytes from "fd" and turn them into an int, MSB first.
+ * Returns -1 when encountering EOF.
  */
     int
 get2c(FILE *fd)
 {
-    int		n;
+    int		c, n;
 
     n = getc(fd);
-    n = (n << 8) + getc(fd);
-    return n;
+    if (n == EOF) return -1;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    return (n << 8) + c;
 }
 
 /*
  * Read 3 bytes from "fd" and turn them into an int, MSB first.
+ * Returns -1 when encountering EOF.
  */
     int
 get3c(FILE *fd)
 {
-    int		n;
+    int		c, n;
 
     n = getc(fd);
-    n = (n << 8) + getc(fd);
-    n = (n << 8) + getc(fd);
-    return n;
+    if (n == EOF) return -1;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    n = (n << 8) + c;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    return (n << 8) + c;
 }
 
 /*
  * Read 4 bytes from "fd" and turn them into an int, MSB first.
+ * Returns -1 when encountering EOF.
  */
     int
 get4c(FILE *fd)
 {
+    int		c;
     /* Use unsigned rather than int otherwise result is undefined
      * when left-shift sets the MSB. */
     unsigned	n;
 
-    n = (unsigned)getc(fd);
-    n = (n << 8) + (unsigned)getc(fd);
-    n = (n << 8) + (unsigned)getc(fd);
-    n = (n << 8) + (unsigned)getc(fd);
+    c = getc(fd);
+    if (c == EOF) return -1;
+    n = (unsigned)c;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    n = (n << 8) + (unsigned)c;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    n = (n << 8) + (unsigned)c;
+    c = getc(fd);
+    if (c == EOF) return -1;
+    n = (n << 8) + (unsigned)c;
     return (int)n;
 }
 
 /*
  * Read 8 bytes from "fd" and turn them into a time_T, MSB first.
+ * Returns -1 when encountering EOF.
  */
     time_T
 get8ctime(FILE *fd)
 {
+    int		c;
     time_T	n = 0;
     int		i;
 
     for (i = 0; i < 8; ++i)
-	n = (n << 8) + getc(fd);
+    {
+	c = getc(fd);
+	if (c == EOF) return -1;
+	n = (n << 8) + c;
+    }
     return n;
 }
 
@@ -6256,15 +6359,18 @@ has_non_ascii(char_u *s)
 #if defined(MESSAGE_QUEUE) || defined(PROTO)
 /*
  * Process messages that have been queued for netbeans or clientserver.
+ * Also check if any jobs have ended.
  * These functions can call arbitrary vimscript and should only be called when
  * it is safe to do so.
  */
     void
 parse_queued_messages(void)
 {
+    win_T *old_curwin = curwin;
+
     /* For Win32 mch_breakcheck() does not check for input, do it here. */
 # if defined(WIN32) && defined(FEAT_JOB_CHANNEL)
-    channel_handle_events();
+    channel_handle_events(FALSE);
 # endif
 
 # ifdef FEAT_NETBEANS_INTG
@@ -6286,5 +6392,187 @@ parse_queued_messages(void)
     /* Check if any jobs have ended. */
     job_check_ended();
 # endif
+
+    /* If the current window changed we need to bail out of the waiting loop.
+     * E.g. when a job exit callback closes the terminal window. */
+    if (curwin != old_curwin)
+	ins_char_typebuf(K_IGNORE);
 }
+#endif
+
+#ifndef PROTO  /* proto is defined in vim.h */
+# ifdef ELAPSED_TIMEVAL
+/*
+ * Return time in msec since "start_tv".
+ */
+    long
+elapsed(struct timeval *start_tv)
+{
+    struct timeval  now_tv;
+
+    gettimeofday(&now_tv, NULL);
+    return (now_tv.tv_sec - start_tv->tv_sec) * 1000L
+	 + (now_tv.tv_usec - start_tv->tv_usec) / 1000L;
+}
+# endif
+
+# ifdef ELAPSED_TICKCOUNT
+/*
+ * Return time in msec since "start_tick".
+ */
+    long
+elapsed(DWORD start_tick)
+{
+    DWORD	now = GetTickCount();
+
+    return (long)now - (long)start_tick;
+}
+# endif
+#endif
+
+#if defined(FEAT_JOB_CHANNEL) \
+	|| (defined(UNIX) && (!defined(USE_SYSTEM) \
+	|| (defined(FEAT_GUI) && defined(FEAT_TERMINAL)))) \
+	|| defined(PROTO)
+/*
+ * Parse "cmd" and put the white-separated parts in "argv".
+ * "argv" is an allocated array with "argc" entries and room for 4 more.
+ * Returns FAIL when out of memory.
+ */
+    int
+mch_parse_cmd(char_u *cmd, int use_shcf, char ***argv, int *argc)
+{
+    int		i;
+    char_u	*p, *d;
+    int		inquote;
+
+    /*
+     * Do this loop twice:
+     * 1: find number of arguments
+     * 2: separate them and build argv[]
+     */
+    for (i = 0; i < 2; ++i)
+    {
+	p = skipwhite(cmd);
+	inquote = FALSE;
+	*argc = 0;
+	for (;;)
+	{
+	    if (i == 1)
+		(*argv)[*argc] = (char *)p;
+	    ++*argc;
+	    d = p;
+	    while (*p != NUL && (inquote || (*p != ' ' && *p != TAB)))
+	    {
+		if (p[0] == '"')
+		    /* quotes surrounding an argument and are dropped */
+		    inquote = !inquote;
+		else
+		{
+		    if (p[0] == '\\' && p[1] != NUL)
+		    {
+			/* First pass: skip over "\ " and "\"".
+			 * Second pass: Remove the backslash. */
+			++p;
+		    }
+		    if (i == 1)
+			*d++ = *p;
+		}
+		++p;
+	    }
+	    if (*p == NUL)
+	    {
+		if (i == 1)
+		    *d++ = NUL;
+		break;
+	    }
+	    if (i == 1)
+		*d++ = NUL;
+	    p = skipwhite(p + 1);
+	}
+	if (*argv == NULL)
+	{
+	    if (use_shcf)
+	    {
+		/* Account for possible multiple args in p_shcf. */
+		p = p_shcf;
+		for (;;)
+		{
+		    p = skiptowhite(p);
+		    if (*p == NUL)
+			break;
+		    ++*argc;
+		    p = skipwhite(p);
+		}
+	    }
+
+	    *argv = (char **)alloc((unsigned)((*argc + 4) * sizeof(char *)));
+	    if (*argv == NULL)	    /* out of memory */
+		return FAIL;
+	}
+    }
+    return OK;
+}
+
+# if defined(FEAT_JOB_CHANNEL) || defined(PROTO)
+/*
+ * Build "argv[argc]" from the string "cmd".
+ * "argv[argc]" is set to NULL;
+ * Return FAIL when out of memory.
+ */
+    int
+build_argv_from_string(char_u *cmd, char ***argv, int *argc)
+{
+    char_u	*cmd_copy;
+    int		i;
+
+    /* Make a copy, parsing will modify "cmd". */
+    cmd_copy = vim_strsave(cmd);
+    if (cmd_copy == NULL
+	    || mch_parse_cmd(cmd_copy, FALSE, argv, argc) == FAIL)
+    {
+	vim_free(cmd_copy);
+	return FAIL;
+    }
+    for (i = 0; i < *argc; i++)
+	(*argv)[i] = (char *)vim_strsave((char_u *)(*argv)[i]);
+    (*argv)[*argc] = NULL;
+    vim_free(cmd_copy);
+    return OK;
+}
+
+/*
+ * Build "argv[argc]" from the list "l".
+ * "argv[argc]" is set to NULL;
+ * Return FAIL when out of memory.
+ */
+    int
+build_argv_from_list(list_T *l, char ***argv, int *argc)
+{
+    listitem_T  *li;
+    char_u	*s;
+
+    /* Pass argv[] to mch_call_shell(). */
+    *argv = (char **)alloc(sizeof(char *) * (l->lv_len + 1));
+    if (*argv == NULL)
+	return FAIL;
+    *argc = 0;
+    for (li = l->lv_first; li != NULL; li = li->li_next)
+    {
+	s = get_tv_string_chk(&li->li_tv);
+	if (s == NULL)
+	{
+	    int i;
+
+	    for (i = 0; i < *argc; ++i)
+		vim_free((*argv)[i]);
+	    return FAIL;
+	}
+	(*argv)[*argc] = (char *)vim_strsave(s);
+	*argc += 1;
+    }
+    (*argv)[*argc] = NULL;
+    return OK;
+}
+# endif
 #endif

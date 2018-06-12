@@ -8,8 +8,8 @@
  */
 
 /* for debugging */
-/* #define CHECK(c, s)	if (c) EMSG(s) */
-#define CHECK(c, s)
+/* #define CHECK(c, s)	do { if (c) EMSG(s); } while (0) */
+#define CHECK(c, s)	do { /**/ } while (0)
 
 /*
  * memline.c: Contains the functions for appending, deleting and changing the
@@ -333,7 +333,7 @@ ml_open(buf_T *buf)
 	goto error;
     if (hp->bh_bnum != 0)
     {
-	EMSG(_("E298: Didn't get block nr 0?"));
+	IEMSG(_("E298: Didn't get block nr 0?"));
 	goto error;
     }
     b0p = (ZERO_BL *)(hp->bh_data);
@@ -383,7 +383,7 @@ ml_open(buf_T *buf)
 	goto error;
     if (hp->bh_bnum != 1)
     {
-	EMSG(_("E298: Didn't get block nr 1?"));
+	IEMSG(_("E298: Didn't get block nr 1?"));
 	goto error;
     }
     pp = (PTR_BL *)(hp->bh_data);
@@ -401,7 +401,7 @@ ml_open(buf_T *buf)
 	goto error;
     if (hp->bh_bnum != 2)
     {
-	EMSG(_("E298: Didn't get block nr 2?"));
+	IEMSG(_("E298: Didn't get block nr 2?"));
 	goto error;
     }
 
@@ -535,8 +535,7 @@ ml_set_crypt_key(
 	idx = 0;		/* start with first index in block 1 */
 	error = 0;
 	buf->b_ml.ml_stack_top = 0;
-	vim_free(buf->b_ml.ml_stack);
-	buf->b_ml.ml_stack = NULL;
+	VIM_CLEAR(buf->b_ml.ml_stack);
 	buf->b_ml.ml_stack_size = 0;	/* no stack yet */
 
 	for ( ; !got_int; line_breakcheck())
@@ -852,8 +851,7 @@ ml_close(buf_T *buf, int del_file)
 	vim_free(buf->b_ml.ml_line_ptr);
     vim_free(buf->b_ml.ml_stack);
 #ifdef FEAT_BYTEOFF
-    vim_free(buf->b_ml.ml_chunksize);
-    buf->b_ml.ml_chunksize = NULL;
+    VIM_CLEAR(buf->b_ml.ml_chunksize);
 #endif
     buf->b_ml.ml_mfp = NULL;
 
@@ -950,7 +948,7 @@ ml_upd_block0(buf_T *buf, upd_block0_T what)
 
     b0p = (ZERO_BL *)(hp->bh_data);
     if (ml_check_b0_id(b0p) == FAIL)
-	EMSG(_("E304: ml_upd_block0(): Didn't get block 0??"));
+	IEMSG(_("E304: ml_upd_block0(): Didn't get block 0??"));
     else
     {
 	if (what == UB_FNAME)
@@ -1136,10 +1134,10 @@ ml_recover(void)
 
     recoverymode = TRUE;
     called_from_main = (curbuf->b_ml.ml_mfp == NULL);
-    attr = hl_attr(HLF_E);
+    attr = HL_ATTR(HLF_E);
 
     /*
-     * If the file name ends in ".s[uvw][a-z]" we assume this is the swap file.
+     * If the file name ends in ".s[a-w][a-z]" we assume this is the swap file.
      * Otherwise a search is done to find the swap file(s).
      */
     fname = curbuf->b_fname;
@@ -1148,12 +1146,13 @@ ml_recover(void)
     len = (int)STRLEN(fname);
     if (len >= 4 &&
 #if defined(VMS)
-	    STRNICMP(fname + len - 4, "_s" , 2)
+	    STRNICMP(fname + len - 4, "_s", 2)
 #else
-	    STRNICMP(fname + len - 4, ".s" , 2)
+	    STRNICMP(fname + len - 4, ".s", 2)
 #endif
-		== 0
-		&& vim_strchr((char_u *)"UVWuvw", fname[len - 2]) != NULL
+						== 0
+		&& vim_strchr((char_u *)"abcdefghijklmnopqrstuvw",
+					   TOLOWER_ASC(fname[len - 2])) != NULL
 		&& ASCII_ISALPHA(fname[len - 1]))
     {
 	directly = TRUE;
@@ -1519,7 +1518,7 @@ ml_recover(void)
 			    line_count = pp->pb_pointer[idx].pe_line_count;
 			    if (readfile(curbuf->b_ffname, NULL, lnum,
 					pp->pb_pointer[idx].pe_old_lnum - 1,
-					line_count, NULL, 0) == FAIL)
+					line_count, NULL, 0) != OK)
 				cannot_open = TRUE;
 			    else
 				lnum += line_count;
@@ -1649,7 +1648,7 @@ ml_recover(void)
 	if (!(curbuf->b_ml.ml_line_count == 2 && *ml_get(1) == NUL))
 	{
 	    changed_int();
-	    ++curbuf->b_changedtick;
+	    ++CHANGEDTICK(curbuf);
 	}
     }
     else
@@ -1663,7 +1662,7 @@ ml_recover(void)
 	    if (i != 0)
 	    {
 		changed_int();
-		++curbuf->b_changedtick;
+		++CHANGEDTICK(curbuf);
 		break;
 	    }
 	}
@@ -1733,13 +1732,11 @@ theend:
     }
     if (serious_error && called_from_main)
 	ml_close(curbuf, TRUE);
-#ifdef FEAT_AUTOCMD
     else
     {
 	apply_autocmds(EVENT_BUFREADPOST, NULL, curbuf->b_fname, FALSE, curbuf);
 	apply_autocmds(EVENT_BUFWINENTER, NULL, curbuf->b_fname, FALSE, curbuf);
     }
-#endif
     return;
 }
 
@@ -1863,8 +1860,10 @@ recover_names(
 	    else
 	    {
 #if defined(UNIX) || defined(WIN3264)
-		p = dir_name + STRLEN(dir_name);
-		if (after_pathsep(dir_name, p) && p[-1] == p[-2])
+		int	len = (int)STRLEN(dir_name);
+
+		p = dir_name + len;
+		if (after_pathsep(dir_name, p) && len > 1 && p[-1] == p[-2])
 		{
 		    /* Ends with '//', Use Full path for swap name */
 		    tail = make_percent_swname(dir_name, fname_res);
@@ -2026,7 +2025,7 @@ make_percent_swname(char_u *dir, char_u *name)
 	if (s != NULL)
 	{
 	    STRCPY(s, f);
-	    for (d = s; *d != NUL; mb_ptr_adv(d))
+	    for (d = s; *d != NUL; MB_PTR_ADV(d))
 		if (vim_ispathsep(*d))
 		    *d = '%';
 	    d = concat_fnames(dir, s, TRUE);
@@ -2450,7 +2449,7 @@ ml_get_buf(
 	    /* Avoid giving this message for a recursive call, may happen when
 	     * the GUI redraws part of the text. */
 	    ++recursive;
-	    EMSGN(_("E315: ml_get: invalid lnum: %ld"), lnum);
+	    IEMSGN(_("E315: ml_get: invalid lnum: %ld"), lnum);
 	    --recursive;
 	}
 errorret:
@@ -2485,7 +2484,7 @@ errorret:
 		/* Avoid giving this message for a recursive call, may happen
 		 * when the GUI redraws part of the text. */
 		++recursive;
-		EMSGN(_("E316: ml_get: cannot find line %ld"), lnum);
+		IEMSGN(_("E316: ml_get: cannot find line %ld"), lnum);
 		--recursive;
 	    }
 	    goto errorret;
@@ -2542,8 +2541,7 @@ ml_append(
     return ml_append_int(curbuf, lnum, line, len, newfile, FALSE);
 }
 
-#if defined(FEAT_SPELL) || (defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)) \
-	|| defined(PROTO)
+#if defined(FEAT_SPELL) || defined(FEAT_QUICKFIX) || defined(PROTO)
 /*
  * Like ml_append() but for an arbitrary buffer.  The buffer must already have
  * a memline.
@@ -2900,7 +2898,7 @@ ml_append_int(
 	    pp = (PTR_BL *)(hp->bh_data);   /* must be pointer block */
 	    if (pp->pb_id != PTR_ID)
 	    {
-		EMSG(_("E317: pointer block id wrong 3"));
+		IEMSG(_("E317: pointer block id wrong 3"));
 		mf_put(mfp, hp, FALSE, FALSE);
 		return FAIL;
 	    }
@@ -3042,7 +3040,7 @@ ml_append_int(
 	 */
 	if (stack_idx < 0)
 	{
-	    EMSG(_("E318: Updated too many blocks?"));
+	    IEMSG(_("E318: Updated too many blocks?"));
 	    buf->b_ml.ml_stack_top = 0;	/* invalidate stack */
 	}
     }
@@ -3110,7 +3108,8 @@ ml_replace(linenr_T lnum, char_u *line, int copy)
 }
 
 /*
- * Delete line 'lnum' in the current buffer.
+ * Delete line "lnum" in the current buffer.
+ * When "message" is TRUE may give a "No lines in buffer" message.
  *
  * Check: The caller of this function should probably also call
  * deleted_lines() after this.
@@ -3220,7 +3219,7 @@ ml_delete_int(buf_T *buf, linenr_T lnum, int message)
 	    pp = (PTR_BL *)(hp->bh_data);   /* must be pointer block */
 	    if (pp->pb_id != PTR_ID)
 	    {
-		EMSG(_("E317: pointer block id wrong 4"));
+		IEMSG(_("E317: pointer block id wrong 4"));
 		mf_put(mfp, hp, FALSE, FALSE);
 		return FAIL;
 	    }
@@ -3432,7 +3431,7 @@ ml_flush_line(buf_T *buf)
 
 	hp = ml_find_line(buf, lnum, ML_FIND);
 	if (hp == NULL)
-	    EMSGN(_("E320: Cannot find line %ld"), lnum);
+	    IEMSGN(_("E320: Cannot find line %ld"), lnum);
 	else
 	{
 	    dp = (DATA_BL *)(hp->bh_data);
@@ -3674,7 +3673,7 @@ ml_find_line(buf_T *buf, linenr_T lnum, int action)
 	pp = (PTR_BL *)(dp);		/* must be pointer block */
 	if (pp->pb_id != PTR_ID)
 	{
-	    EMSG(_("E317: pointer block id wrong"));
+	    IEMSG(_("E317: pointer block id wrong"));
 	    goto error_block;
 	}
 
@@ -3719,11 +3718,11 @@ ml_find_line(buf_T *buf, linenr_T lnum, int action)
 	if (idx >= (int)pp->pb_count)	    /* past the end: something wrong! */
 	{
 	    if (lnum > buf->b_ml.ml_line_count)
-		EMSGN(_("E322: line number out of range: %ld past the end"),
+		IEMSGN(_("E322: line number out of range: %ld past the end"),
 					      lnum - buf->b_ml.ml_line_count);
 
 	    else
-		EMSGN(_("E323: line count wrong in block %ld"), bnum);
+		IEMSGN(_("E323: line count wrong in block %ld"), bnum);
 	    goto error_block;
 	}
 	if (action == ML_DELETE)
@@ -3817,7 +3816,7 @@ ml_lineadd(buf_T *buf, int count)
 	if (pp->pb_id != PTR_ID)
 	{
 	    mf_put(mfp, hp, FALSE, FALSE);
-	    EMSG(_("E317: pointer block id wrong 2"));
+	    IEMSG(_("E317: pointer block id wrong 2"));
 	    break;
 	}
 	pp->pb_pointer[ip->ip_index].pe_line_count += count;
@@ -3922,8 +3921,10 @@ makeswapname(
 #endif
 
 #if defined(UNIX) || defined(WIN3264)  /* Need _very_ long file names */
-    s = dir_name + STRLEN(dir_name);
-    if (after_pathsep(dir_name, s) && s[-1] == s[-2])
+    int		len = (int)STRLEN(dir_name);
+
+    s = dir_name + len;
+    if (after_pathsep(dir_name, s) && len > 1 && s[-1] == s[-2])
     {			       /* Ends with '//', Use Full path */
 	r = NULL;
 	if ((s = make_percent_swname(dir_name, fname)) != NULL)
@@ -4011,7 +4012,7 @@ get_file_in_dir(
 
 #ifdef WIN3264
     if (retval != NULL)
-	for (t = gettail(retval); *t != NUL; mb_ptr_adv(t))
+	for (t = gettail(retval); *t != NUL; MB_PTR_ADV(t))
 	    if (*t == ':')
 		*t = '%';
 #endif
@@ -4068,7 +4069,7 @@ attention_message(
     --no_wait_return;
 }
 
-#ifdef FEAT_AUTOCMD
+#if defined(FEAT_EVAL)
 static int do_swapexists(buf_T *buf, char_u *fname);
 
 /*
@@ -4150,7 +4151,7 @@ findswapname(
 	if (buf_fname == NULL)
 	    buf_fname = buf->b_fname;
 	else
-	    for (t = gettail(buf_fname); *t != NUL; mb_ptr_adv(t))
+	    for (t = gettail(buf_fname); *t != NUL; MB_PTR_ADV(t))
 		if (*t == ':')
 		    *t = '%';
     }
@@ -4192,8 +4193,7 @@ findswapname(
 	    break;
 	if ((n = (int)STRLEN(fname)) == 0)	/* safety check */
 	{
-	    vim_free(fname);
-	    fname = NULL;
+	    VIM_CLEAR(fname);
 	    break;
 	}
 #if defined(UNIX)
@@ -4448,7 +4448,7 @@ findswapname(
 #if (defined(UNIX) || defined(VMS)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 		    process_still_running = FALSE;
 #endif
-#ifdef FEAT_AUTOCMD
+#if defined(FEAT_EVAL)
 		    /*
 		     * If there is an SwapExists autocommand and we can handle
 		     * the response, trigger it.  It may return 0 to ask the
@@ -4573,8 +4573,7 @@ findswapname(
 	    if (fname[n - 2] == 'a')    /* ".saa": tried enough, give up */
 	    {
 		EMSG(_("E326: Too many swap files found"));
-		vim_free(fname);
-		fname = NULL;
+		VIM_CLEAR(fname);
 		break;
 	    }
 	    --fname[n - 2];		/* ".svz", ".suz", etc. */
@@ -4649,8 +4648,8 @@ b0_magic_wrong(ZERO_BL *b0p)
  *		== 0   == 0	OK	FAIL	TRUE
  *
  * current file doesn't exist, inode for swap unknown, both file names not
- * available -> probably same file
- *		== 0   == 0    FAIL	FAIL	FALSE
+ * available -> compare file names
+ *		== 0   == 0    FAIL	FAIL	fname_c != fname_s
  *
  * Note that when the ino_t is 64 bits, only the last 32 will be used.  This
  * can't be changed without making the block 0 incompatible with 32 bit
@@ -4694,14 +4693,15 @@ fnamecmp_ino(
     retval_c = vim_FullName(fname_c, buf_c, MAXPATHL, TRUE);
     retval_s = vim_FullName(fname_s, buf_s, MAXPATHL, TRUE);
     if (retval_c == OK && retval_s == OK)
-	return (STRCMP(buf_c, buf_s) != 0);
+	return STRCMP(buf_c, buf_s) != 0;
 
     /*
      * Can't compare inodes or file names, guess that the files are different,
-     * unless both appear not to exist at all.
+     * unless both appear not to exist at all, then compare with the file name
+     * in the swap file.
      */
     if (ino_s == 0 && ino_c == 0 && retval_c == FAIL && retval_s == FAIL)
-	return FALSE;
+	return STRCMP(fname_c, fname_s) != 0;
     return TRUE;
 }
 #endif /* CHECK_INODE */

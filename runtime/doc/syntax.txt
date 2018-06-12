@@ -1,4 +1,4 @@
-*syntax.txt*	For Vim version 8.0.  Last change: 2016 Sep 12
+*syntax.txt*	For Vim version 8.1.  Last change: 2018 Apr 30
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -61,10 +61,12 @@ fine.  If it doesn't, try setting the VIM environment variable to the
 directory where the Vim stuff is located.  For example, if your syntax files
 are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
 "/usr/vim/vim50".  You must do this in the shell, before starting Vim.
+This command also sources the |menu.vim| script when the GUI is running or
+will start soon.  See |'go-M'| about avoiding that.
 
 							*:syn-on* *:syntax-on*
-The ":syntax enable" command will keep your current color settings.  This
-allows using ":highlight" commands to set your preferred colors before or
+The `:syntax enable` command will keep your current color settings.  This
+allows using `:highlight` commands to set your preferred colors before or
 after using this command.  If you want Vim to overrule your settings with the
 defaults, use: >
 	:syntax on
@@ -810,12 +812,9 @@ See |mysyntaxfile-add| for installing script languages permanently.
 
 APACHE						*apache.vim* *ft-apache-syntax*
 
-The apache syntax file provides syntax highlighting depending on Apache HTTP
-server version, by default for 1.3.x.  Set "apache_version" to Apache version
-(as a string) to get highlighting for another version.	Example: >
+The apache syntax file provides syntax highlighting for Apache HTTP server
+version 2.2.3.
 
-	:let apache_version = "2.0"
-<
 
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
 ASSEMBLY	*ft-asm-syntax* *ft-asmh8300-syntax* *ft-nasm-syntax*
@@ -1476,7 +1475,7 @@ algorithm should work in the vast majority of cases.  In some cases, such as a
 file that begins with 500 or more full-line comments, the script may
 incorrectly decide that the fortran code is in fixed form.  If that happens,
 just add a non-comment statement beginning anywhere in the first five columns
-of the first twenty five lines, save (:w) and then reload (:e!) the file.
+of the first twenty-five lines, save (:w) and then reload (:e!) the file.
 
 Tabs in fortran files ~
 Tabs are not recognized by the Fortran standards.  Tabs are not a good idea in
@@ -2138,6 +2137,16 @@ set "msql_minlines" to the value you desire.  Example: >
 	:let msql_minlines = 200
 
 
+N1QL						*n1ql.vim* *ft-n1ql-syntax*
+
+N1QL is a SQL-like declarative language for manipulating JSON documents in
+Couchbase Server databases.
+
+Vim syntax highlights N1QL statements, keywords, operators, types, comments,
+and special values.  Vim ignores syntactical elements specific to SQL or its
+many dialects, like COLUMN or CHAR, that don't exist in N1QL.
+
+
 NCF						*ncf.vim* *ft-ncf-syntax*
 
 There is one option for NCF syntax highlighting.
@@ -2646,9 +2655,9 @@ later, and part earlier) adds.
 
 RESTRUCTURED TEXT			*rst.vim* *ft-rst-syntax*
 
-You may set what syntax definitions should be used for code blocks via
+You may set what syntax definitions should be used for code blocks via >
 	let rst_syntax_code_list = ['vim', 'lisp', ...]
-
+<
 
 REXX						*rexx.vim* *ft-rexx-syntax*
 
@@ -2770,13 +2779,10 @@ Ruby syntax will perform spellchecking of strings if you define
 
 SCHEME						*scheme.vim* *ft-scheme-syntax*
 
-By default only R5RS keywords are highlighted and properly indented.
+By default only R7RS keywords are highlighted and properly indented.
 
-MzScheme-specific stuff will be used if b:is_mzscheme or g:is_mzscheme
-variables are defined.
-
-Also scheme.vim supports keywords of the Chicken Scheme->C compiler.  Define
-b:is_chicken or g:is_chicken, if you need them.
+scheme.vim also supports extensions of the CHICKEN Scheme->C compiler.
+Define b:is_chicken or g:is_chicken, if you need them.
 
 
 SDL						*sdl.vim* *ft-sdl-syntax*
@@ -2863,9 +2869,11 @@ vimrc file: >
 (Adapted from the html.vim help text by Claudio Fleiner <claudio@fleiner.com>)
 
 
-SH		*sh.vim* *ft-sh-syntax* *ft-bash-syntax* *ft-ksh-syntax*
+		*ft-posix-synax* *ft-dash-syntax*
+SH		*sh.vim*  *ft-sh-syntax*  *ft-bash-syntax*  *ft-ksh-syntax*
 
-This covers the "normal" Unix (Bourne) sh, bash and the Korn shell.
+This covers syntax highlighting for the older Unix (Bourne) sh, and newer
+shells such as bash, dash, posix, and the Korn shells.
 
 Vim attempts to determine which shell type is in use by specifying that
 various filenames are of specific types: >
@@ -2874,28 +2882,31 @@ various filenames are of specific types: >
     bash: .bashrc* bashrc bash.bashrc .bash_profile* *.bash
 <
 If none of these cases pertain, then the first line of the file is examined
-(ex. /bin/sh  /bin/ksh	/bin/bash).  If the first line specifies a shelltype,
-then that shelltype is used.  However some files (ex. .profile) are known to
-be shell files but the type is not apparent.  Furthermore, on many systems
-sh is symbolically linked to "bash" (Linux, Windows+cygwin) or "ksh" (Posix).
+(ex. looking for /bin/sh  /bin/ksh  /bin/bash).  If the first line specifies a
+shelltype, then that shelltype is used.  However some files (ex. .profile) are
+known to be shell files but the type is not apparent.  Furthermore, on many
+systems sh is symbolically linked to "bash" (Linux, Windows+cygwin) or "ksh"
+(Posix).
 
-One may specify a global default by instantiating one of the following three
+One may specify a global default by instantiating one of the following
 variables in your <.vimrc>:
 
-    ksh: >
+   ksh: >
 	let g:is_kornshell = 1
-<   posix: (using this is the same as setting is_kornshell to 1) >
+<   posix:  (using this is the nearly the same as setting g:is_kornshell to 1) >
 	let g:is_posix     = 1
 <   bash: >
 	let g:is_bash	   = 1
 <   sh: (default) Bourne shell >
 	let g:is_sh	   = 1
 
+<   (dash users should use posix)
+
 If there's no "#! ..." line, and the user hasn't availed himself/herself of a
 default sh.vim syntax setting as just shown, then syntax/sh.vim will assume
 the Bourne shell syntax.  No need to quote RFCs or market penetration
 statistics in error reports, please -- just select the default version of the
-sh your system uses in your <.vimrc>.
+sh your system uses and install the associated "let..." in your <.vimrc>.
 
 The syntax/sh.vim file provides several levels of syntax-based folding: >
 
@@ -2904,7 +2915,7 @@ The syntax/sh.vim file provides several levels of syntax-based folding: >
 	let g:sh_fold_enabled= 2     (enable heredoc folding)
 	let g:sh_fold_enabled= 4     (enable if/do/for folding)
 >
-then various syntax items (HereDocuments and function bodies) become
+then various syntax items (ie. HereDocuments and function bodies) become
 syntax-foldable (see |:syn-fold|).  You also may add these together
 to get multiple types of folding: >
 
@@ -2928,14 +2939,14 @@ reduce this, the "sh_maxlines" internal variable can be set.  Example: >
 The default is to use the twice sh_minlines.  Set it to a smaller number to
 speed up displaying.  The disadvantage is that highlight errors may appear.
 
-						*g:sh_isk* *g:sh_noisk*
-The shell languages appear to let "." be part of words, commands, etc;
-consequently it should be in the isk for sh.vim.  As of v116 of syntax/sh.vim,
-syntax/sh.vim will append the "." to |'iskeyword'| by default; you may control
-this behavior with: >
-	let g:sh_isk  = '..whatever characters you want as part of iskeyword'
-	let g:sh_noisk= 1  " otherwise, if this exists, the isk will NOT chg
+syntax/sh.vim tries to flag certain problems as errors; usually things like
+extra ']'s, 'done's, 'fi's, etc.  If you find the error handling problematic
+for your purposes, you may suppress such error highlighting by putting
+the following line in your .vimrc: >
+
+	let g:sh_no_error= 1
 <
+
 						*sh-embed*  *sh-awk*
  Sh: EMBEDDING LANGUAGES~
 
@@ -3237,11 +3248,11 @@ syntax highlighting script handles this with the following logic:
 	* If g:tex_stylish exists and is 1
 		then the file will be treated as a "sty" file, so the "_"
 		will be allowed as part of keywords
-		(irregardless of g:tex_isk)
+		(regardless of g:tex_isk)
 	* Else if the file's suffix is sty, cls, clo, dtx, or ltx,
 		then the file will be treated as a "sty" file, so the "_"
 		will be allowed as part of keywords
-		(irregardless of g:tex_isk)
+		(regardless of g:tex_isk)
 
 	* If g:tex_isk exists, then it will be used for the local 'iskeyword'
 	* Else the local 'iskeyword' will be set to 48-57,a-z,A-Z,192-255
@@ -3322,8 +3333,8 @@ Some folding is now supported with syntax/vim.vim: >
    g:vimsyn_folding =~ 't' : fold tcl      script
 <
 							*g:vimsyn_noerror*
-Not all error highlighting that syntax/vim.vim does may be correct; VimL is a
-difficult language to highlight correctly.  A way to suppress error
+Not all error highlighting that syntax/vim.vim does may be correct; Vim script
+is a difficult language to highlight correctly.  A way to suppress error
 highlighting is to put the following line in your |vimrc|: >
 
 	let g:vimsyn_noerror = 1
@@ -3481,6 +3492,8 @@ DEFINING CASE						*:syn-case* *E390*
 	"ignore".  Note that any items before this are not affected, and all
 	items until the next ":syntax case" command are affected.
 
+:sy[ntax] case
+	Show either "syntax case match" or "syntax case ignore" (translated).
 
 SPELL CHECKING						*:syn-spell*
 
@@ -3497,6 +3510,11 @@ SPELL CHECKING						*:syn-spell*
 	spell checking is done for "default" and "toplevel".
 
 	To activate spell checking the 'spell' option must be set.
+
+:sy[ntax] spell
+	Show either "syntax spell toplevel", "syntax spell notoplevel" or
+	"syntax spell default" (translated).
+
 
 SYNTAX ISKEYWORD SETTING				*:syn-iskeyword*
 
@@ -3521,8 +3539,8 @@ SYNTAX ISKEYWORD SETTING				*:syn-iskeyword*
 	and also determines where |:syn-keyword| will be checked for a new
 	match.
 
-	It is recommended when writing syntax files, to use this command
-	to the correct value for the specific syntax language and not change
+	It is recommended when writing syntax files, to use this command to
+	set the correct value for the specific syntax language and not change
 	the 'iskeyword' option.
 
 DEFINING KEYWORDS					*:syn-keyword*
@@ -3580,7 +3598,11 @@ DEFINING KEYWORDS					*:syn-keyword*
 
 DEFINING MATCHES					*:syn-match*
 
-:sy[ntax] match {group-name} [{options}] [excludenl] {pattern} [{options}]
+:sy[ntax] match {group-name} [{options}]
+		[excludenl]
+		[keepend]
+		{pattern}
+		[{options}]
 
 	This defines one match.
 
@@ -3589,6 +3611,9 @@ DEFINING MATCHES					*:syn-match*
 	[excludenl]		Don't make a pattern with the end-of-line "$"
 				extend a containing match or region.  Must be
 				given before the pattern. |:syn-excludenl|
+	keepend			Don't allow contained matches to go past a
+				match with the end pattern.  See
+				|:syn-keepend|.
 	{pattern}		The search pattern that defines the match.
 				See |:syn-pattern| below.
 				Note that the pattern may match more than one
@@ -4083,6 +4108,9 @@ IMPLICIT CONCEAL					*:syn-conceal-implicit*
 	defined will have the "conceal" flag set implicitly. ":syn conceal
 	off" returns to the normal state where the "conceal" flag must be
 	given explicitly.
+
+:sy[ntax] conceal
+	Show either "syntax conceal on" or "syntax conceal off" (translated).
 
 ==============================================================================
 7. Syntax patterns				*:syn-pattern* *E401* *E402*
@@ -4592,6 +4620,15 @@ in their own color.
 
 			Doesn't work recursively, thus you can't use
 			":colorscheme" in a color scheme script.
+
+			To customize a colorscheme use another name, e.g.
+			"~/.vim/colors/mine.vim", and use `:runtime` to load
+			the original colorscheme: >
+				runtime colors/evening.vim
+				hi Statement ctermfg=Blue guifg=Blue
+
+<			Before the color scheme will be loaded the
+			|ColorSchemePre| autocommand event is triggered.
 			After the color scheme has been loaded the
 			|ColorScheme| autocommand event is triggered.
 			For info about writing a colorscheme file: >
@@ -4660,23 +4697,26 @@ the same syntax file on all terminals, and use the optimal highlighting.
 
 					*bold* *underline* *undercurl*
 					*inverse* *italic* *standout*
+					*nocombine* *strikethrough*
 term={attr-list}			*attr-list* *highlight-term* *E418*
 	attr-list is a comma separated list (without spaces) of the
 	following items (in any order):
 		bold
 		underline
 		undercurl	not always available
+		strikethrough	not always available
 		reverse
 		inverse		same as reverse
 		italic
 		standout
+		nocombine	override attributes instead of combining them
 		NONE		no attributes used (used to reset it)
 
 	Note that "bold" can be used here and by using a bold font.  They
 	have the same effect.
 	"undercurl" is a curly underline.  When "undercurl" is not possible
-	then "underline" is used.  In general "undercurl" is only available in
-	the GUI.  The color is set with |highlight-guisp|.
+	then "underline" is used.  In general "undercurl" and "strikethrough"
+	is only available in the GUI.  The color is set with |highlight-guisp|.
 
 start={term-list}				*highlight-start* *E422*
 stop={term-list}				*term-list* *highlight-stop*
@@ -4783,10 +4823,11 @@ ctermbg={color-nr}				*highlight-ctermbg*
 	Example: >
 		:highlight Normal ctermfg=grey ctermbg=darkblue
 <	When setting the "ctermbg" color for the Normal group, the
-	'background' option will be adjusted automatically.  This causes the
-	highlight groups that depend on 'background' to change!  This means
-	you should set the colors for Normal first, before setting other
-	colors.
+	'background' option will be adjusted automatically, under the
+	condition that the color is recognized and 'background' was not set
+	explicitly.  This causes the highlight groups that depend on
+	'background' to change!  This means you should set the colors for
+	Normal first, before setting other colors.
 	When a colorscheme is being used, changing 'background' causes it to
 	be reloaded, which may reset all colors (including Normal).  First
 	delete the "g:colors_name" variable when you don't want this.
@@ -4840,7 +4881,8 @@ guifg={color-name}					*highlight-guifg*
 guibg={color-name}					*highlight-guibg*
 guisp={color-name}					*highlight-guisp*
 	These give the foreground (guifg), background (guibg) and special
-	(guisp) color to use in the GUI.  "guisp" is used for undercurl.
+	(guisp) color to use in the GUI.  "guisp" is used for undercurl and
+	strikethrough.
 	There are a few special names:
 		NONE		no color (transparent)
 		bg		use normal background color
@@ -4952,10 +4994,11 @@ PmenuSbar	Popup menu: scrollbar.
 PmenuThumb	Popup menu: Thumb of the scrollbar.
 							*hl-Question*
 Question	|hit-enter| prompt and yes/no questions
+							*hl-QuickFixLine*
+QuickFixLine	Current |quickfix| item in the quickfix window.
 							*hl-Search*
 Search		Last search pattern highlighting (see 'hlsearch').
-		Also used for highlighting the current line in the quickfix
-		window and similar items that need to stand out.
+		Also used for similar items that need to stand out.
 							*hl-SpecialKey*
 SpecialKey	Meta and special keys listed with ":map", also for text used
 		to show unprintable characters in the text, 'listchars'.
@@ -4981,12 +5024,19 @@ StatusLine	status line of current window
 StatusLineNC	status lines of not-current windows
 		Note: if this is equal to "StatusLine" Vim will use "^^^" in
 		the status line of the current window.
+							*hl-StatusLineTerm*
+StatusLineTerm	status line of current window, if it is a |terminal| window.
+							*hl-StatusLineTermNC*
+StatusLineTermNC   status lines of not-current windows that is a |terminal|
+		window.
 							*hl-TabLine*
 TabLine		tab pages line, not active tab page label
 							*hl-TabLineFill*
 TabLineFill	tab pages line, where there are no labels
 							*hl-TabLineSel*
 TabLineSel	tab pages line, active tab page label
+							*hl-Terminal*
+Terminal	|terminal| window (see |terminal-size-color|)
 							*hl-Title*
 Title		titles for output from ":set all", ":autocmd" etc.
 							*hl-Visual*

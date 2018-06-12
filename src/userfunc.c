@@ -41,7 +41,7 @@ static garray_T funcargs = GA_EMPTY;
 /* pointer to funccal for currently active function */
 funccall_T *current_funccal = NULL;
 
-/* pointer to list of previously used funccal, still around because some
+/* Pointer to list of previously used funccal, still around because some
  * item in it is still being used. */
 funccall_T *previous_funccal = NULL;
 
@@ -628,6 +628,55 @@ free_funccal(
 }
 
 /*
+ * Handle the last part of returning from a function: free the local hashtable.
+ * Unless it is still in use by a closure.
+ */
+    static void
+cleanup_function_call(funccall_T *fc)
+{
+    current_funccal = fc->caller;
+
+    /* If the a:000 list and the l: and a: dicts are not referenced and there
+     * is no closure using it, we can free the funccall_T and what's in it. */
+    if (fc->l_varlist.lv_refcount == DO_NOT_FREE_CNT
+	    && fc->l_vars.dv_refcount == DO_NOT_FREE_CNT
+	    && fc->l_avars.dv_refcount == DO_NOT_FREE_CNT
+	    && fc->fc_refcount <= 0)
+    {
+	free_funccal(fc, FALSE);
+    }
+    else
+    {
+	hashitem_T	*hi;
+	listitem_T	*li;
+	int		todo;
+	dictitem_T	*v;
+
+	/* "fc" is still in use.  This can happen when returning "a:000",
+	 * assigning "l:" to a global variable or defining a closure.
+	 * Link "fc" in the list for garbage collection later. */
+	fc->caller = previous_funccal;
+	previous_funccal = fc;
+
+	/* Make a copy of the a: variables, since we didn't do that above. */
+	todo = (int)fc->l_avars.dv_hashtab.ht_used;
+	for (hi = fc->l_avars.dv_hashtab.ht_array; todo > 0; ++hi)
+	{
+	    if (!HASHITEM_EMPTY(hi))
+	    {
+		--todo;
+		v = HI2DI(hi);
+		copy_tv(&v->di_tv, &v->di_tv);
+	    }
+	}
+
+	/* Make a copy of the a:000 items, since we didn't do that above. */
+	for (li = fc->l_varlist.lv_first; li != NULL; li = li->li_next)
+	    copy_tv(&li->li_tv, &li->li_tv);
+    }
+}
+
+/*
  * Call a user function.
  */
     static void
@@ -982,46 +1031,9 @@ call_user_func(
     }
 
     did_emsg |= save_did_emsg;
-    current_funccal = fc->caller;
     --depth;
 
-    /* If the a:000 list and the l: and a: dicts are not referenced and there
-     * is no closure using it, we can free the funccall_T and what's in it. */
-    if (fc->l_varlist.lv_refcount == DO_NOT_FREE_CNT
-	    && fc->l_vars.dv_refcount == DO_NOT_FREE_CNT
-	    && fc->l_avars.dv_refcount == DO_NOT_FREE_CNT
-	    && fc->fc_refcount <= 0)
-    {
-	free_funccal(fc, FALSE);
-    }
-    else
-    {
-	hashitem_T	*hi;
-	listitem_T	*li;
-	int		todo;
-
-	/* "fc" is still in use.  This can happen when returning "a:000",
-	 * assigning "l:" to a global variable or defining a closure.
-	 * Link "fc" in the list for garbage collection later. */
-	fc->caller = previous_funccal;
-	previous_funccal = fc;
-
-	/* Make a copy of the a: variables, since we didn't do that above. */
-	todo = (int)fc->l_avars.dv_hashtab.ht_used;
-	for (hi = fc->l_avars.dv_hashtab.ht_array; todo > 0; ++hi)
-	{
-	    if (!HASHITEM_EMPTY(hi))
-	    {
-		--todo;
-		v = HI2DI(hi);
-		copy_tv(&v->di_tv, &v->di_tv);
-	    }
-	}
-
-	/* Make a copy of the a:000 items, since we didn't do that above. */
-	for (li = fc->l_varlist.lv_first; li != NULL; li = li->li_next)
-	    copy_tv(&li->li_tv, &li->li_tv);
-    }
+    cleanup_function_call(fc);
 }
 
 /*
@@ -1075,12 +1087,17 @@ func_remove(ufunc_T *fp)
 }
 
 /*
- * Free a function and remove it from the list of functions.
+ * Free all things that a function contains.  Does not free the function
+ * itself, use func_free() for that.
  * When "force" is TRUE we are exiting.
  */
     static void
-func_free(ufunc_T *fp, int force)
+func_clear(ufunc_T *fp, int force)
 {
+    if (fp->uf_cleared)
+	return;
+    fp->uf_cleared = TRUE;
+
     /* clear this function */
     ga_clear_strings(&(fp->uf_args));
     ga_clear_strings(&(fp->uf_lines));
@@ -1089,14 +1106,33 @@ func_free(ufunc_T *fp, int force)
     vim_free(fp->uf_tml_total);
     vim_free(fp->uf_tml_self);
 #endif
+    funccal_unref(fp->uf_scoped, fp, force);
+}
+
+/*
+ * Free a function and remove it from the list of functions.  Does not free
+ * what a function contains, call func_clear() first.
+ */
+    static void
+func_free(ufunc_T *fp)
+{
     /* only remove it when not done already, otherwise we would remove a newer
      * version of the function */
     if ((fp->uf_flags & (FC_DELETED | FC_REMOVED)) == 0)
 	func_remove(fp);
 
-    funccal_unref(fp->uf_scoped, fp, force);
-
     vim_free(fp);
+}
+
+/*
+ * Free all things that a function contains and free the function itself.
+ * When "force" is TRUE we are exiting.
+ */
+    static void
+func_clear_free(ufunc_T *fp, int force)
+{
+    func_clear(fp, force);
+    func_free(fp);
 }
 
 /*
@@ -1120,10 +1156,47 @@ free_all_functions(void)
     hashitem_T	*hi;
     ufunc_T	*fp;
     long_u	skipped = 0;
-    long_u	todo;
+    long_u	todo = 1;
+    long_u	used;
 
-    /* Need to start all over every time, because func_free() may change the
-     * hash table. */
+    /* Clean up the call stack. */
+    while (current_funccal != NULL)
+    {
+	clear_tv(current_funccal->rettv);
+	cleanup_function_call(current_funccal);
+    }
+
+    /* First clear what the functions contain.  Since this may lower the
+     * reference count of a function, it may also free a function and change
+     * the hash table. Restart if that happens. */
+    while (todo > 0)
+    {
+	todo = func_hashtab.ht_used;
+	for (hi = func_hashtab.ht_array; todo > 0; ++hi)
+	    if (!HASHITEM_EMPTY(hi))
+	    {
+		/* Only free functions that are not refcounted, those are
+		 * supposed to be freed when no longer referenced. */
+		fp = HI2UF(hi);
+		if (func_name_refcount(fp->uf_name))
+		    ++skipped;
+		else
+		{
+		    used = func_hashtab.ht_used;
+		    func_clear(fp, TRUE);
+		    if (used != func_hashtab.ht_used)
+		    {
+			skipped = 0;
+			break;
+		    }
+		}
+		--todo;
+	    }
+    }
+
+    /* Now actually free the functions.  Need to start all over every time,
+     * because func_free() may change the hash table. */
+    skipped = 0;
     while (func_hashtab.ht_used > skipped)
     {
 	todo = func_hashtab.ht_used;
@@ -1138,7 +1211,7 @@ free_all_functions(void)
 		    ++skipped;
 		else
 		{
-		    func_free(fp, TRUE);
+		    func_free(fp);
 		    skipped = 0;
 		    break;
 		}
@@ -1299,7 +1372,6 @@ call_func(
 	    else
 		fp = find_func(rfname);
 
-#ifdef FEAT_AUTOCMD
 	    /* Trigger FuncUndefined event, may load the function. */
 	    if (fp == NULL
 		    && apply_autocmds(EVENT_FUNCUNDEFINED,
@@ -1309,7 +1381,6 @@ call_func(
 		/* executed an autocommand, search for the function again */
 		fp = find_func(rfname);
 	    }
-#endif
 	    /* Try loading a package. */
 	    if (fp == NULL && script_autoload(rfname, TRUE) && !aborting())
 	    {
@@ -1335,6 +1406,7 @@ call_func(
 		else
 		{
 		    int did_save_redo = FALSE;
+		    save_redo_T	save_redo;
 
 		    /*
 		     * Call the user function.
@@ -1346,7 +1418,7 @@ call_func(
 		    if (!ins_compl_active())
 #endif
 		    {
-			saveRedobuff();
+			saveRedobuff(&save_redo);
 			did_save_redo = TRUE;
 		    }
 		    ++fp->uf_calls;
@@ -1356,9 +1428,9 @@ call_func(
 		    if (--fp->uf_calls <= 0 && fp->uf_refcount <= 0)
 			/* Function was unreferenced while being used, free it
 			 * now. */
-			func_free(fp, FALSE);
+			func_clear_free(fp, FALSE);
 		    if (did_save_redo)
-			restoreRedobuff();
+			restoreRedobuff(&save_redo);
 		    restore_search_patterns();
 		    error = ERROR_NONE;
 		}
@@ -1440,7 +1512,7 @@ list_func_head(ufunc_T *fp, int indent)
     MSG_PUTS("function ");
     if (fp->uf_name[0] == K_SPECIAL)
     {
-	MSG_PUTS_ATTR("<SNR>", hl_attr(HLF_8));
+	MSG_PUTS_ATTR("<SNR>", HL_ATTR(HLF_8));
 	msg_puts(fp->uf_name + 3);
     }
     else
@@ -1520,7 +1592,7 @@ trans_function_name(
 	start += lead;
 
     /* Note that TFN_ flags use the same values as GLV_ flags. */
-    end = get_lval(start, NULL, &lv, FALSE, skip, flags,
+    end = get_lval(start, NULL, &lv, FALSE, skip, flags | GLV_READ_ONLY,
 					      lead > 2 ? 0 : FNE_CHECK_START);
     if (end == start)
     {
@@ -1706,6 +1778,7 @@ theend:
 ex_function(exarg_T *eap)
 {
     char_u	*theline;
+    char_u	*line_to_free = NULL;
     int		j;
     int		c;
     int		saved_did_emsg;
@@ -1811,7 +1884,7 @@ ex_function(exarg_T *eap)
      * g:func	    global function name, same as "func"
      */
     p = eap->arg;
-    name = trans_function_name(&p, eap->skip, 0, &fudi, NULL);
+    name = trans_function_name(&p, eap->skip, TFN_NO_AUTOLOAD, &fudi, NULL);
     paren = (vim_strchr(p, '(') != NULL);
     if (name == NULL && (fudi.fd_dict == NULL || !paren) && !eap->skip)
     {
@@ -2019,10 +2092,15 @@ ex_function(exarg_T *eap)
 		line_arg = p + 1;
 	    }
 	}
-	else if (eap->getline == NULL)
-	    theline = getcmdline(':', 0L, indent);
 	else
-	    theline = eap->getline(':', eap->cookie, indent);
+	{
+	    vim_free(line_to_free);
+	    if (eap->getline == NULL)
+		theline = getcmdline(':', 0L, indent);
+	    else
+		theline = eap->getline(':', eap->cookie, indent);
+	    line_to_free = theline;
+	}
 	if (KeyTyped)
 	    lines_left = Rows - 1;
 	if (theline == NULL)
@@ -2042,22 +2120,40 @@ ex_function(exarg_T *eap)
 	    /* between ":append" and "." and between ":python <<EOF" and "EOF"
 	     * don't check for ":endfunc". */
 	    if (STRCMP(theline, skip_until) == 0)
-	    {
-		vim_free(skip_until);
-		skip_until = NULL;
-	    }
+		VIM_CLEAR(skip_until);
 	}
 	else
 	{
 	    /* skip ':' and blanks*/
-	    for (p = theline; vim_iswhite(*p) || *p == ':'; ++p)
+	    for (p = theline; VIM_ISWHITE(*p) || *p == ':'; ++p)
 		;
 
 	    /* Check for "endfunction". */
 	    if (checkforcmd(&p, "endfunction", 4) && nesting-- == 0)
 	    {
-		if (line_arg == NULL)
-		    vim_free(theline);
+		char_u *nextcmd = NULL;
+
+		if (*p == '|')
+		    nextcmd = p + 1;
+		else if (line_arg != NULL && *skipwhite(line_arg) != NUL)
+		    nextcmd = line_arg;
+		else if (*p != NUL && *p != '"' && p_verbose > 0)
+		    give_warning2(
+			 (char_u *)_("W22: Text found after :endfunction: %s"),
+			 p, TRUE);
+		if (nextcmd != NULL)
+		{
+		    /* Another command follows. If the line came from "eap" we
+		     * can simply point into it, otherwise we need to change
+		     * "eap->cmdlinep". */
+		    eap->nextcmd = nextcmd;
+		    if (line_to_free != NULL)
+		    {
+			vim_free(*eap->cmdlinep);
+			*eap->cmdlinep = line_to_free;
+			line_to_free = NULL;
+		    }
+		}
 		break;
 	    }
 
@@ -2085,9 +2181,14 @@ ex_function(exarg_T *eap)
 		}
 	    }
 
-	    /* Check for ":append" or ":insert". */
+	    /* Check for ":append", ":change", ":insert". */
 	    p = skip_range(p, NULL);
 	    if ((p[0] == 'a' && (!ASCII_ISALPHA(p[1]) || p[1] == 'p'))
+		    || (p[0] == 'c'
+			&& (!ASCII_ISALPHA(p[1]) || (p[1] == 'h'
+				&& (!ASCII_ISALPHA(p[2]) || (p[2] == 'a'
+					&& (STRNCMP(&p[3], "nge", 3) != 0
+					    || !ASCII_ISALPHA(p[6])))))))
 		    || (p[0] == 'i'
 			&& (!ASCII_ISALPHA(p[1]) || (p[1] == 'n'
 				&& (!ASCII_ISALPHA(p[2]) || (p[2] == 's'))))))
@@ -2097,7 +2198,9 @@ ex_function(exarg_T *eap)
 	    arg = skipwhite(skiptowhite(p));
 	    if (arg[0] == '<' && arg[1] =='<'
 		    && ((p[0] == 'p' && p[1] == 'y'
-				    && (!ASCII_ISALPHA(p[2]) || p[2] == 't'))
+				    && (!ASCII_ISALNUM(p[2]) || p[2] == 't'
+					|| ((p[2] == '3' || p[2] == 'x')
+						   && !ASCII_ISALPHA(p[3]))))
 			|| (p[0] == 'p' && p[1] == 'e'
 				    && (!ASCII_ISALPHA(p[2]) || p[2] == 'r'))
 			|| (p[0] == 't' && p[1] == 'c'
@@ -2121,24 +2224,15 @@ ex_function(exarg_T *eap)
 
 	/* Add the line to the function. */
 	if (ga_grow(&newlines, 1 + sourcing_lnum_off) == FAIL)
-	{
-	    if (line_arg == NULL)
-		vim_free(theline);
 	    goto erret;
-	}
 
 	/* Copy the line to newly allocated memory.  get_one_sourceline()
 	 * allocates 250 bytes per line, this saves 80% on average.  The cost
 	 * is an extra alloc/free. */
 	p = vim_strsave(theline);
-	if (p != NULL)
-	{
-	    if (line_arg == NULL)
-		vim_free(theline);
-	    theline = p;
-	}
-
-	((char_u **)(newlines.ga_data))[newlines.ga_len++] = theline;
+	if (p == NULL)
+	    goto erret;
+	((char_u **)(newlines.ga_data))[newlines.ga_len++] = p;
 
 	/* Add NULL lines for continuation lines, so that the line count is
 	 * equal to the index in the growarray.   */
@@ -2196,8 +2290,7 @@ ex_function(exarg_T *eap)
 		/* redefine existing function */
 		ga_clear_strings(&(fp->uf_args));
 		ga_clear_strings(&(fp->uf_lines));
-		vim_free(name);
-		name = NULL;
+		VIM_CLEAR(name);
 	    }
 	}
     }
@@ -2337,6 +2430,7 @@ errret_2:
     ga_clear_strings(&newlines);
 ret_free:
     vim_free(skip_until);
+    vim_free(line_to_free);
     vim_free(fudi.fd_newkey);
     vim_free(name);
     did_emsg |= saved_did_emsg;
@@ -2718,7 +2812,8 @@ ex_delfunction(exarg_T *eap)
     {
 	if (fp == NULL)
 	{
-	    EMSG2(_(e_nofunc), eap->arg);
+	    if (!eap->forceit)
+		EMSG2(_(e_nofunc), eap->arg);
 	    return;
 	}
 	if (fp->uf_calls > 0)
@@ -2749,7 +2844,7 @@ ex_delfunction(exarg_T *eap)
 		fp->uf_flags |= FC_DELETED;
 	    }
 	    else
-		func_free(fp, FALSE);
+		func_clear_free(fp, FALSE);
 	}
     }
 }
@@ -2771,14 +2866,14 @@ func_unref(char_u *name)
 #ifdef EXITFREE
 	if (!entered_free_all_mem)
 #endif
-	    EMSG2(_(e_intern2), "func_unref()");
+	    internal_error("func_unref()");
     }
     if (fp != NULL && --fp->uf_refcount <= 0)
     {
 	/* Only delete it when it's not being used.  Otherwise it's done
 	 * when "uf_calls" becomes zero. */
 	if (fp->uf_calls == 0)
-	    func_free(fp, FALSE);
+	    func_clear_free(fp, FALSE);
     }
 }
 
@@ -2794,7 +2889,7 @@ func_ptr_unref(ufunc_T *fp)
 	/* Only delete it when it's not being used.  Otherwise it's done
 	 * when "uf_calls" becomes zero. */
 	if (fp->uf_calls == 0)
-	    func_free(fp, FALSE);
+	    func_clear_free(fp, FALSE);
     }
 }
 
@@ -2814,7 +2909,7 @@ func_ref(char_u *name)
     else if (isdigit(*name))
 	/* Only give an error for a numbered function.
 	 * Fail silently, when named or lambda function isn't found. */
-	EMSG2(_(e_intern2), "func_ref()");
+	internal_error("func_ref()");
 }
 
 /*
@@ -2871,6 +2966,9 @@ ex_return(exarg_T *eap)
     /* It's safer to return also on error. */
     else if (!eap->skip)
     {
+	/* In return statement, cause_abort should be force_abort. */
+	update_force_abort();
+
 	/*
 	 * Return unless the expression evaluation has been cancelled due to an
 	 * aborting error, an interrupt, or an exception.
@@ -2985,6 +3083,8 @@ ex_call(exarg_T *eap)
 	    failed = TRUE;
 	    break;
 	}
+	if (has_watchexpr())
+	    dbg_check_breakpoint(eap);
 
 	/* Handle a function returning a Funcref, Dictionary or List. */
 	if (handle_subscript(&arg, &rettv, !eap->skip, TRUE) == FAIL)
@@ -3549,7 +3649,7 @@ get_funccal_args_var()
 {
     if (current_funccal == NULL)
 	return NULL;
-    return &current_funccal->l_avars_var;
+    return &get_funccal()->l_avars_var;
 }
 
 /*

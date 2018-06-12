@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 8.0.  Last change: 2016 Sep 11
+*repeat.txt*    For Vim version 8.1.  Last change: 2018 Mar 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -46,7 +46,7 @@ of area is used, see |visual-repeat|.
 ==============================================================================
 2. Multiple repeats					*multi-repeat*
 
-						*:g* *:global* *E147* *E148*
+						*:g* *:global* *E148*
 :[range]g[lobal]/{pattern}/[cmd]
 			Execute the Ex command [cmd] (default ":p") on the
 			lines within [range] where {pattern} matches.
@@ -79,8 +79,15 @@ The default for [range] is the whole buffer (1,$).  Use "CTRL-C" to interrupt
 the command.  If an error message is given for a line, the command for that
 line is aborted and the global command continues with the next marked or
 unmarked line.
+								*E147* 
+When the command is used recursively, it only works on one line.  Giving a
+range is then not allowed. This is useful to find all lines that match a
+pattern and do not match another pattern: >
+	:g/found/v/notfound/{cmd}
+This first finds all lines containing "found", but only executes {cmd} when
+there is no match for "notfound".
 
-To repeat a non-Ex command, you can use the ":normal" command: >
+To execute a non-Ex command, you can use the `:normal` command: >
 	:g/pat/normal {commands}
 Make sure that {commands} ends with a whole command, otherwise Vim will wait
 for you to type the rest of the command for each match.  The screen will not
@@ -235,6 +242,10 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			If the directory pack/*/opt/{name}/after exists it is
 			added at the end of 'runtimepath'.
 
+			If loading packages from "pack/*/start" was skipped,
+			then this directory is searched first:
+				pack/*/start/{name} ~
+
 			Note that {name} is the directory name, not the name
 			of the .vim file.  All the files matching the pattern
 				pack/*/opt/{name}/plugin/**/*.vim ~
@@ -254,6 +265,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			loaded during initialization, see |load-plugins|.
 
 			Also see |pack-add|.
+			{only available when compiled with +eval}
 
 						*:packl* *:packloadall*
 :packl[oadall][!]	Load all packages in the "start" directory under each
@@ -277,6 +289,7 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			An error only causes sourcing the script where it
 			happens to be aborted, further plugins will be loaded.
 			See |packages|.
+			{only available when compiled with +eval}
 
 :scripte[ncoding] [encoding]		*:scripte* *:scriptencoding* *E167*
 			Specify the character encoding used in the script.
@@ -305,6 +318,11 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 			Mark) in utf-8 format Vim will recognize it, no need
 			to use ":scriptencoding utf-8" then.
 
+			If you set the 'encoding' option in your |.vimrc|,
+			`:scriptencoding` must be placed after that. E.g.: >
+				set encoding=utf-8
+				scriptencoding utf-8
+<
 			When compiled without the |+multi_byte| feature this
 			command is ignored.
 			{not in Vi}
@@ -789,6 +807,19 @@ DEFINING BREAKPOINTS
 			:breakadd file <cursor-line> <current-file>
 <		Note that this only works for commands that are executed when
 		sourcing the file, not for a function defined in that file.
+
+:breaka[dd] expr {expression}
+		Sets a breakpoint, that will break whenever the {expression}
+		evaluates to a different value. Example: >
+			:breakadd expr g:lnum
+
+<		Will break, whenever the global variable lnum changes.
+		Note if you watch a |script-variable| this will break
+		when switching scripts, since the script variable is only
+		valid in the script where it has been defined and if that
+		script is called from several other scripts, this will stop
+		whenever that particular variable will become visible or
+		unaccessible again.
 
 The [lnum] is the line number of the breakpoint.  Vim will stop at or after
 this line.  When omitted line 1 is used.

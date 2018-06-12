@@ -17,8 +17,9 @@
  * Vim originated from Stevie version 3.6 (Fish disk 217) by GRWalter (Fred)
  * It has been changed beyond recognition since then.
  *
- * Differences between version 6.x and 7.x can be found with ":help version7".
- * Differences between version 5.x and 6.x can be found with ":help version6".
+ * Differences between version 7.4 and 8.x can be found with ":help version8".
+ * Differences between version 6.4 and 7.x can be found with ":help version7".
+ * Differences between version 5.8 and 6.x can be found with ":help version6".
  * Differences between version 4.x and 5.x can be found with ":help version5".
  * Differences between version 3.0 and 4.x can be found with ":help version4".
  * All the remarks about older versions have been removed, they are not very
@@ -56,7 +57,6 @@ char	*longVersion = VIM_VERSION_LONG;
 #endif
 
 static void list_features(void);
-static void version_msg(char *s);
 
 static char *(features[]) =
 {
@@ -77,15 +77,21 @@ static char *(features[]) =
 #else
 	"-arabic",
 #endif
-#ifdef FEAT_AUTOCMD
 	"+autocmd",
+#ifdef FEAT_AUTOSERVERNAME
+	"+autoservername",
 #else
-	"-autocmd",
+	"-autoservername",
 #endif
-#ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL_GUI
 	"+balloon_eval",
 #else
 	"-balloon_eval",
+#endif
+#ifdef FEAT_BEVAL_TERM
+	"+balloon_eval_term",
+#else
+	"-balloon_eval_term",
 #endif
 #ifdef FEAT_BROWSE
 	"+browse",
@@ -161,11 +167,7 @@ static char *(features[]) =
 #else
 	"-cscope",
 #endif
-#ifdef FEAT_CURSORBIND
 	"+cursorbind",
-#else
-	"-cursorbind",
-#endif
 #ifdef CURSOR_SHAPE
 	"+cursorshape",
 #else
@@ -329,11 +331,7 @@ static char *(features[]) =
 #else
 	"-lispindent",
 #endif
-#ifdef FEAT_LISTCMDS
 	"+listcmds",
-#else
-	"-listcmds",
-#endif
 #ifdef FEAT_LOCALMAP
 	"+localmap",
 #else
@@ -549,11 +547,7 @@ static char *(features[]) =
 #else
 	"-ruby",
 #endif
-#ifdef FEAT_SCROLLBIND
 	"+scrollbind",
-#else
-	"-scrollbind",
-#endif
 #ifdef FEAT_SIGNS
 	"+signs",
 #else
@@ -617,6 +611,11 @@ static char *(features[]) =
 #else
 	"-termguicolors",
 #endif
+#ifdef FEAT_TERMINAL
+	"+terminal",
+#else
+	"-terminal",
+#endif
 #if defined(UNIX)
 /* only Unix can have terminfo instead of termcap */
 # ifdef TERMINFO
@@ -661,11 +660,7 @@ static char *(features[]) =
 #else
 	"-user_commands",
 #endif
-#ifdef FEAT_WINDOWS
 	"+vertsplit",
-#else
-	"-vertsplit",
-#endif
 #ifdef FEAT_VIRTUALEDIT
 	"+virtualedit",
 #else
@@ -687,6 +682,13 @@ static char *(features[]) =
 #else
 	"-vreplace",
 #endif
+#ifdef WIN3264
+# ifdef FEAT_VTP
+	"+vtp",
+# else
+	"-vtp",
+# endif
+#endif
 #ifdef FEAT_WILDIGN
 	"+wildignore",
 #else
@@ -697,11 +699,7 @@ static char *(features[]) =
 #else
 	"-wildmenu",
 #endif
-#ifdef FEAT_WINDOWS
 	"+windows",
-#else
-	"-windows",
-#endif
 #ifdef FEAT_WRITEBACKUP
 	"+writebackup",
 #else
@@ -822,35 +820,75 @@ ex_version(exarg_T *eap)
 }
 
 /*
+ * Output a string for the version message.  If it's going to wrap, output a
+ * newline, unless the message is too long to fit on the screen anyway.
+ * When "wrap" is TRUE wrap the string in [].
+ */
+    static void
+version_msg_wrap(char_u *s, int wrap)
+{
+    int		len = (int)vim_strsize(s) + (wrap ? 2 : 0);
+
+    if (!got_int && len < (int)Columns && msg_col + len >= (int)Columns
+								&& *s != '\n')
+	msg_putchar('\n');
+    if (!got_int)
+    {
+	if (wrap)
+	    MSG_PUTS("[");
+	MSG_PUTS(s);
+	if (wrap)
+	    MSG_PUTS("]");
+    }
+}
+
+    static void
+version_msg(char *s)
+{
+    version_msg_wrap((char_u *)s, FALSE);
+}
+
+/*
  * List all features aligned in columns, dictionary style.
  */
     static void
 list_features(void)
 {
+    list_in_columns((char_u **)features, -1, -1);
+}
+
+/*
+ * List string items nicely aligned in columns.
+ * When "size" is < 0 then the last entry is marked with NULL.
+ * The entry with index "current" is inclosed in [].
+ */
+    void
+list_in_columns(char_u **items, int size, int current)
+{
     int		i;
     int		ncol;
     int		nrow;
-    int		nfeat = 0;
+    int		item_count = 0;
     int		width = 0;
 
-    /* Find the length of the longest feature name, use that + 1 as the column
-     * width */
-    for (i = 0; features[i] != NULL; ++i)
+    /* Find the length of the longest item, use that + 1 as the column
+     * width. */
+    for (i = 0; size < 0 ? items[i] != NULL : i < size; ++i)
     {
-	int l = (int)STRLEN(features[i]);
+	int l = (int)vim_strsize(items[i]) + (i == current ? 2 : 0);
 
 	if (l > width)
 	    width = l;
-	++nfeat;
+	++item_count;
     }
     width += 1;
 
     if (Columns < width)
     {
 	/* Not enough screen columns - show one per line */
-	for (i = 0; features[i] != NULL; ++i)
+	for (i = 0; items[i] != NULL; ++i)
 	{
-	    version_msg(features[i]);
+	    version_msg_wrap(items[i], i == current);
 	    if (msg_col > 0)
 		msg_putchar('\n');
 	}
@@ -860,18 +898,22 @@ list_features(void)
     /* The rightmost column doesn't need a separator.
      * Sacrifice it to fit in one more column if possible. */
     ncol = (int) (Columns + 1) / width;
-    nrow = nfeat / ncol + (nfeat % ncol ? 1 : 0);
+    nrow = item_count / ncol + (item_count % ncol ? 1 : 0);
 
     /* i counts columns then rows.  idx counts rows then columns. */
     for (i = 0; !got_int && i < nrow * ncol; ++i)
     {
 	int idx = (i / ncol) + (i % ncol) * nrow;
 
-	if (idx < nfeat)
+	if (idx < item_count)
 	{
 	    int last_col = (i + 1) % ncol == 0;
 
-	    msg_puts((char_u *)features[idx]);
+	    if (idx == current)
+		msg_putchar('[');
+	    msg_puts(items[idx]);
+	    if (idx == current)
+		msg_putchar(']');
 	    if (last_col)
 	    {
 		if (msg_col > 0)
@@ -905,15 +947,10 @@ list_version(void)
     MSG(longVersion);
 #ifdef WIN3264
 # ifdef FEAT_GUI_W32
-#  if defined(_MSC_VER) && (_MSC_VER <= 1010)
-    /* Only MS VC 4.1 and earlier can do Win32s */
-    MSG_PUTS(_("\nMS-Windows 16/32-bit GUI version"));
-#  else
-#   ifdef _WIN64
+#  ifdef _WIN64
     MSG_PUTS(_("\nMS-Windows 64-bit GUI version"));
-#   else
+#  else
     MSG_PUTS(_("\nMS-Windows 32-bit GUI version"));
-#   endif
 #  endif
 # ifdef FEAT_OLE
     MSG_PUTS(_(" with OLE support"));
@@ -926,15 +963,11 @@ list_version(void)
 #  endif
 # endif
 #endif
-#ifdef MACOS
-# ifdef MACOS_X
-#  ifdef MACOS_X_UNIX
-    MSG_PUTS(_("\nMacOS X (unix) version"));
-#  else
-    MSG_PUTS(_("\nMacOS X version"));
-#  endif
-#else
-    MSG_PUTS(_("\nMacOS version"));
+#if defined(MACOS_X)
+# if defined(MACOS_X_DARWIN)
+    MSG_PUTS(_("\nmacOS version"));
+# else
+    MSG_PUTS(_("\nmacOS version w/o darwin feat."));
 # endif
 #endif
 
@@ -1075,8 +1108,8 @@ list_version(void)
 #	    endif
 #	   endif
 #     endif
+#	 endif
 #	endif
-#      endif
 #    endif
 #   endif
 #  endif
@@ -1179,22 +1212,6 @@ list_version(void)
 #endif
 }
 
-/*
- * Output a string for the version message.  If it's going to wrap, output a
- * newline, unless the message is too long to fit on the screen anyway.
- */
-    static void
-version_msg(char *s)
-{
-    int		len = (int)STRLEN(s);
-
-    if (!got_int && len < (int)Columns && msg_col + len >= (int)Columns
-								&& *s != '\n')
-	msg_putchar('\n');
-    if (!got_int)
-	MSG_PUTS(s);
-}
-
 static void do_intro_line(int row, char_u *mesg, int add_version, int attr);
 
 /*
@@ -1203,11 +1220,9 @@ static void do_intro_line(int row, char_u *mesg, int add_version, int attr);
     void
 maybe_intro_message(void)
 {
-    if (bufempty()
+    if (BUFEMPTY()
 	    && curbuf->b_fname == NULL
-#ifdef FEAT_WINDOWS
 	    && firstwin->w_next == NULL
-#endif
 	    && vim_strchr(p_shm, SHM_INTRO) == NULL)
 	intro_message(FALSE);
 }
@@ -1248,7 +1263,7 @@ intro_message(
 #else
     N_("type  :q<Enter>               to exit         "),
 	N_("type  :help<Enter>  or  <F1>  for on-line help"),
-	N_("type  :help version7<Enter>   for version info"),
+    N_("type  :help version8<Enter>   for version info"),
 #endif
 	NULL,
 	"",
@@ -1286,16 +1301,10 @@ intro_message(
     blanklines = (int)Rows - ((sizeof(lines) / sizeof(char *)) - 1);
     if (!p_cp)
 	blanklines += 4;  /* add 4 for not showing "Vi compatible" message */
-#if defined(WIN3264) && !defined(FEAT_GUI_W32)
-    if (mch_windows95())
-	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
-#endif
 
-#ifdef FEAT_WINDOWS
     /* Don't overwrite a statusline.  Depends on 'cmdheight'. */
     if (p_ls > 1)
 	blanklines -= Rows - topframe->fr_height;
-#endif
     if (blanklines < 0)
 	blanklines = 0;
 
@@ -1338,17 +1347,6 @@ intro_message(
 		do_intro_line(row, (char_u *)_(p), i == 2, 0);
 	    ++row;
 	}
-#if defined(WIN3264) && !defined(FEAT_GUI_W32)
-	if (mch_windows95())
-	{
-	    do_intro_line(++row,
-		    (char_u *)_("WARNING: Windows 95/98/ME detected"),
-							FALSE, hl_attr(HLF_E));
-	    do_intro_line(++row,
-		(char_u *)_("type  :help windows95<Enter>  for info on this"),
-								    FALSE, 0);
-	}
-#endif
     }
 
     /* Make the wait-return message appear just below the text. */
@@ -1421,7 +1419,7 @@ do_intro_line(
 #endif
 		clen += byte2cells(p[l]);
 	}
-	screen_puts_len(p, l, row, col, *p == '<' ? hl_attr(HLF_8) : attr);
+	screen_puts_len(p, l, row, col, *p == '<' ? HL_ATTR(HLF_8) : attr);
 	col += clen;
     }
 

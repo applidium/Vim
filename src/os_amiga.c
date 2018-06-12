@@ -152,7 +152,6 @@ mch_inchar(
 	 */
 	if (WaitForChar(raw_in, p_ut * 1000L) == 0)
 	{
-#ifdef FEAT_AUTOCMD
 	    if (trigger_cursorhold() && maxlen >= 3)
 	    {
 		buf[0] = K_SPECIAL;
@@ -160,7 +159,6 @@ mch_inchar(
 		buf[2] = (int)KE_CURSORHOLD;
 		return 3;
 	    }
-#endif
 	    before_blocking();
 	}
     }
@@ -889,6 +887,8 @@ mch_early_init(void)
     void
 mch_exit(int r)
 {
+    exiting = TRUE;
+
     if (raw_in)			    /* put terminal in 'normal' mode */
     {
 	settmode(TMODE_COOK);
@@ -1381,7 +1381,7 @@ mch_call_shell(
  * trouble with lattice-c programs.
  */
     void
-mch_breakcheck(void)
+mch_breakcheck(int force)
 {
    if (SetSignal(0L, (long)(SIGBREAKF_CTRL_C|SIGBREAKF_CTRL_D|SIGBREAKF_CTRL_E|SIGBREAKF_CTRL_F)) & SIGBREAKF_CTRL_C)
 	got_int = TRUE;
@@ -1565,7 +1565,7 @@ sortcmp(const void *a, const void *b)
     int
 mch_has_exp_wildcard(char_u *p)
 {
-    for ( ; *p; mb_ptr_adv(p))
+    for ( ; *p; MB_PTR_ADV(p))
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
@@ -1578,7 +1578,7 @@ mch_has_exp_wildcard(char_u *p)
     int
 mch_has_wildcard(char_u *p)
 {
-    for ( ; *p; mb_ptr_adv(p))
+    for ( ; *p; MB_PTR_ADV(p))
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
@@ -1617,8 +1617,7 @@ mch_getenv(char_u *var)
     else
 #endif
     {
-	vim_free(alloced);
-	alloced = NULL;
+	VIM_CLEAR(alloced);
 	retval = NULL;
 
 	buf = alloc(IOSIZE);

@@ -38,7 +38,7 @@ typedef union {
   /* MS-Windows is always little endian */
 #else
 # ifdef HAVE_CONFIG_H
-   /* in configure.in AC_C_BIGENDIAN() defines WORDS_BIGENDIAN when needed */
+   /* in configure.ac AC_C_BIGENDIAN() defines WORDS_BIGENDIAN when needed */
 # else
    error!
    Please change this code to define WORDS_BIGENDIAN for big-endian machines.
@@ -426,7 +426,7 @@ bf_key_init(
     keylen = (int)STRLEN(key) / 2;
     if (keylen == 0)
     {
-	EMSG(_("E831: bf_key_init() called with empty password"));
+	IEMSG(_("E831: bf_key_init() called with empty password"));
 	return;
     }
     for (i = 0; i < keylen; i++)

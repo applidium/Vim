@@ -87,7 +87,7 @@ endfunc
 func Test_loop_over_null_list()
   let null_list = test_null_list()
   for i in null_list
-    call assert_true(0, 'should not get here')
+    call assert_report('should not get here')
   endfor
 endfunc
 
@@ -131,6 +131,9 @@ func Test_option_value()
 endfunc
 
 function Test_printf_misc()
+  call assert_equal('123', printf('123'))
+  call assert_fails("call printf('123', 3)", "E767:")
+
   call assert_equal('123', printf('%d', 123))
   call assert_equal('123', printf('%i', 123))
   call assert_equal('123', printf('%D', 123))
@@ -405,9 +408,10 @@ func Test_substitute_expr()
 	\ {-> submatch(2) . submatch(3) . submatch(1)}, ''))
 
   func Recurse()
-    return substitute('yyy', 'y*', {-> g:val}, '')
+    return substitute('yyy', 'y\(.\)y', {-> submatch(1)}, '')
   endfunc
-  call assert_equal('--', substitute('xxx', 'x*', {-> '-' . Recurse() . '-'}, ''))
+  " recursive call works
+  call assert_equal('-y-x-', substitute('xxx', 'x\(.\)x', {-> '-' . Recurse() . '-' . submatch(1) . '-'}, ''))
 endfunc
 
 func Test_invalid_submatch()
@@ -439,6 +443,9 @@ func Test_function_with_funcref()
   let s:fref = function(s:f)
   call assert_equal(v:t_string, s:fref('x'))
   call assert_fails("call function('s:f')", 'E700:')
+
+  call assert_fails("call function('foo()')", 'E475:')
+  call assert_fails("call function('foo()')", 'foo()')
 endfunc
 
 func Test_funcref()
@@ -468,4 +475,9 @@ func Test_setmatches()
   endif
   call setmatches(set)
   call assert_equal(exp, getmatches())
+endfunc
+
+func Test_empty_concatenate()
+  call assert_equal('b', 'a'[4:0] . 'b')
+  call assert_equal('b', 'b' . 'a'[4:0])
 endfunc

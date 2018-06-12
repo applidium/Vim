@@ -633,6 +633,30 @@ S_SvREFCNT_dec(pTHX_ SV *sv)
 }
 # endif
 
+/* perl-5.26 also needs S_TOPMARK and S_POPMARK. */
+# if (PERL_REVISION == 5) && (PERL_VERSION >= 26)
+PERL_STATIC_INLINE I32
+S_TOPMARK(pTHX)
+{
+    DEBUG_s(DEBUG_v(PerlIO_printf(Perl_debug_log,
+				 "MARK top  %p %" IVdf "\n",
+				  PL_markstack_ptr,
+				  (IV)*PL_markstack_ptr)));
+    return *PL_markstack_ptr;
+}
+
+PERL_STATIC_INLINE I32
+S_POPMARK(pTHX)
+{
+    DEBUG_s(DEBUG_v(PerlIO_printf(Perl_debug_log,
+				 "MARK pop  %p %" IVdf "\n",
+				  (PL_markstack_ptr-1),
+				  (IV)*(PL_markstack_ptr-1))));
+    assert((PL_markstack_ptr > PL_markstack) || !"MARK underflow");
+    return *PL_markstack_ptr--;
+}
+# endif
+
 /*
  * Make all runtime-links of perl.
  *
@@ -1077,6 +1101,7 @@ perl_to_vim(SV *sv, typval_T *rettv)
 		rettv->vval.v_number = SvIV(sv);
 		break;
 	    }
+	    /* FALLTHROUGH */
 	case SVt_PV:	/* string */
 	{
 	    size_t  len		= 0;
@@ -1136,9 +1161,7 @@ perl_to_vim(SV *sv, typval_T *rettv)
 		}
 	    }
 
-	    list->lv_refcount++;
-	    rettv->v_type	= VAR_LIST;
-	    rettv->vval.v_list	= list;
+	    rettv_list_set(rettv, list);
 	    break;
 	}
 	case SVt_PVHV:	/* dictionary */
@@ -1192,9 +1215,7 @@ perl_to_vim(SV *sv, typval_T *rettv)
 		}
 	    }
 
-	    dict->dv_refcount++;
-	    rettv->v_type	= VAR_DICT;
-	    rettv->vval.v_dict	= dict;
+	    rettv_dict_set(rettv, dict);
 	    break;
 	}
 	default:	/* not convertible */
@@ -1286,8 +1307,9 @@ ex_perldo(exarg_T *eap)
     SV		*sv;
     char	*str;
     linenr_T	i;
+    buf_T	*was_curbuf = curbuf;
 
-    if (bufempty())
+    if (BUFEMPTY())
 	return;
 
     if (perl_interp == NULL)
@@ -1321,11 +1343,14 @@ ex_perldo(exarg_T *eap)
     SAVETMPS;
     for (i = eap->line1; i <= eap->line2; i++)
     {
+	/* Check the line number, the command my have deleted lines. */
+	if (i > curbuf->b_ml.ml_line_count)
+	    break;
 	sv_setpv(GvSV(PL_defgv), (char *)ml_get(i));
 	PUSHMARK(sp);
 	perl_call_pv("VIM::perldo", G_SCALAR | G_EVAL);
 	str = SvPV(GvSV(PL_errgv), length);
-	if (length)
+	if (length || curbuf != was_curbuf)
 	    break;
 	SPAGAIN;
 	if (SvTRUEx(POPs))
@@ -1363,11 +1388,8 @@ PerlIOVim_pushed(pTHX_ PerlIO *f, const char *mode,
 {
     PerlIOVim *s = PerlIOSelf(f, PerlIOVim);
     s->attr = 0;
-    if (arg && SvPOK(arg)) {
-	int id = syn_name2id((char_u *)SvPV_nolen(arg));
-	if (id != 0)
-	    s->attr = syn_id2attr(id);
-    }
+    if (arg && SvPOK(arg))
+	s->attr = syn_name2attr((char_u *)SvPV_nolen(arg));
     return PerlIOBase_pushed(aTHX_ f, mode, (SV *)NULL, tab);
 }
 
@@ -1427,24 +1449,6 @@ vim_IOLayer_init(void)
 }
 #endif /* PERLIO_LAYERS && !USE_SFIO */
 
-#ifndef FEAT_WINDOWS
-    int
-win_valid(win_T *w)
-{
-    return TRUE;
-}
-    int
-win_count(void)
-{
-    return 1;
-}
-    win_T *
-win_find_nr(int n)
-{
-    return curwin;
-}
-#endif
-
 XS(boot_VIM);
 
     static void
@@ -1469,18 +1473,13 @@ Msg(text, hl=NULL)
 
     PREINIT:
     int		attr;
-    int		id;
 
     PPCODE:
     if (text != NULL)
     {
 	attr = 0;
 	if (hl != NULL)
-	{
-	    id = syn_name2id((char_u *)hl);
-	    if (id != 0)
-		attr = syn_id2attr(id);
-	}
+	    attr = syn_name2attr((char_u *)hl);
 	msg_split((char_u *)text, attr);
     }
 
@@ -1559,7 +1558,7 @@ Buffers(...)
 
 		pat = (char_u *)SvPV(sv, len);
 		++emsg_off;
-		b = buflist_findpat(pat, pat+len, FALSE, FALSE, FALSE);
+		b = buflist_findpat(pat, pat + len, TRUE, FALSE, FALSE);
 		--emsg_off;
 	    }
 

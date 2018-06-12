@@ -38,13 +38,9 @@
 
 # if defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)
 #  include <dlgs.h>
-#  ifdef WIN3264
-#   include <winspool.h>
-#  else
-#   include <print.h>
-#  endif
+#  include <winspool.h>
 #  include <commdlg.h>
-#endif
+# endif
 
 #endif /* PROTO */
 
@@ -130,10 +126,6 @@ typedef void VOID;
 FILE* fdDump = NULL;
 #endif
 
-#ifdef WIN3264
-extern DWORD g_PlatformId;
-#endif
-
 #ifndef FEAT_GUI_MSWIN
 extern char g_szOrigTitle[];
 #endif
@@ -209,6 +201,8 @@ int _stricoll(char *a, char *b)
     void
 mch_exit(int r)
 {
+    exiting = TRUE;
+
     display_errors();
 
     ml_close_all(TRUE);		/* remove all memfiles */
@@ -248,20 +242,13 @@ mch_early_init(void)
 {
     int		i;
 
-#ifdef WIN3264
     PlatformId();
-#endif
 
     /* Init the tables for toupper() and tolower() */
     for (i = 0; i < 256; ++i)
 	toupper_tab[i] = tolower_tab[i] = i;
-#ifdef WIN3264
     CharUpperBuff((LPSTR)toupper_tab, 256);
     CharLowerBuff((LPSTR)tolower_tab, 256);
-#else
-    AnsiUpperBuff((LPSTR)toupper_tab, 256);
-    AnsiLowerBuff((LPSTR)tolower_tab, 256);
-#endif
 }
 
 
@@ -299,14 +286,12 @@ mch_settitle(
 	{
 	    /* Convert the title from 'encoding' to the active codepage. */
 	    WCHAR	*wp = enc_to_utf16(title, NULL);
-	    int	n;
 
 	    if (wp != NULL)
 	    {
-		n = SetConsoleTitleW(wp);
+		SetConsoleTitleW(wp);
 		vim_free(wp);
-		if (n != 0 || GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
-		    return;
+		return;
 	    }
 	}
 #  endif
@@ -323,10 +308,8 @@ mch_settitle(
  *  2: Just restore icon (which we don't have)
  *  3: Restore title and icon (which we don't have)
  */
-/*ARGSUSED*/
     void
-mch_restore_title(
-    int which)
+mch_restore_title(int which UNUSED)
 {
 #ifndef FEAT_GUI_MSWIN
     SetConsoleTitle(g_szOrigTitle);
@@ -362,13 +345,12 @@ mch_can_restore_icon(void)
  * When 'shellslash' set do it the other way around.
  * Return OK or FAIL.
  */
-/*ARGSUSED*/
     int
 mch_FullName(
     char_u	*fname,
     char_u	*buf,
     int		len,
-    int		force)
+    int		force UNUSED)
 {
     int		nResult = FAIL;
 
@@ -379,12 +361,7 @@ mch_FullName(
 #endif
     {
 #ifdef FEAT_MBYTE
-	if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
-# ifdef __BORLANDC__
-		/* Wide functions of Borland C 5.5 do not work on Windows 98. */
-		&& g_PlatformId == VER_PLATFORM_WIN32_NT
-# endif
-	   )
+	if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
 	{
 	    WCHAR	*wname;
 	    WCHAR	wbuf[MAX_PATH];
@@ -473,11 +450,21 @@ slash_adjust(char_u *p)
 {
     if (path_with_url(p))
 	return;
+
+    if (*p == '`')
+    {
+	size_t len = STRLEN(p);
+
+	/* don't replace backslash in backtick quoted strings */
+	if (len > 2 && *(p + len - 1) == '`')
+	    return;
+    }
+
     while (*p)
     {
 	if (*p == psepcN)
 	    *p = psepc;
-	mb_ptr_adv(p);
+	MB_PTR_ADV(p);
     }
 }
 
@@ -623,7 +610,7 @@ vim_stat(const char *name, stat_T *stp)
     vim_strncpy((char_u *)buf, (char_u *)name, sizeof(buf) - 1);
     p = buf + STRLEN(buf);
     if (p > buf)
-	mb_ptr_back(buf, p);
+	MB_PTR_BACK(buf, p);
 
     /* Remove trailing '\\' except root path. */
     if (p > buf && (*p == '\\' || *p == '/') && p[-1] != ':')
@@ -641,12 +628,7 @@ vim_stat(const char *name, stat_T *stp)
 	}
     }
 #ifdef FEAT_MBYTE
-    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
-# ifdef __BORLANDC__
-	    /* Wide functions of Borland C 5.5 do not work on Windows 98. */
-	    && g_PlatformId == VER_PLATFORM_WIN32_NT
-# endif
-       )
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	WCHAR	*wp = enc_to_utf16(buf, NULL);
 	int	n;
@@ -655,11 +637,7 @@ vim_stat(const char *name, stat_T *stp)
 	{
 	    n = wstat_symlink_aware(wp, stp);
 	    vim_free(wp);
-	    if (n >= 0 || g_PlatformId == VER_PLATFORM_WIN32_NT)
-		return n;
-	    /* Retry with non-wide function (for Windows 98). Can't use
-	     * GetLastError() here and it's unclear what errno gets set to if
-	     * the _wstat() fails for missing wide functions. */
+	    return n;
 	}
     }
 #endif
@@ -667,9 +645,8 @@ vim_stat(const char *name, stat_T *stp)
 }
 
 #if defined(FEAT_GUI_MSWIN) || defined(PROTO)
-/*ARGSUSED*/
     void
-mch_settmode(int tmode)
+mch_settmode(int tmode UNUSED)
 {
     /* nothing to do */
 }
@@ -753,7 +730,7 @@ display_errors(void)
     int
 mch_has_exp_wildcard(char_u *p)
 {
-    for ( ; *p; mb_ptr_adv(p))
+    for ( ; *p; MB_PTR_ADV(p))
     {
 	if (vim_strchr((char_u *)"?*[", *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
@@ -769,7 +746,7 @@ mch_has_exp_wildcard(char_u *p)
     int
 mch_has_wildcard(char_u *p)
 {
-    for ( ; *p; mb_ptr_adv(p))
+    for ( ; *p; MB_PTR_ADV(p))
     {
 	if (vim_strchr((char_u *)
 #  ifdef VIM_BACKTICK
@@ -823,9 +800,7 @@ mch_chdir(char *path)
 	{
 	    n = _wchdir(p);
 	    vim_free(p);
-	    if (n == 0 || g_PlatformId == VER_PLATFORM_WIN32_NT)
-		return n;
-	    /* Retry with non-wide function (for Windows 98). */
+	    return n;
 	}
     }
 #endif
@@ -833,27 +808,6 @@ mch_chdir(char *path)
     return chdir(path);	       /* let the normal chdir() do the rest */
 }
 
-
-/*
- * Switching off termcap mode is only allowed when Columns is 80, otherwise a
- * crash may result.  It's always allowed on NT or when running the GUI.
- */
-/*ARGSUSED*/
-    int
-can_end_termcap_mode(
-    int give_msg)
-{
-#ifdef FEAT_GUI_MSWIN
-    return TRUE;	/* GUI starts a new console anyway */
-#else
-    if (g_PlatformId == VER_PLATFORM_WIN32_NT || Columns == 80)
-	return TRUE;
-    if (give_msg)
-	msg((char_u *)
-		_("'columns' is not 80, cannot execute external commands"));
-    return FALSE;
-#endif
-}
 
 #ifdef FEAT_GUI_MSWIN
 /*
@@ -865,16 +819,26 @@ mch_char_avail(void)
     /* never used */
     return TRUE;
 }
+
+# if defined(FEAT_TERMINAL) || defined(PROTO)
+/*
+ * Check for any pending input or messages.
+ */
+    int
+mch_check_messages(void)
+{
+    /* TODO: check for messages */
+    return TRUE;
+}
+# endif
 #endif
 
 
 /*
  * set screen mode, always fails.
  */
-/*ARGSUSED*/
     int
-mch_screenmode(
-    char_u *arg)
+mch_screenmode(char_u *arg UNUSED)
 {
     EMSG(_(e_screenmode));
     return FAIL;
@@ -887,17 +851,10 @@ mch_screenmode(
  * and returns an allocated string.
  * Return OK if it worked, FAIL if not.
  */
-# ifdef WIN3264
 typedef LPTSTR (*MYSTRPROCSTR)(LPTSTR);
 typedef LPTSTR (*MYINTPROCSTR)(int);
 typedef int (*MYSTRPROCINT)(LPTSTR);
 typedef int (*MYINTPROCINT)(int);
-# else
-typedef LPSTR (*MYSTRPROCSTR)(LPSTR);
-typedef LPSTR (*MYINTPROCSTR)(int);
-typedef int (*MYSTRPROCINT)(LPSTR);
-typedef int (*MYINTPROCINT)(int);
-# endif
 
 /*
  * Check if a pointer points to a valid NUL terminated string.
@@ -1057,10 +1014,8 @@ mch_libcall(
 /*
  * Debugging helper: expose the MCH_WRITE_DUMP stuff to other modules
  */
-/*ARGSUSED*/
     void
-DumpPutS(
-    const char *psz)
+DumpPutS(const char *psz UNUSED)
 {
 # ifdef MCH_WRITE_DUMP
     if (fdDump)
@@ -1093,7 +1048,7 @@ Trace(
 #endif //_DEBUG
 
 #if !defined(FEAT_GUI) || defined(PROTO)
-# if defined(FEAT_TITLE) && defined(WIN3264)
+# ifdef FEAT_TITLE
 extern HWND g_hWnd;	/* This is in os_win32.c. */
 # endif
 
@@ -1114,7 +1069,7 @@ GetConsoleHwnd(void)
     if (s_hwnd != 0)
 	return;
 
-# if defined(FEAT_TITLE) && defined(WIN3264)
+# ifdef FEAT_TITLE
     /* Window handle may have been found by init code (Windows NT only) */
     if (g_hWnd != 0)
     {
@@ -1234,9 +1189,12 @@ swap_me(COLORREF colorref)
 # define PDP_RETVAL INT_PTR
 #endif
 
-/*ARGSUSED*/
     static PDP_RETVAL CALLBACK
-PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+PrintDlgProc(
+	HWND hDlg,
+	UINT message,
+	WPARAM wParam UNUSED,
+	LPARAM lParam UNUSED)
 {
 #ifdef FEAT_GETTEXT
     NONCLIENTMETRICS nm;
@@ -1275,8 +1233,7 @@ PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	    if (prt_name != NULL)
 	    {
 		vimSetDlgItemText(hDlg, IDC_PRINTTEXT2, (char_u *)prt_name);
-		vim_free(prt_name);
-		prt_name = NULL;
+		VIM_CLEAR(prt_name);
 	    }
 	    EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
 #ifndef FEAT_GUI
@@ -1297,9 +1254,8 @@ PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-/*ARGSUSED*/
     static BOOL CALLBACK
-AbortProc(HDC hdcPrn, int iCode)
+AbortProc(HDC hdcPrn UNUSED, int iCode UNUSED)
 {
     MSG msg;
 
@@ -1539,7 +1495,6 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	    )
     {
 	prt_dlg.Flags |= PD_RETURNDEFAULT;
-#ifdef WIN3264
 	/*
 	 * MSDN suggests setting the first parameter to WINSPOOL for
 	 * NT, but NULL appears to work just as well.
@@ -1547,7 +1502,6 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	if (*p_pdev != NUL)
 	    prt_dlg.hDC = CreateDC(NULL, (LPCSTR)p_pdev, NULL, NULL);
 	else
-#endif
 	{
 	    prt_dlg.Flags |= PD_RETURNDEFAULT;
 	    if (PrintDlg(&prt_dlg) == 0)
@@ -1593,10 +1547,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     mem = (DEVMODE *)GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
-#ifdef WIN3264
 	if (mem->dmCopies != 1)
 	    stored_nCopies = mem->dmCopies;
-#endif
 	if ((mem->dmFields & DM_DUPLEX) && (mem->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
 	if ((mem->dmFields & DM_COLOR) && (mem->dmColor & DMCOLOR_COLOR))
@@ -1684,7 +1636,9 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 
 	if (psettings->n_uncollated_copies == 0)
 	    psettings->n_uncollated_copies = 1;
-    } else {
+    }
+    else
+    {
 	psettings->n_collated_copies = 1;
 	psettings->n_uncollated_copies = 1;
     }
@@ -1724,8 +1678,10 @@ init_fail_dlg:
 mch_print_begin(prt_settings_T *psettings)
 {
     int			ret;
-    static DOCINFO	di;
     char		szBuffer[300];
+#if defined(FEAT_MBYTE)
+    WCHAR		*wp = NULL;
+#endif
 
     hDlgPrint = CreateDialog(GetModuleHandle(NULL), TEXT("PrintDlgBox"),
 					     prt_dlg.hwndOwner, PrintDlgProc);
@@ -1733,10 +1689,29 @@ mch_print_begin(prt_settings_T *psettings)
     wsprintf(szBuffer, _("Printing '%s'"), gettail(psettings->jobname));
     vimSetDlgItemText(hDlgPrint, IDC_PRINTTEXT1, (char_u *)szBuffer);
 
-    vim_memset(&di, 0, sizeof(DOCINFO));
-    di.cbSize = sizeof(DOCINFO);
-    di.lpszDocName = (LPCSTR)psettings->jobname;
-    ret = StartDoc(prt_dlg.hDC, &di);
+#if defined(FEAT_MBYTE)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+	wp = enc_to_utf16(psettings->jobname, NULL);
+    if (wp != NULL)
+    {
+	DOCINFOW	di;
+
+	vim_memset(&di, 0, sizeof(di));
+	di.cbSize = sizeof(di);
+	di.lpszDocName = wp;
+	ret = StartDocW(prt_dlg.hDC, &di);
+	vim_free(wp);
+    }
+    else
+#endif
+    {
+	DOCINFO		di;
+
+	vim_memset(&di, 0, sizeof(di));
+	di.cbSize = sizeof(di);
+	di.lpszDocName = (LPCSTR)psettings->jobname;
+	ret = StartDoc(prt_dlg.hDC, &di);
+    }
 
 #ifdef FEAT_GUI
     /* Give focus back to main window (when using MDI). */
@@ -1746,9 +1721,8 @@ mch_print_begin(prt_settings_T *psettings)
     return (ret > 0);
 }
 
-/*ARGSUSED*/
     void
-mch_print_end(prt_settings_T *psettings)
+mch_print_end(prt_settings_T *psettings UNUSED)
 {
     EndDoc(prt_dlg.hDC);
     if (!*bUserAbort)
@@ -1953,7 +1927,7 @@ shortcut_errorw:
 		goto shortcut_end;
 	    }
 	}
-	/* Retry with non-wide function (for Windows 98). */
+	goto shortcut_end;
     }
 # endif
     // create a link manager object and request its interface
@@ -2173,11 +2147,15 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	    str = serverConvert(client_enc, (char_u *)data->lpData, &tofree);
 	    res = eval_client_expr_to_string(str);
-	    vim_free(tofree);
 
 	    if (res == NULL)
 	    {
-		res = vim_strsave((char_u *)_(e_invexprmsg));
+		char	*err = _(e_invexprmsg);
+		size_t	len = STRLEN(str) + STRLEN(err) + 5;
+
+		res = alloc((unsigned)len);
+		if (res != NULL)
+		    vim_snprintf((char *)res, len, "%s: \"%s\"", err, str);
 		reply.dwData = COPYDATA_ERROR_RESULT;
 	    }
 	    else
@@ -2188,6 +2166,7 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    serverSendEnc(sender);
 	    retval = (int)SendMessage(sender, WM_COPYDATA,
 				    (WPARAM)message_window, (LPARAM)(&reply));
+	    vim_free(tofree);
 	    vim_free(res);
 	    return retval;
 
@@ -2205,7 +2184,6 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			   (data->dwData == COPYDATA_RESULT ? 1 :
 							      2))) == FAIL)
 		    vim_free(str);
-#ifdef FEAT_AUTOCMD
 		else if (data->dwData == COPYDATA_REPLY)
 		{
 		    char_u	winstr[30];
@@ -2214,7 +2192,6 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		    apply_autocmds(EVENT_REMOTEREPLY, winstr, str,
 								TRUE, curbuf);
 		}
-#endif
 	    }
 	    return 1;
 	}
@@ -2464,6 +2441,7 @@ serverSendToVim(
     char_u	 **result,		/* Result of eval'ed expression */
     void	 *ptarget,		/* HWND of server */
     int		 asExpr,		/* Expression or keys? */
+    int		 timeout,		/* timeout in seconds or zero */
     int		 silent)		/* don't complain about no server */
 {
     HWND	target;
@@ -2471,6 +2449,10 @@ serverSendToVim(
     char_u	*retval = NULL;
     int		retcode = 0;
     char_u	altname_buf[MAX_PATH];
+
+    /* Execute locally if no display or target is ourselves */
+    if (serverName != NULL && STRICMP(name, serverName) == 0)
+	return sendToLocalVim(cmd, asExpr, result);
 
     /* If the server name does not end in a digit then we look for an
      * alternate name.  e.g. when "name" is GVIM the we may find GVIM2. */
@@ -2503,7 +2485,7 @@ serverSendToVim(
 	return -1;
 
     if (asExpr)
-	retval = serverGetReply(target, &retcode, TRUE, TRUE);
+	retval = serverGetReply(target, &retcode, TRUE, TRUE, timeout);
 
     if (result == NULL)
 	vim_free(retval);
@@ -2580,13 +2562,17 @@ save_reply(HWND server, char_u *reply, int expr)
  * if "wait" is TRUE block until a message arrives (or the server exits).
  */
     char_u *
-serverGetReply(HWND server, int *expr_res, int remove, int wait)
+serverGetReply(HWND server, int *expr_res, int remove, int wait, int timeout)
 {
     int		i;
     char_u	*reply;
     reply_T	*rep;
+    int		did_process = FALSE;
+    time_t	start;
+    time_t	now;
 
     /* When waiting, loop until the message waiting for is received. */
+    time(&start);
     for (;;)
     {
 	/* Reset this here, in case a message arrives while we are going
@@ -2621,7 +2607,17 @@ serverGetReply(HWND server, int *expr_res, int remove, int wait)
 	/* If we got here, we didn't find a reply. Return immediately if the
 	 * "wait" parameter isn't set.  */
 	if (!wait)
+	{
+	    /* Process pending messages once. Without this, looping on
+	     * remote_peek() would never get the reply. */
+	    if (!did_process)
+	    {
+		did_process = TRUE;
+		serverProcessPendingMessages();
+		continue;
+	    }
 	    break;
+	}
 
 	/* We need to wait for a reply. Enter a message loop until the
 	 * "reply_received" flag gets set. */
@@ -2629,6 +2625,14 @@ serverGetReply(HWND server, int *expr_res, int remove, int wait)
 	/* Loop until we receive a reply */
 	while (reply_received == 0)
 	{
+#ifdef FEAT_TIMERS
+	    /* TODO: use the return value to decide how long to wait. */
+	    check_due_timer();
+#endif
+	    time(&now);
+	    if (timeout > 0 && (now - start) >= timeout)
+		break;
+
 	    /* Wait for a SendMessage() call to us.  This could be the reply
 	     * we are waiting for.  Use a timeout of a second, to catch the
 	     * situation that the server died unexpectedly. */
@@ -2681,7 +2685,6 @@ charset_pairs[] =
     {"OEM",		OEM_CHARSET},
     {"SHIFTJIS",	SHIFTJIS_CHARSET},
     {"SYMBOL",		SYMBOL_CHARSET},
-#ifdef WIN3264
     {"ARABIC",		ARABIC_CHARSET},
     {"BALTIC",		BALTIC_CHARSET},
     {"EASTEUROPE",	EASTEUROPE_CHARSET},
@@ -2693,10 +2696,8 @@ charset_pairs[] =
     {"RUSSIAN",		RUSSIAN_CHARSET},
     {"THAI",		THAI_CHARSET},
     {"TURKISH",		TURKISH_CHARSET},
-# if (!defined(_MSC_VER) || (_MSC_VER > 1010)) \
-	&& (!defined(__BORLANDC__) || (__BORLANDC__ > 0x0500))
+#ifdef VIETNAMESE_CHARSET
     {"VIETNAMESE",	VIETNAMESE_CHARSET},
-# endif
 #endif
     {NULL,		0}
 };
@@ -2830,12 +2831,11 @@ points_to_pixels(char_u *str, char_u **end, int vertical, long_i pprinter_dc)
     return pixels;
 }
 
-/*ARGSUSED*/
     static int CALLBACK
 font_enumproc(
     ENUMLOGFONT	    *elf,
-    NEWTEXTMETRIC   *ntm,
-    int		    type,
+    NEWTEXTMETRIC   *ntm UNUSED,
+    int		    type UNUSED,
     LPARAM	    lparam)
 {
     /* Return value:
@@ -2961,7 +2961,7 @@ get_logfont(
      */
     for (p = name; *p && *p != ':'; p++)
     {
-	if (p - name + 1 > LF_FACESIZE)
+	if (p - name + 1 >= LF_FACESIZE)
 	    goto theend;			/* Name too long */
 	lf->lfFaceName[p - name] = *p;
     }
@@ -2984,7 +2984,9 @@ get_logfont(
 	int	did_replace = FALSE;
 
 	for (i = 0; lf->lfFaceName[i]; ++i)
-	    if (lf->lfFaceName[i] == '_')
+	    if (IsDBCSLeadByte(lf->lfFaceName[i]))
+		++i;
+	    else if (lf->lfFaceName[i] == '_')
 	    {
 		lf->lfFaceName[i] = ' ';
 		did_replace = TRUE;

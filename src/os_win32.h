@@ -202,7 +202,9 @@ Trace(char *pszFormat, ...);
 #define ASSERT_NULL_OR_POINTER(p, type) \
     ASSERT(((p) == NULL)  ||  IsValidAddress((p), sizeof(type), FALSE))
 
-#define mch_setenv(name, val, x) setenv(name, val, x)
+#ifndef HAVE_SETENV
+# define HAVE_SETENV
+#endif
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
 #ifdef __BORLANDC__
 # define vim_mkdir(x, y) mkdir(x)
@@ -210,20 +212,15 @@ Trace(char *pszFormat, ...);
 # define vim_mkdir(x, y) mch_mkdir(x)
 #endif
 
-#ifndef PROTO
-
 /* Enable common dialogs input unicode from IME if possible. */
 #ifdef FEAT_MBYTE
-    /* The variables are defined in os_win32.c. */
-extern LRESULT (WINAPI *pDispatchMessage)(CONST MSG *);
-extern BOOL (WINAPI *pGetMessage)(LPMSG, HWND, UINT, UINT);
-extern BOOL (WINAPI *pIsDialogMessage)(HWND, LPMSG);
-extern BOOL (WINAPI *pPeekMessage)(LPMSG, HWND, UINT, UINT, UINT);
+# define pDispatchMessage DispatchMessageW
+# define pGetMessage GetMessageW
+# define pIsDialogMessage IsDialogMessageW
+# define pPeekMessage PeekMessageW
 #else
 # define pDispatchMessage DispatchMessage
 # define pGetMessage GetMessage
 # define pIsDialogMessage IsDialogMessage
 # define pPeekMessage PeekMessage
 #endif
-
-#endif /* PROTO */

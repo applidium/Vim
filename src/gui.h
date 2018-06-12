@@ -16,10 +16,6 @@
 # include <X11/StringDefs.h>
 #endif
 
-#if defined(FEAT_BEVAL) || defined(PROTO)
-# include "gui_beval.h"
-#endif
-
 #ifdef FEAT_GUI_GTK
 # ifdef VMS /* undef MIN and MAX because Intrinsic.h redefines them anyway */
 #  ifdef MAX
@@ -146,6 +142,7 @@
 # define DRAW_ITALIC		0x10	/* draw italic text */
 #endif
 #define DRAW_CURSOR		0x20	/* drawing block cursor (win32) */
+#define DRAW_STRIKE		0x40	/* strikethrough */
 
 /* For our own tearoff menu item */
 #define TEAR_STRING		"-->Detach"
@@ -183,9 +180,7 @@ typedef struct GuiScrollbar
     /* Values measured in characters: */
     int		top;		/* Top of scroll bar (chars from row 0) */
     int		height;		/* Current height of scroll bar in rows */
-#ifdef FEAT_WINDOWS
     int		width;		/* Current width of scroll bar in cols */
-#endif
     int		status_height;	/* Height of status line */
 #ifdef FEAT_GUI_X11
     Widget	id;		/* Id of real scroll bar */
@@ -216,6 +211,8 @@ typedef long	    guicolor_T;	/* handle for a GUI color; for X11 this should
 #define INVALCOLOR (guicolor_T)-11111	/* number for invalid color; on 32 bit
 				   displays there is a tiny chance this is an
 				   actual color */
+#define CTERMCOLOR (guicolor_T)-11110	/* only used for cterm.bg_rgb and
+					   cterm.fg_rgb: use cterm color */
 
 #ifdef FEAT_GUI_GTK
   typedef PangoFontDescription	*GuiFont;       /* handle for a GUI font */
@@ -582,3 +579,7 @@ typedef enum
 #  define FUNC2GENERIC(func) G_CALLBACK(func)
 # endif
 #endif /* FEAT_GUI_GTK */
+
+#if defined(UNIX) && !(defined(FEAT_GUI_MAC) || defined(FEAT_GUI_IOS))
+# define GUI_MAY_FORK
+#endif

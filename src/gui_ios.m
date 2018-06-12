@@ -1208,7 +1208,7 @@ gui_mch_start_blink(void)
  * Stop the cursor blinking.  Show the cursor if it wasn't shown.
  */
     void
-gui_mch_stop_blink(void)
+gui_mch_stop_blink(int may_call_gui_update_cursor)
 {
 //    printf("%s\n",__func__);  
     [gui_ios.blink_timer invalidate];

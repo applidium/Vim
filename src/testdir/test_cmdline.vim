@@ -1,5 +1,6 @@
 " Tests for editing the command line.
 
+
 func Test_complete_tab()
   call writefile(['testfile'], 'Xtestfile')
   call feedkeys(":e Xtest\t\r", "tx")
@@ -23,6 +24,92 @@ func Test_complete_wildmenu()
   call delete('Xtestfile1')
   call delete('Xtestfile2')
   set nowildmenu
+endfunc
+
+func Test_map_completion()
+  if !has('cmdline_compl')
+    return
+  endif
+  call feedkeys(":map <unique> <si\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <unique> <silent>', getreg(':'))
+  call feedkeys(":map <script> <un\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <script> <unique>', getreg(':'))
+  call feedkeys(":map <expr> <sc\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <expr> <script>', getreg(':'))
+  call feedkeys(":map <buffer> <e\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <buffer> <expr>', getreg(':'))
+  call feedkeys(":map <nowait> <b\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <nowait> <buffer>', getreg(':'))
+  call feedkeys(":map <special> <no\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <special> <nowait>', getreg(':'))
+  call feedkeys(":map <silent> <sp\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"map <silent> <special>', getreg(':'))
+endfunc
+
+func Test_match_completion()
+  if !has('cmdline_compl')
+    return
+  endif
+  hi Aardig ctermfg=green
+  call feedkeys(":match \<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"match Aardig', getreg(':'))
+  call feedkeys(":match \<S-Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"match none', getreg(':'))
+endfunc
+
+func Test_highlight_completion()
+  if !has('cmdline_compl')
+    return
+  endif
+  hi Aardig ctermfg=green
+  call feedkeys(":hi \<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi Aardig', getreg(':'))
+  call feedkeys(":hi default \<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi default Aardig', getreg(':'))
+  call feedkeys(":hi clear Aa\<Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi clear Aardig', getreg(':'))
+  call feedkeys(":hi li\<S-Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi link', getreg(':'))
+  call feedkeys(":hi d\<S-Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi default', getreg(':'))
+  call feedkeys(":hi c\<S-Tab>\<Home>\"\<CR>", 'xt')
+  call assert_equal('"hi clear', getreg(':'))
+
+  " A cleared group does not show up in completions.
+  hi Anders ctermfg=green
+  call assert_equal(['Aardig', 'Anders'], getcompletion('A', 'highlight'))
+  hi clear Aardig
+  call assert_equal(['Anders'], getcompletion('A', 'highlight'))
+  hi clear Anders
+  call assert_equal([], getcompletion('A', 'highlight'))
+endfunc
+
+func Test_expr_completion()
+  if !has('cmdline_compl')
+    return
+  endif
+  for cmd in [
+	\ 'let a = ',
+	\ 'if',
+	\ 'elseif',
+	\ 'while',
+	\ 'for',
+	\ 'echo',
+	\ 'echon',
+	\ 'execute',
+	\ 'echomsg',
+	\ 'echoerr',
+	\ 'call',
+	\ 'return',
+	\ 'cexpr',
+	\ 'caddexpr',
+	\ 'cgetexpr',
+	\ 'lexpr',
+	\ 'laddexpr',
+	\ 'lgetexpr']
+    call feedkeys(":" . cmd . " getl\<Tab>\<Home>\"\<CR>", 'xt')
+    call assert_equal('"' . cmd . ' getline(', getreg(':'))
+  endfor
 endfunc
 
 func Test_getcompletion()
@@ -49,6 +136,11 @@ func Test_getcompletion()
   call assert_true(index(l, 'v:null') >= 0)
   let l = getcompletion('v:notexists', 'var')
   call assert_equal([], l)
+
+  args a.c b.c
+  let l = getcompletion('', 'arglist')
+  call assert_equal(['a.c', 'b.c'], l)
+  %argdelete
 
   let l = getcompletion('', 'augroup')
   call assert_true(index(l, 'END') >= 0)
@@ -129,6 +221,16 @@ func Test_getcompletion()
   let l = getcompletion('dark', 'highlight')
   call assert_equal([], l)
 
+  let l = getcompletion('', 'messages')
+  call assert_true(index(l, 'clear') >= 0)
+  let l = getcompletion('not', 'messages')
+  call assert_equal([], l)
+
+  let l = getcompletion('', 'mapclear')
+  call assert_true(index(l, '<buffer>') >= 0)
+  let l = getcompletion('not', 'mapclear')
+  call assert_equal([], l)
+
   if has('cscope')
     let l = getcompletion('', 'cscope')
     let cmds = ['add', 'find', 'help', 'kill', 'reset', 'show']
@@ -189,3 +291,204 @@ func Test_expand_star_star()
   bwipe!
   call delete('a', 'rf')
 endfunc
+
+func Test_paste_in_cmdline()
+  let @a = "def"
+  call feedkeys(":abc \<C-R>a ghi\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"abc def ghi', @:)
+
+  new
+  call setline(1, 'asdf.x /tmp/some verylongword a;b-c*d ')
+
+  call feedkeys(":aaa \<C-R>\<C-W> bbb\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"aaa asdf bbb', @:)
+
+  call feedkeys("ft:aaa \<C-R>\<C-F> bbb\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"aaa /tmp/some bbb', @:)
+
+  call feedkeys(":aaa \<C-R>\<C-L> bbb\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"aaa '.getline(1).' bbb', @:)
+
+  set incsearch
+  call feedkeys("fy:aaa veryl\<C-R>\<C-W> bbb\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"aaa verylongword bbb', @:)
+
+  call feedkeys("f;:aaa \<C-R>\<C-A> bbb\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"aaa a;b-c*d bbb', @:)
+
+  call feedkeys(":\<C-\>etoupper(getline(1))\<CR>\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"ASDF.X /TMP/SOME VERYLONGWORD A;B-C*D ', @:)
+  bwipe!
+
+  " Error while typing a command used to cause that it was not executed
+  " in the end.
+  new
+  try
+    call feedkeys(":file \<C-R>%Xtestfile\<CR>", 'tx')
+  catch /^Vim\%((\a\+)\)\=:E32/
+    " ignore error E32
+  endtry
+  call assert_equal("Xtestfile", bufname("%"))
+  bwipe!
+endfunc
+
+func Test_remove_char_in_cmdline()
+  call feedkeys(":abc def\<S-Left>\<Del>\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"abc ef', @:)
+
+  call feedkeys(":abc def\<S-Left>\<BS>\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"abcdef', @:)
+
+  call feedkeys(":abc def ghi\<S-Left>\<C-W>\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"abc ghi', @:)
+
+  call feedkeys(":abc def\<S-Left>\<C-U>\<C-B>\"\<CR>", 'tx')
+  call assert_equal('"def', @:)
+endfunc
+
+func Test_illegal_address1()
+  new
+  2;'(
+  2;')
+  quit
+endfunc
+
+func Test_illegal_address2()
+  call writefile(['c', 'x', '  x', '.', '1;y'], 'Xtest.vim')
+  new
+  source Xtest.vim
+  " Trigger calling validate_cursor()
+  diffsp Xtest.vim
+  quit!
+  bwipe!
+  call delete('Xtest.vim')
+endfunc
+
+func Test_cmdline_complete_wildoptions()
+  help
+  call feedkeys(":tag /\<c-a>\<c-b>\"\<cr>", 'tx')
+  let a = join(sort(split(@:)),' ')
+  set wildoptions=tagfile
+  call feedkeys(":tag /\<c-a>\<c-b>\"\<cr>", 'tx')
+  let b = join(sort(split(@:)),' ')
+  call assert_equal(a, b)
+  bw!
+endfunc
+
+func Test_cmdline_complete_user_cmd()
+  command! -complete=color -nargs=1 Foo :
+  call feedkeys(":Foo \<Tab>\<Home>\"\<cr>", 'tx')
+  call assert_equal('"Foo blue', @:)
+  call feedkeys(":Foo b\<Tab>\<Home>\"\<cr>", 'tx')
+  call assert_equal('"Foo blue', @:)
+  delcommand Foo
+endfunc
+
+func Test_cmdline_write_alternatefile()
+  new
+  call setline('.', ['one', 'two'])
+  f foo.txt
+  new
+  f #-A
+  call assert_equal('foo.txt-A', expand('%'))
+  f #<-B.txt
+  call assert_equal('foo-B.txt', expand('%'))
+  f %<
+  call assert_equal('foo-B', expand('%'))
+  new
+  call assert_fails('f #<', 'E95')
+  bw!
+  f foo-B.txt
+  f %<-A
+  call assert_equal('foo-B-A', expand('%'))
+  bw!
+  bw!
+endfunc
+
+" using a leading backslash here
+set cpo+=C
+
+func Test_cmdline_search_range()
+  new
+  call setline(1, ['a', 'b', 'c', 'd'])
+  /d
+  1,\/s/b/B/
+  call assert_equal('B', getline(2))
+
+  /a
+  $
+  \?,4s/c/C/
+  call assert_equal('C', getline(3))
+
+  call setline(1, ['a', 'b', 'c', 'd'])
+  %s/c/c/
+  1,\&s/b/B/
+  call assert_equal('B', getline(2))
+
+  bwipe!
+endfunc
+
+" Tests for getcmdline(), getcmdpos() and getcmdtype()
+func Check_cmdline(cmdtype)
+  call assert_equal('MyCmd a', getcmdline())
+  call assert_equal(8, getcmdpos())
+  call assert_equal(a:cmdtype, getcmdtype())
+  return ''
+endfunc
+
+func Test_getcmdtype()
+  call feedkeys(":MyCmd a\<C-R>=Check_cmdline(':')\<CR>\<Esc>", "xt")
+
+  let cmdtype = ''
+  debuggreedy
+  call feedkeys(":debug echo 'test'\<CR>", "t")
+  call feedkeys("let cmdtype = \<C-R>=string(getcmdtype())\<CR>\<CR>", "t")
+  call feedkeys("cont\<CR>", "xt")
+  0debuggreedy
+  call assert_equal('>', cmdtype)
+
+  call feedkeys("/MyCmd a\<C-R>=Check_cmdline('/')\<CR>\<Esc>", "xt")
+  call feedkeys("?MyCmd a\<C-R>=Check_cmdline('?')\<CR>\<Esc>", "xt")
+
+  call feedkeys(":call input('Answer?')\<CR>", "t")
+  call feedkeys("MyCmd a\<C-R>=Check_cmdline('@')\<CR>\<C-C>", "xt")
+
+  call feedkeys(":insert\<CR>MyCmd a\<C-R>=Check_cmdline('-')\<CR>\<Esc>", "xt")
+
+  cnoremap <expr> <F6> Check_cmdline('=')
+  call feedkeys("a\<C-R>=MyCmd a\<F6>\<Esc>\<Esc>", "xt")
+  cunmap <F6>
+endfunc
+
+func Test_verbosefile()
+  set verbosefile=Xlog
+  echomsg 'foo'
+  echomsg 'bar'
+  set verbosefile=
+  let log = readfile('Xlog')
+  call assert_match("foo\nbar", join(log, "\n"))
+  call delete('Xlog')
+endfunc
+
+func Test_setcmdpos()
+  func InsertTextAtPos(text, pos)
+    call assert_equal(0, setcmdpos(a:pos))
+    return a:text
+  endfunc
+
+  " setcmdpos() with position in the middle of the command line.
+  call feedkeys(":\"12\<C-R>=InsertTextAtPos('a', 3)\<CR>b\<CR>", 'xt')
+  call assert_equal('"1ab2', @:)
+
+  call feedkeys(":\"12\<C-R>\<C-R>=InsertTextAtPos('a', 3)\<CR>b\<CR>", 'xt')
+  call assert_equal('"1b2a', @:)
+
+  " setcmdpos() with position beyond the end of the command line.
+  call feedkeys(":\"12\<C-B>\<C-R>=InsertTextAtPos('a', 10)\<CR>b\<CR>", 'xt')
+  call assert_equal('"12ab', @:)
+
+  " setcmdpos() returns 1 when not editing the command line.
+  call assert_equal(1, setcmdpos(3))
+endfunc
+
+set cpo&

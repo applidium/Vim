@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	SungHyun Nam <goweol@gmail.com>
-" Last Change: 	2016 Jun 20
+" Last Change: 	2018 May 2
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -14,12 +14,6 @@ if &filetype == "man"
     finish
   endif
   let b:did_ftplugin = 1
-
-  " Ensure Vim is not recursively invoked (man-db does this)
-  " when doing ctrl-[ on a man page reference.
-  if exists("$MANPAGER")
-    let $MANPAGER = ""
-  endif
 
   " allow dot and dash in manual page name.
   setlocal iskeyword+=\.,-
@@ -45,8 +39,9 @@ if &filetype == "man"
 endif
 
 if exists(":Man") != 2
-  com -nargs=+ Man call s:GetPage(<f-args>)
+  com -nargs=+ -complete=shellcmd Man call s:GetPage(<f-args>)
   nmap <Leader>K :call <SID>PreGetPage(0)<CR>
+  nmap <Plug>ManPreGetPage :call <SID>PreGetPage(0)<CR>
 endif
 
 " Define functions only once.
@@ -96,7 +91,7 @@ func <SID>GetCmdArg(sect, page)
 endfunc
 
 func <SID>FindPage(sect, page)
-  let where = system("/usr/bin/man ".s:man_find_arg.' '.s:GetCmdArg(a:sect, a:page))
+  let where = system("man ".s:man_find_arg.' '.s:GetCmdArg(a:sect, a:page))
   if where !~ "^/"
     if matchstr(where, " [^ ]*$") !~ "^ /"
       return 0
@@ -169,22 +164,34 @@ func <SID>GetPage(...)
   setl buftype=nofile noswapfile
 
   setl ma nonu nornu nofen
-  silent exec "norm 1GdG"
+  silent exec "norm! 1GdG"
   let unsetwidth = 0
   if empty($MANWIDTH)
     let $MANWIDTH = winwidth(0)
     let unsetwidth = 1
   endif
-  silent exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
+
+  " Ensure Vim is not recursively invoked (man-db does this) when doing ctrl-[
+  " on a man page reference by unsetting MANPAGER.
+  " Some versions of env(1) do not support the '-u' option, and in such case
+  " we set MANPAGER=cat.
+  if !exists('s:env_has_u')
+    call system('env -u x true')
+    let s:env_has_u = (v:shell_error == 0)
+  endif
+  let env_cmd = s:env_has_u ? 'env -u MANPAGER' : 'env MANPAGER=cat'
+  let man_cmd = env_cmd . ' man ' . s:GetCmdArg(sect, page) . ' | col -b'
+  silent exec "r !" . man_cmd
+
   if unsetwidth
     let $MANWIDTH = ''
   endif
   " Remove blank lines from top and bottom.
   while getline(1) =~ '^\s*$'
-    silent keepj norm ggdd
+    silent keepj norm! ggdd
   endwhile
   while getline('$') =~ '^\s*$'
-    silent keepj norm Gdd
+    silent keepj norm! Gdd
   endwhile
   1
   setl ft=man nomod
@@ -201,7 +208,7 @@ func <SID>PopPage()
     exec "let s:man_tag_col=s:man_tag_col_".s:man_tag_depth
     exec s:man_tag_buf."b"
     exec s:man_tag_lin
-    exec "norm ".s:man_tag_col."|"
+    exec "norm! ".s:man_tag_col."|"
     exec "unlet s:man_tag_buf_".s:man_tag_depth
     exec "unlet s:man_tag_lin_".s:man_tag_depth
     exec "unlet s:man_tag_col_".s:man_tag_depth

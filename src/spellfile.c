@@ -54,8 +54,8 @@
  *			    website, etc)
  *
  * sectionID == SN_REGION: <regionname> ...
- * <regionname>	 2 bytes    Up to 8 region names: ca, au, etc.  Lower case.
- *			    First <regionname> is region 1.
+ * <regionname>	 2 bytes    Up to MAXREGIONS region names: ca, au, etc.  Lower
+ *			    case.  First <regionname> is region 1.
  *
  * sectionID == SN_CHARFLAGS: <charflagslen> <charflags>
  *				<folcharslen> <folchars>
@@ -832,7 +832,7 @@ read_region_section(FILE *fd, slang_T *lp, int len)
 {
     int		i;
 
-    if (len > 16)
+    if (len > MAXREGIONS * 2)
 	return SP_FORMERROR;
     for (i = 0; i < len; ++i)
 	lp->sl_regions[i] = getc(fd);			/* <regionname> */
@@ -1352,8 +1352,7 @@ read_compound(FILE *fd, slang_T *slang, int len)
 	{
 	    if (c == '?' || c == '+' || c == '*')
 	    {
-		vim_free(slang->sl_comprules);
-		slang->sl_comprules = NULL;
+		VIM_CLEAR(slang->sl_comprules);
 		crp = NULL;
 	    }
 	    else
@@ -1429,7 +1428,7 @@ set_sofo(slang_T *lp, char_u *from, char_u *to)
 	for (p = from, s = to; *p != NUL && *s != NUL; )
 	{
 	    c = mb_cptr2char_adv(&p);
-	    mb_cptr_adv(s);
+	    MB_CPTR_ADV(s);
 	    if (c >= 256)
 		++lp->sl_sal_first[c & 0xff];
 	}
@@ -1585,7 +1584,7 @@ spell_read_tree(
     int		prefixtree,	/* TRUE for the prefix tree */
     int		prefixcnt)	/* when "prefixtree" is TRUE: prefix count */
 {
-    int		len;
+    long	len;
     int		idx;
     char_u	*bp;
     idx_T	*ip;
@@ -1595,6 +1594,9 @@ spell_read_tree(
     len = get4c(fd);
     if (len < 0)
 	return SP_TRUNCERROR;
+    if (len >= LONG_MAX / (long)sizeof(int))
+	/* Invalid length, multiply with sizeof(int) would overflow. */
+	return SP_FORMERROR;
     if (len > 0)
     {
 	/* Allocate the byte array. */
@@ -1949,8 +1951,9 @@ typedef struct spellinfo_S
     char_u	*si_info;	/* info text chars or NULL  */
     int		si_region_count; /* number of regions supported (1 when there
 				    are no regions) */
-    char_u	si_region_name[17]; /* region names; used only if
-				     * si_region_count > 1) */
+    char_u	si_region_name[MAXREGIONS * 2 + 1];
+				/* region names; used only if
+				 * si_region_count > 1) */
 
     garray_T	si_rep;		/* list of fromto_T entries from REP lines */
     garray_T	si_repsal;	/* list of fromto_T entries from REPSAL lines */
@@ -2799,7 +2802,7 @@ spell_read_aff(spellinfo_T *spin, char_u *fname)
 			    {
 				p = aff_entry->ae_add
 						  + STRLEN(aff_entry->ae_add);
-				mb_ptr_back(aff_entry->ae_add, p);
+				MB_PTR_BACK(aff_entry->ae_add, p);
 				if (PTR2CHAR(p) == c_up)
 				{
 				    upper = TRUE;
@@ -2927,10 +2930,10 @@ spell_read_aff(spellinfo_T *spin, char_u *fname)
 		{
 		    /* Replace underscore with space (can't include a space
 		     * directly). */
-		    for (p = items[1]; *p != NUL; mb_ptr_adv(p))
+		    for (p = items[1]; *p != NUL; MB_PTR_ADV(p))
 			if (*p == '_')
 			    *p = ' ';
-		    for (p = items[2]; *p != NUL; mb_ptr_adv(p))
+		    for (p = items[2]; *p != NUL; MB_PTR_ADV(p))
 			if (*p == '_')
 			    *p = ' ';
 		    add_fromto(spin, items[0][3] == 'S'
@@ -3621,7 +3624,7 @@ spell_read_dic(spellinfo_T *spin, char_u *fname, afffile_T *affile)
 	/* Truncate the word at the "/", set "afflist" to what follows.
 	 * Replace "\/" by "/" and "\\" by "\". */
 	afflist = NULL;
-	for (p = w; *p != NUL; mb_ptr_adv(p))
+	for (p = w; *p != NUL; MB_PTR_ADV(p))
 	{
 	    if (*p == '\\' && (p[1] == '\\' || p[1] == '/'))
 		STRMOVE(p, p + 1);
@@ -3646,7 +3649,7 @@ spell_read_dic(spellinfo_T *spin, char_u *fname, afffile_T *affile)
 	{
 	    spin->si_msg_count = 0;
 	    vim_snprintf((char *)message, sizeof(message),
-		    _("line %6d, word %6d - %s"),
+		    _("line %6d, word %6ld - %s"),
 		       lnum, spin->si_foldwcount + spin->si_keepwcount, w);
 	    msg_start();
 	    msg_puts_long_attr(message, 0);
@@ -3944,7 +3947,7 @@ store_aff_word(
 				{
 				    i = mb_charlen(ae->ae_chop);
 				    for ( ; i > 0; --i)
-					mb_ptr_adv(p);
+					MB_PTR_ADV(p);
 				}
 				else
 #endif
@@ -3962,7 +3965,7 @@ store_aff_word(
 				p = newword + STRLEN(newword);
 				i = (int)MB_CHARLEN(ae->ae_chop);
 				for ( ; i > 0; --i)
-				    mb_ptr_back(newword, p);
+				    MB_PTR_BACK(newword, p);
 				*p = NUL;
 			    }
 			    if (ae->ae_add != NULL)
@@ -4231,7 +4234,7 @@ spell_read_wordfile(spellinfo_T *spin, char_u *fname)
 		else
 		{
 		    line += 8;
-		    if (STRLEN(line) > 16)
+		    if (STRLEN(line) > MAXREGIONS * 2)
 			smsg((char_u *)_("Too many regions in %s line %d: %s"),
 						       fname, lnum, line);
 		    else
@@ -4274,7 +4277,7 @@ spell_read_wordfile(spellinfo_T *spin, char_u *fname)
 		    flags |= WF_REGION;
 
 		    l = *p - '0';
-		    if (l > spin->si_region_count)
+		    if (l == 0 || l > spin->si_region_count)
 		    {
 			smsg((char_u *)_("Invalid region nr in %s line %d: %s"),
 							  fname, lnum, p);
@@ -5951,7 +5954,7 @@ mkspell(
     char_u	*wfname;
     char_u	**innames;
     int		incount;
-    afffile_T	*(afile[8]);
+    afffile_T	*(afile[MAXREGIONS]);
     int		i;
     int		len;
     stat_T	st;
@@ -6022,8 +6025,8 @@ mkspell(
 	EMSG(_(e_invarg));	/* need at least output and input names */
     else if (vim_strchr(gettail(wfname), '_') != NULL)
 	EMSG(_("E751: Output file name must not have region name"));
-    else if (incount > 8)
-	EMSG(_("E754: Only up to 8 regions supported"));
+    else if (incount > MAXREGIONS)
+	EMSGN(_("E754: Only up to %ld regions supported"), MAXREGIONS);
     else
     {
 	/* Check for overwriting before doing things that may take a lot of

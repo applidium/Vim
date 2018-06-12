@@ -582,9 +582,9 @@ VimTryStart(void)
 VimTryEnd(void)
 {
     --trylevel;
-    /* Without this it stops processing all subsequent VimL commands and
-     * generates strange error messages if I e.g. try calling Test() in a
-     * cycle */
+    /* Without this it stops processing all subsequent Vim script commands and
+     * generates strange error messages if I e.g. try calling Test() in a cycle
+     */
     did_emsg = FALSE;
     /* Keyboard interrupt should be preferred over anything else */
     if (got_int)
@@ -625,7 +625,7 @@ VimTryEnd(void)
 	discard_current_exception();
 	return -1;
     }
-    /* Finally transform VimL exception to python one */
+    /* Finally transform Vim script exception to python one */
     else
     {
 	PyErr_SetVim((char *)current_exception->value);
@@ -1996,6 +1996,7 @@ DictionaryUpdate(DictionaryObject *self, PyObject *args, PyObject *kwargs)
 		PyObject	*todecref;
 		char_u		*key;
 		dictitem_T	*di;
+		hashitem_T	*hi;
 
 		if (!(fast = PySequence_Fast(item, "")))
 		{
@@ -2052,7 +2053,8 @@ DictionaryUpdate(DictionaryObject *self, PyObject *args, PyObject *kwargs)
 
 		Py_DECREF(fast);
 
-		if (dict_add(dict, di) == FAIL)
+		hi = hash_find(&dict->dv_hashtab, di->di_key);
+		if (!HASHITEM_EMPTY(hi) || dict_add(dict, di) == FAIL)
 		{
 		    RAISE_KEY_ADD_FAIL(di->di_key);
 		    Py_DECREF(iterator);
@@ -3872,14 +3874,12 @@ WindowAttr(WindowObject *self, char *name)
     }
     else if (strcmp(name, "height") == 0)
 	return PyLong_FromLong((long)(self->win->w_height));
-#ifdef FEAT_WINDOWS
     else if (strcmp(name, "row") == 0)
 	return PyLong_FromLong((long)(self->win->w_winrow));
     else if (strcmp(name, "width") == 0)
-	return PyLong_FromLong((long)(W_WIDTH(self->win)));
+	return PyLong_FromLong((long)(self->win->w_width));
     else if (strcmp(name, "col") == 0)
-	return PyLong_FromLong((long)(W_WINCOL(self->win)));
-#endif
+	return PyLong_FromLong((long)(self->win->w_wincol));
     else if (strcmp(name, "vars") == 0)
 	return NEW_DICTIONARY(self->win->w_vars);
     else if (strcmp(name, "options") == 0)
@@ -3965,7 +3965,6 @@ WindowSetattr(WindowObject *self, char *name, PyObject *valObject)
 
 	return 0;
     }
-#ifdef FEAT_WINDOWS
     else if (strcmp(name, "width") == 0)
     {
 	long	width;
@@ -3988,7 +3987,6 @@ WindowSetattr(WindowObject *self, char *name, PyObject *valObject)
 
 	return 0;
     }
-#endif
     else
     {
 	PyErr_SetString(PyExc_AttributeError, name);
@@ -4263,43 +4261,6 @@ py_fix_cursor(linenr_T lo, linenr_T hi, linenr_T extra)
 }
 
 /*
- * Find a window that contains "buf" and switch to it.
- * If there is no such window, use the current window and change "curbuf".
- * Caller must initialize save_curbuf to NULL.
- * restore_win_for_buf() MUST be called later!
- */
-    static void
-switch_to_win_for_buf(
-    buf_T	*buf,
-    win_T	**save_curwinp,
-    tabpage_T	**save_curtabp,
-    bufref_T	*save_curbuf)
-{
-    win_T	*wp;
-    tabpage_T	*tp;
-
-    if (find_win_for_buf(buf, &wp, &tp) == FAIL)
-	switch_buffer(save_curbuf, buf);
-    else if (switch_win(save_curwinp, save_curtabp, wp, tp, TRUE) == FAIL)
-    {
-	restore_win(*save_curwinp, *save_curtabp, TRUE);
-	switch_buffer(save_curbuf, buf);
-    }
-}
-
-    static void
-restore_win_for_buf(
-    win_T	*save_curwin,
-    tabpage_T	*save_curtab,
-    bufref_T	*save_curbuf)
-{
-    if (save_curbuf->br_buf == NULL)
-	restore_win(save_curwin, save_curtab, TRUE);
-    else
-	restore_buffer(save_curbuf);
-}
-
-/*
  * Replace a line in the specified buffer. The line number is
  * in Vim format (1-based). The replacement line is given as
  * a Python string object. The object is checked for validity
@@ -4311,7 +4272,7 @@ restore_win_for_buf(
     static int
 SetBufferLine(buf_T *buf, PyInt n, PyObject *line, PyInt *len_change)
 {
-    bufref_T	save_curbuf = {NULL, 0};
+    bufref_T	save_curbuf = {NULL, 0, 0};
     win_T	*save_curwin = NULL;
     tabpage_T	*save_curtab = NULL;
 
@@ -4415,7 +4376,7 @@ SetBufferLineList(
 	PyObject *list,
 	PyInt *len_change)
 {
-    bufref_T	save_curbuf = {NULL, 0};
+    bufref_T	save_curbuf = {NULL, 0, 0};
     win_T	*save_curwin = NULL;
     tabpage_T	*save_curtab = NULL;
 
@@ -4616,7 +4577,7 @@ SetBufferLineList(
     static int
 InsertBufferLines(buf_T *buf, PyInt n, PyObject *lines, PyInt *len_change)
 {
-    bufref_T	save_curbuf = {NULL, 0};
+    bufref_T	save_curbuf = {NULL, 0, 0};
     win_T	*save_curwin = NULL;
     tabpage_T	*save_curtab = NULL;
 
@@ -5619,6 +5580,7 @@ run_do(const char *cmd, void *arg UNUSED
     int		status;
     PyObject	*pyfunc, *pymain;
     PyObject	*run_ret;
+    buf_T	*was_curbuf = curbuf;
 
     if (u_save((linenr_T)RangeStart - 1, (linenr_T)RangeEnd + 1) != OK)
     {
@@ -5671,7 +5633,9 @@ run_do(const char *cmd, void *arg UNUSED
 #ifdef PY_CAN_RECURSE
 	*pygilstate = PyGILState_Ensure();
 #endif
-	if (!(line = GetBufferLine(curbuf, lnum)))
+	/* Check the line number, the command my have deleted lines. */
+	if (lnum > curbuf->b_ml.ml_line_count
+		|| !(line = GetBufferLine(curbuf, lnum)))
 	    goto err;
 	if (!(linenr = PyInt_FromLong((long) lnum)))
 	{
@@ -5684,9 +5648,19 @@ run_do(const char *cmd, void *arg UNUSED
 	if (!ret)
 	    goto err;
 
+	/* Check that the command didn't switch to another buffer. */
+	if (curbuf != was_curbuf)
+	{
+	    Py_XDECREF(ret);
+	    goto err;
+	}
+
 	if (ret != Py_None)
 	    if (SetBufferLine(curbuf, lnum, ret, NULL) == FAIL)
+	    {
+		Py_XDECREF(ret);
 		goto err;
+	    }
 
 	Py_XDECREF(ret);
 	PythonIO_Flush();
@@ -5741,7 +5715,7 @@ run_eval(const char *cmd, typval_T *rettv
     }
     else
     {
-	if (run_ret != Py_None && ConvertFromPyObject(run_ret, rettv) == -1)
+	if (ConvertFromPyObject(run_ret, rettv) == -1)
 	    EMSG(_("E859: Failed to convert returned python object to vim value"));
 	Py_DECREF(run_ret);
     }
@@ -6022,7 +5996,7 @@ convert_dl(PyObject *obj, typval_T *tv,
     PyObject	*capsule;
     char	hexBuf[sizeof(void *) * 2 + 3];
 
-    sprintf(hexBuf, "%p", obj);
+    sprintf(hexBuf, "%p", (void *)obj);
 
 # ifdef PY_USE_CAPSULE
     capsule = PyDict_GetItemString(lookup_dict, hexBuf);
@@ -6259,6 +6233,11 @@ _ConvertFromPyObject(PyObject *obj, typval_T *tv, PyObject *lookup_dict)
 
 	Py_DECREF(num);
     }
+    else if (obj == Py_None)
+    {
+	tv->v_type = VAR_SPECIAL;
+	tv->vval.v_number = VVAL_NONE;
+    }
     else
     {
 	PyErr_FORMAT(PyExc_TypeError,
@@ -6354,9 +6333,12 @@ init_structs(void)
     OutputType.tp_alloc = call_PyType_GenericAlloc;
     OutputType.tp_new = call_PyType_GenericNew;
     OutputType.tp_free = call_PyObject_Free;
+    OutputType.tp_base = &PyStdPrinter_Type;
 #else
     OutputType.tp_getattr = (getattrfunc)OutputGetattr;
     OutputType.tp_setattr = (setattrfunc)OutputSetattr;
+    // Disabled, because this causes a crash in test86
+    // OutputType.tp_base = &PyFile_Type;
 #endif
 
     vim_memset(&IterType, 0, sizeof(IterType));

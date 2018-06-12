@@ -6,7 +6,8 @@ func s:test_expand_dllpath(optname)
     execute 'call assert_equal("' . $TEST_EXPAND_DLLPATH . '", &' . a:optname . ')' 
 
     execute 'set ' . a:optname . '=~' . $TEST_EXPAND_DLLPATH
-    execute 'call assert_equal("' . $HOME . $TEST_EXPAND_DLLPATH . '", &' . a:optname . ')' 
+    let home = substitute($HOME, '\\', '/', 'g')
+    execute 'call assert_equal("' . home . $TEST_EXPAND_DLLPATH . '", &' . a:optname . ')' 
   finally
     execute 'let &' . a:optname . ' = dllpath_save'
     let $TEST_EXPAND_DLLPATH = ''
@@ -14,7 +15,7 @@ func s:test_expand_dllpath(optname)
 endfunc
 
 func s:generate_test_if_exists(optname)
-  if exists('&' . a:optname)
+  if exists('+' . a:optname)
     execute join([
           \ 'func Test_expand_' . a:optname . '()',
           \ '  call s:test_expand_dllpath("' . a:optname . '")',

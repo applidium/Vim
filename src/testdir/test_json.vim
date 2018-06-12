@@ -103,6 +103,10 @@ func Test_json_encode()
   call assert_fails('echo json_encode(function("tr"))', 'E474:')
   call assert_fails('echo json_encode([function("tr")])', 'E474:')
 
+  call assert_equal('{"a":""}', json_encode({'a': test_null_string()}))
+  call assert_equal('{"a":[]}', json_encode({"a": test_null_list()}))
+  call assert_equal('{"a":{}}', json_encode({"a": test_null_dict()}))
+
   silent! let res = json_encode(function("tr"))
   call assert_equal("", res)
 endfunc
@@ -144,12 +148,20 @@ func Test_json_decode()
   call assert_equal(type(v:none), type(json_decode('')))
   call assert_equal("", json_decode('""'))
 
+  " empty key is OK
+  call assert_equal({'': 'ok'}, json_decode('{"": "ok"}'))
+  " but not twice
+  call assert_fails("call json_decode('{\"\": \"ok\", \"\": \"bad\"}')", 'E938:')
+
   call assert_equal({'n': 1}, json_decode('{"n":1,}'))
+  call assert_fails("call json_decode(\"{'n':'1',}\")", 'E474:')
+  call assert_fails("call json_decode(\"'n'\")", 'E474:')
 
   call assert_fails('call json_decode("\"")', "E474:")
   call assert_fails('call json_decode("blah")', "E474:")
-  call assert_fails('call json_decode("true blah")', "E474:")
+  call assert_fails('call json_decode("true blah")', "E488:")
   call assert_fails('call json_decode("<foobar>")', "E474:")
+  call assert_fails('call json_decode("{\"a\":1,\"a\":2}")', "E938:")
 
   call assert_fails('call json_decode("{")', "E474:")
   call assert_fails('call json_decode("{foobar}")', "E474:")
@@ -167,6 +179,9 @@ func Test_json_decode()
   call assert_fails('call json_decode("[1 2]")', "E474:")
 
   call assert_fails('call json_decode("[1,,2]")', "E474:")
+
+  call assert_fails('call json_decode("{{}:42}")', "E474:")
+  call assert_fails('call json_decode("{[]:42}")', "E474:")
 endfunc
 
 let s:jsl5 = '[7,,,]'
@@ -254,8 +269,11 @@ func Test_js_decode()
   call assert_equal(v:none, js_decode(''))
   call assert_equal(type(v:none), type(js_decode('')))
   call assert_equal("", js_decode('""'))
+  call assert_equal("", js_decode("''"))
 
+  call assert_equal('n', js_decode("'n'"))
   call assert_equal({'n': 1}, js_decode('{"n":1,}'))
+  call assert_equal({'n': '1'}, js_decode("{'n':'1',}"))
 
   call assert_fails('call js_decode("\"")', "E474:")
   call assert_fails('call js_decode("blah")', "E474:")

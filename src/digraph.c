@@ -321,7 +321,7 @@ static digr_T digraphdefault[] =
 	};
 
 #  else
-#   if defined(MACOS) && !defined(FEAT_MBYTE)
+#   if defined(MACOS_X) && !defined(FEAT_MBYTE)
 
 	/*
 	 * Macintosh digraphs
@@ -449,7 +449,7 @@ static digr_T digraphdefault[] =
 	{NUL, NUL, NUL}
 	};
 
-#   else	/* !MACOS */
+#   else	/* !MACOS_X */
 
 #    ifdef OLD_DIGRAPHS
 
@@ -1312,6 +1312,7 @@ static digr_T digraphdefault[] =
 	{'/', '-', 0x2020},
 	{'/', '=', 0x2021},
 	{'.', '.', 0x2025},
+	{',', '.', 0x2026},
 	{'%', '0', 0x2030},
 	{'1', '\'', 0x2032},
 	{'2', '\'', 0x2033},
@@ -1875,6 +1876,13 @@ static digr_T digraphdefault[] =
 	{'f', 'l', 0xfb02},
 	{'f', 't', 0xfb05},
 	{'s', 't', 0xfb06},
+
+	/* extra alternatives, easier to remember */
+	{'W', '`', 0x1e80},
+	{'w', '`', 0x1e81},
+	{'Y', '`', 0x1ef2},
+	{'y', '`', 0x1ef3},
+
 #      endif /* FEAT_MBYTE */
 
 	/* Vim 5.x compatible digraphs that don't conflict with the above */
@@ -1964,6 +1972,41 @@ do_digraph(int c)
     }
     lastchar = c;
     return c;
+}
+
+/*
+ * Find a digraph for "val".  If found return the string to display it.
+ * If not found return NULL.
+ */
+    char_u *
+get_digraph_for_char(val)
+    int val;
+{
+    int		i;
+    int		use_defaults;
+    digr_T	*dp;
+    static      char_u      r[3];
+
+    for (use_defaults = 0; use_defaults <= 1; use_defaults++)
+    {
+	if (use_defaults == 0)
+	    dp = (digr_T *)user_digraphs.ga_data;
+	else
+	    dp = digraphdefault;
+	for (i = 0; use_defaults ? dp->char1 != NUL
+					       : i < user_digraphs.ga_len; ++i)
+	{
+	    if (dp->result == val)
+	    {
+		r[0] = dp->char1;
+		r[1] = dp->char2;
+		r[2] = NUL;
+		return r;
+	    }
+	    ++dp;
+	}
+    }
+    return NULL;
 }
 
 /*
@@ -2418,9 +2461,7 @@ ex_loadkeymap(exarg_T *eap)
     p_cpo = save_cpo;
 
     curbuf->b_kmap_state |= KEYMAP_LOADED;
-#ifdef FEAT_WINDOWS
     status_redraw_curbuf();
-#endif
 }
 
 /*
@@ -2446,17 +2487,26 @@ keymap_unload(void)
     {
 	vim_snprintf((char *)buf, sizeof(buf), "<buffer> %s", kp[i].from);
 	(void)do_map(1, buf, LANGMAP, FALSE);
-	vim_free(kp[i].from);
-	vim_free(kp[i].to);
     }
+    keymap_clear(&curbuf->b_kmap_ga);
 
     p_cpo = save_cpo;
 
     ga_clear(&curbuf->b_kmap_ga);
     curbuf->b_kmap_state &= ~KEYMAP_LOADED;
-#ifdef FEAT_WINDOWS
     status_redraw_curbuf();
-#endif
 }
 
+    void
+keymap_clear(garray_T *kmap)
+{
+    int	    i;
+    kmap_T  *kp = (kmap_T *)kmap->ga_data;
+
+    for (i = 0; i < kmap->ga_len; ++i)
+    {
+	vim_free(kp[i].from);
+	vim_free(kp[i].to);
+    }
+}
 #endif /* FEAT_KEYMAP */

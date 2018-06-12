@@ -1,7 +1,6 @@
 " Tests for the getbufinfo(), getwininfo() and gettabinfo() functions
 
 function Test_getbufwintabinfo()
-    1,$bwipeout
     edit Xtestfile1
     edit Xtestfile2
     let buflist = getbufinfo()
@@ -20,6 +19,13 @@ function Test_getbufwintabinfo()
     call assert_equal(bufnr('%'), l[0].bufnr)
     call assert_equal('vim', l[0].variables.editor)
     call assert_notequal(-1, index(l[0].windows, bufwinid('%')))
+
+    " Test for getbufinfo() with 'bufmodified'
+    call assert_equal(0, len(getbufinfo({'bufmodified' : 1})))
+    call setbufline('Xtestfile1', 1, ["Line1"])
+    let l = getbufinfo({'bufmodified' : 1})
+    call assert_equal(1, len(l))
+    call assert_equal(bufnr('Xtestfile1'), l[0].bufnr)
 
     if has('signs')
 	call append(0, ['Linux', 'Windows', 'Mac'])
@@ -87,9 +93,17 @@ function Test_get_buf_options()
 endfunc
 
 function Test_get_win_options()
+  if has('folding')
+    set foldlevel=999
+  endif
+  set list
   let opts = getwinvar(1, '&')
   call assert_equal(v:t_dict, type(opts))
   call assert_equal(0, opts.linebreak)
+  call assert_equal(1, opts.list)
+  if has('folding')
+    call assert_equal(999, opts.foldlevel)
+  endif
   if has('signs')
     call assert_equal('auto', opts.signcolumn)
   endif
@@ -97,7 +111,12 @@ function Test_get_win_options()
   let opts = gettabwinvar(1, 1, '&')
   call assert_equal(v:t_dict, type(opts))
   call assert_equal(0, opts.linebreak)
+  call assert_equal(1, opts.list)
   if has('signs')
     call assert_equal('auto', opts.signcolumn)
+  endif
+  set list&
+  if has('folding')
+    set foldlevel=0
   endif
 endfunc

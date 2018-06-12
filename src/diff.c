@@ -23,6 +23,7 @@ static int	diff_busy = FALSE;	/* ex_diffgetput() is busy */
 #define DIFF_IWHITE	4	/* ignore change in white space */
 #define DIFF_HORIZONTAL	8	/* horizontal splits */
 #define DIFF_VERTICAL	16	/* vertical splits */
+#define DIFF_HIDDEN_OFF	32	/* diffoff when hidden */
 static int	diff_flags = DIFF_FILLER;
 
 #define LBUFLEN 50		/* length of line in diff file */
@@ -136,6 +137,23 @@ diff_buf_add(buf_T *buf)
 	}
 
     EMSGN(_("E96: Cannot diff more than %ld buffers"), DB_COUNT);
+}
+
+/*
+ * Remove all buffers to make diffs for.
+ */
+    static void
+diff_buf_clear(void)
+{
+    int		i;
+
+    for (i = 0; i < DB_COUNT; ++i)
+	if (curtab->tp_diffbuf[i] != NULL)
+	{
+	    curtab->tp_diffbuf[i] = NULL;
+	    curtab->tp_diff_invalid = TRUE;
+	    diff_redraw(TRUE);
+	}
 }
 
 /*
@@ -854,13 +872,9 @@ diff_file(
 		    (diff_flags & DIFF_ICASE) ? "-i " : "",
 		    tmp_orig, tmp_new);
 	    append_redir(cmd, (int)len, p_srr, tmp_diff);
-#ifdef FEAT_AUTOCMD
 	    block_autocmds();	/* Avoid ShellCmdPost stuff */
-#endif
 	    (void)call_shell(cmd, SHELL_FILTER|SHELL_SILENT|SHELL_DOOUT);
-#ifdef FEAT_AUTOCMD
 	    unblock_autocmds();
-#endif
 	    vim_free(cmd);
 	}
     }
@@ -889,12 +903,14 @@ ex_diffpatch(exarg_T *eap)
     int		browse_flag = cmdmod.browse;
 #endif
     stat_T	st;
+    char_u	*esc_name = NULL;
 
 #ifdef FEAT_BROWSE
     if (cmdmod.browse)
     {
 	browseFile = do_browse(0, (char_u *)_("Patch file"),
-			 eap->arg, NULL, NULL, BROWSE_FILTER_ALL_FILES, NULL);
+			 eap->arg, NULL, NULL,
+			 (char_u *)_(BROWSE_FILTER_ALL_FILES), NULL);
 	if (browseFile == NULL)
 	    return;		/* operation cancelled */
 	eap->arg = browseFile;
@@ -918,11 +934,14 @@ ex_diffpatch(exarg_T *eap)
     /* Get the absolute path of the patchfile, changing directory below. */
     fullname = FullName_save(eap->arg, FALSE);
 #endif
-    buflen = STRLEN(tmp_orig) + (
+    esc_name = vim_strsave_shellescape(
 # ifdef UNIX
-		    fullname != NULL ? STRLEN(fullname) :
+		    fullname != NULL ? fullname :
 # endif
-		    STRLEN(eap->arg)) + STRLEN(tmp_new) + 16;
+		    eap->arg, TRUE, TRUE);
+    if (esc_name == NULL)
+	goto theend;
+    buflen = STRLEN(tmp_orig) + STRLEN(esc_name) + STRLEN(tmp_new) + 16;
     buf = alloc((unsigned)buflen);
     if (buf == NULL)
 	goto theend;
@@ -960,19 +979,11 @@ ex_diffpatch(exarg_T *eap)
     {
 	/* Build the patch command and execute it.  Ignore errors.  Switch to
 	 * cooked mode to allow the user to respond to prompts. */
-	vim_snprintf((char *)buf, buflen, "patch -o %s %s < \"%s\"",
-		tmp_new, tmp_orig,
-# ifdef UNIX
-		fullname != NULL ? fullname :
-# endif
-		eap->arg);
-#ifdef FEAT_AUTOCMD
+	vim_snprintf((char *)buf, buflen, "patch -o %s %s < %s",
+						  tmp_new, tmp_orig, esc_name);
 	block_autocmds();	/* Avoid ShellCmdPost stuff */
-#endif
 	(void)call_shell(buf, SHELL_FILTER | SHELL_COOKED);
-#ifdef FEAT_AUTOCMD
 	unblock_autocmds();
-#endif
     }
 
 #ifdef UNIX
@@ -1034,11 +1045,9 @@ ex_diffpatch(exarg_T *eap)
 		    eap->arg = newname;
 		    ex_file(eap);
 
-#ifdef FEAT_AUTOCMD
 		    /* Do filetype detection with the new name. */
 		    if (au_has_group((char_u *)"filetypedetect"))
 			do_cmdline_cmd((char_u *)":doau filetypedetect BufRead");
-#endif
 		}
 	    }
 	}
@@ -1056,6 +1065,7 @@ theend:
 #ifdef UNIX
     vim_free(fullname);
 #endif
+    vim_free(esc_name);
 #ifdef FEAT_BROWSE
     vim_free(browseFile);
     cmdmod.browse = browse_flag;
@@ -1100,10 +1110,7 @@ ex_diffsplit(exarg_T *eap)
 		if (bufref_valid(&old_curbuf))
 		    /* Move the cursor position to that of the old window. */
 		    curwin->w_cursor.lnum = diff_get_corresponding_line(
-			    old_curbuf.br_buf,
-			    old_curwin->w_cursor.lnum,
-			    curbuf,
-			    curwin->w_cursor.lnum);
+			    old_curbuf.br_buf, old_curwin->w_cursor.lnum);
 	    }
 	    /* Now that lines are folded scroll to show the cursor at the same
 	     * relative position. */
@@ -1120,6 +1127,20 @@ ex_diffthis(exarg_T *eap UNUSED)
 {
     /* Set 'diff', 'scrollbind' on and 'wrap' off. */
     diff_win_options(curwin, TRUE);
+}
+
+    static void
+set_diff_option(win_T *wp, int value)
+{
+    win_T *old_curwin = curwin;
+
+    curwin = wp;
+    curbuf = curwin->w_buffer;
+    ++curbuf_lock;
+    set_option_value((char_u *)"diff", (long)value, NULL, OPT_LOCAL);
+    --curbuf_lock;
+    curwin = old_curwin;
+    curbuf = curwin->w_buffer;
 }
 
 /*
@@ -1140,16 +1161,12 @@ diff_win_options(
 # endif
 
     /* Use 'scrollbind' and 'cursorbind' when available */
-#ifdef FEAT_SCROLLBIND
     if (!wp->w_p_diff)
 	wp->w_p_scb_save = wp->w_p_scb;
     wp->w_p_scb = TRUE;
-#endif
-#ifdef FEAT_CURSORBIND
     if (!wp->w_p_diff)
 	wp->w_p_crb_save = wp->w_p_crb;
     wp->w_p_crb = TRUE;
-#endif
     if (!wp->w_p_diff)
 	wp->w_p_wrap_save = wp->w_p_wrap;
     wp->w_p_wrap = FALSE;
@@ -1179,14 +1196,12 @@ diff_win_options(
     /* make sure topline is not halfway a fold */
     changed_window_setting_win(wp);
 # endif
-#ifdef FEAT_SCROLLBIND
     if (vim_strchr(p_sbo, 'h') == NULL)
 	do_cmdline_cmd((char_u *)"set sbo+=hor");
-#endif
-    /* Saved the current values, to be restored in ex_diffoff(). */
+    /* Save the current values, to be restored in ex_diffoff(). */
     wp->w_p_diff_saved = TRUE;
 
-    wp->w_p_diff = TRUE;
+    set_diff_option(wp, TRUE);
 
     if (addbuf)
 	diff_buf_add(wp->w_buffer);
@@ -1201,9 +1216,7 @@ diff_win_options(
 ex_diffoff(exarg_T *eap)
 {
     win_T	*wp;
-#ifdef FEAT_SCROLLBIND
     int		diffwin = FALSE;
-#endif
 
     FOR_ALL_WINDOWS(wp)
     {
@@ -1212,24 +1225,21 @@ ex_diffoff(exarg_T *eap)
 	    /* Set 'diff' off. If option values were saved in
 	     * diff_win_options(), restore the ones whose settings seem to have
 	     * been left over from diff mode.  */
-	    wp->w_p_diff = FALSE;
+	    set_diff_option(wp, FALSE);
 
 	    if (wp->w_p_diff_saved)
 	    {
 
-#ifdef FEAT_SCROLLBIND
 		if (wp->w_p_scb)
 		    wp->w_p_scb = wp->w_p_scb_save;
-#endif
-#ifdef FEAT_CURSORBIND
 		if (wp->w_p_crb)
 		    wp->w_p_crb = wp->w_p_crb_save;
-#endif
 		if (!wp->w_p_wrap)
 		    wp->w_p_wrap = wp->w_p_wrap_save;
 #ifdef FEAT_FOLDING
 		free_string_option(wp->w_p_fdm);
-		wp->w_p_fdm = vim_strsave(wp->w_p_fdm_save);
+		wp->w_p_fdm = vim_strsave(
+		    *wp->w_p_fdm_save ? wp->w_p_fdm_save : (char_u*)"manual");
 
 		if (wp->w_p_fdc == diff_foldcolumn)
 		    wp->w_p_fdc = wp->w_p_fdc_save;
@@ -1255,16 +1265,16 @@ ex_diffoff(exarg_T *eap)
 	    /* Note: 'sbo' is not restored, it's a global option. */
 	    diff_buf_adjust(wp);
 	}
-#ifdef FEAT_SCROLLBIND
 	diffwin |= wp->w_p_diff;
-#endif
     }
 
-#ifdef FEAT_SCROLLBIND
+    /* Also remove hidden buffers from the list. */
+    if (eap->forceit)
+	diff_buf_clear();
+
     /* Remove "hor" from from 'scrollopt' if there are no diff windows left. */
     if (!diffwin && vim_strchr(p_sbo, 'h') != NULL)
 	do_cmdline_cmd((char_u *)"set sbo-=hor");
-#endif
 }
 
 /*
@@ -1627,6 +1637,40 @@ diff_equal_entry(diff_T *dp, int idx1, int idx2)
 }
 
 /*
+ * Compare the characters at "p1" and "p2".  If they are equal (possibly
+ * ignoring case) return TRUE and set "len" to the number of bytes.
+ */
+    static int
+diff_equal_char(char_u *p1, char_u *p2, int *len)
+{
+#ifdef FEAT_MBYTE
+    int l  = (*mb_ptr2len)(p1);
+
+    if (l != (*mb_ptr2len)(p2))
+	return FALSE;
+    if (l > 1)
+    {
+	if (STRNCMP(p1, p2, l) != 0
+		&& (!enc_utf8
+		    || !(diff_flags & DIFF_ICASE)
+		    || utf_fold(utf_ptr2char(p1))
+						!= utf_fold(utf_ptr2char(p2))))
+	    return FALSE;
+	*len = l;
+    }
+    else
+#endif
+    {
+	if ((*p1 != *p2)
+		&& (!(diff_flags & DIFF_ICASE)
+		    || TOLOWER_LOC(*p1) != TOLOWER_LOC(*p2)))
+	    return FALSE;
+	*len = 1;
+    }
+    return TRUE;
+}
+
+/*
  * Compare strings "s1" and "s2" according to 'diffopt'.
  * Return non-zero when they are different.
  */
@@ -1634,9 +1678,7 @@ diff_equal_entry(diff_T *dp, int idx1, int idx2)
 diff_cmp(char_u *s1, char_u *s2)
 {
     char_u	*p1, *p2;
-#ifdef FEAT_MBYTE
     int		l;
-#endif
 
     if ((diff_flags & (DIFF_ICASE | DIFF_IWHITE)) == 0)
 	return STRCMP(s1, s2);
@@ -1648,37 +1690,17 @@ diff_cmp(char_u *s1, char_u *s2)
     p2 = s2;
     while (*p1 != NUL && *p2 != NUL)
     {
-	if (vim_iswhite(*p1) && vim_iswhite(*p2))
+	if (VIM_ISWHITE(*p1) && VIM_ISWHITE(*p2))
 	{
 	    p1 = skipwhite(p1);
 	    p2 = skipwhite(p2);
 	}
 	else
 	{
-#ifdef FEAT_MBYTE
-	    l  = (*mb_ptr2len)(p1);
-	    if (l != (*mb_ptr2len)(p2))
+	    if (!diff_equal_char(p1, p2, &l))
 		break;
-	    if (l > 1)
-	    {
-		if (STRNCMP(p1, p2, l) != 0
-			&& (!enc_utf8
-			    || !(diff_flags & DIFF_ICASE)
-			    || utf_fold(utf_ptr2char(p1))
-					       != utf_fold(utf_ptr2char(p2))))
-		    break;
-		p1 += l;
-		p2 += l;
-	    }
-	    else
-#endif
-	    {
-		if (*p1 != *p2 && (!(diff_flags & DIFF_ICASE)
-				     || TOLOWER_LOC(*p1) != TOLOWER_LOC(*p2)))
-		    break;
-		++p1;
-		++p2;
-	    }
+	    p1 += l;
+	    p2 += l;
 	}
     }
 
@@ -1878,6 +1900,11 @@ diffopt_changed(void)
 	    p += 11;
 	    diff_foldcolumn_new = getdigits(&p);
 	}
+	else if (STRNCMP(p, "hiddenoff", 9) == 0)
+	{
+	    p += 9;
+	    diff_flags_new |= DIFF_HIDDEN_OFF;
+	}
 	if (*p != ',' && *p != NUL)
 	    return FAIL;
 	if (*p == ',')
@@ -1916,6 +1943,15 @@ diffopt_horizontal(void)
 }
 
 /*
+ * Return TRUE if 'diffopt' contains "hiddenoff".
+ */
+    int
+diffopt_hiddenoff(void)
+{
+    return (diff_flags & DIFF_HIDDEN_OFF) != 0;
+}
+
+/*
  * Find the difference within a changed line.
  * Returns TRUE if the line was added, no other buffer has it.
  */
@@ -1935,6 +1971,8 @@ diff_find_change(
     int		idx;
     int		off;
     int		added = TRUE;
+    char_u	*p1, *p2;
+    int		l;
 
     /* Make a copy of the line, the next ml_get() will invalidate it. */
     line_org = vim_strsave(ml_get_buf(wp->w_buffer, lnum, FALSE));
@@ -1975,18 +2013,19 @@ diff_find_change(
 	    while (line_org[si_org] != NUL)
 	    {
 		if ((diff_flags & DIFF_IWHITE)
-			&& vim_iswhite(line_org[si_org])
-			&& vim_iswhite(line_new[si_new]))
+			&& VIM_ISWHITE(line_org[si_org])
+			&& VIM_ISWHITE(line_new[si_new]))
 		{
 		    si_org = (int)(skipwhite(line_org + si_org) - line_org);
 		    si_new = (int)(skipwhite(line_new + si_new) - line_new);
 		}
 		else
 		{
-		    if (line_org[si_org] != line_new[si_new])
+		    if (!diff_equal_char(line_org + si_org, line_new + si_new,
+									   &l))
 			break;
-		    ++si_org;
-		    ++si_new;
+		    si_org += l;
+		    si_new += l;
 		}
 	    }
 #ifdef FEAT_MBYTE
@@ -2010,22 +2049,28 @@ diff_find_change(
 						&& ei_org >= 0 && ei_new >= 0)
 		{
 		    if ((diff_flags & DIFF_IWHITE)
-			    && vim_iswhite(line_org[ei_org])
-			    && vim_iswhite(line_new[ei_new]))
+			    && VIM_ISWHITE(line_org[ei_org])
+			    && VIM_ISWHITE(line_new[ei_new]))
 		    {
 			while (ei_org >= *startp
-					     && vim_iswhite(line_org[ei_org]))
+					     && VIM_ISWHITE(line_org[ei_org]))
 			    --ei_org;
 			while (ei_new >= si_new
-					     && vim_iswhite(line_new[ei_new]))
+					     && VIM_ISWHITE(line_new[ei_new]))
 			    --ei_new;
 		    }
 		    else
 		    {
-			if (line_org[ei_org] != line_new[ei_new])
+			p1 = line_org + ei_org;
+			p2 = line_new + ei_new;
+#ifdef FEAT_MBYTE
+			p1 -= (*mb_head_off)(line_org, p1);
+			p2 -= (*mb_head_off)(line_new, p2);
+#endif
+			if (!diff_equal_char(p1, p2, &l))
 			    break;
-			--ei_org;
-			--ei_new;
+			ei_org -= l;
+			ei_new -= l;
 		    }
 		}
 		if (*endp < ei_org)
@@ -2183,7 +2228,7 @@ ex_diffgetput(exarg_T *eap)
     {
 	/* Buffer number or pattern given.  Ignore trailing white space. */
 	p = eap->arg + STRLEN(eap->arg);
-	while (p > eap->arg && vim_iswhite(p[-1]))
+	while (p > eap->arg && VIM_ISWHITE(p[-1]))
 	    --p;
 	for (i = 0; vim_isdigit(eap->arg[i]) && eap->arg + i < p; ++i)
 	    ;
@@ -2314,7 +2359,7 @@ ex_diffgetput(exarg_T *eap)
 		    end_skip = 0;
 	    }
 
-	    buf_empty = bufempty();
+	    buf_empty = BUFEMPTY();
 	    added = 0;
 	    for (i = 0; i < count; ++i)
 	    {
@@ -2524,21 +2569,22 @@ diff_move_to(int dir, long count)
     return OK;
 }
 
-    linenr_T
-diff_get_corresponding_line(
+/*
+ * Return the line number in the current window that is closest to "lnum1" in
+ * "buf1" in diff mode.
+ */
+    static linenr_T
+diff_get_corresponding_line_int(
     buf_T	*buf1,
-    linenr_T	lnum1,
-    buf_T	*buf2,
-    linenr_T	lnum3)
+    linenr_T	lnum1)
 {
     int		idx1;
     int		idx2;
     diff_T	*dp;
     int		baseline = 0;
-    linenr_T	lnum2;
 
     idx1 = diff_buf_idx(buf1);
-    idx2 = diff_buf_idx(buf2);
+    idx2 = diff_buf_idx(curbuf);
     if (idx1 == DB_COUNT || idx2 == DB_COUNT || curtab->tp_first_diff == NULL)
 	return lnum1;
 
@@ -2551,15 +2597,8 @@ diff_get_corresponding_line(
     for (dp = curtab->tp_first_diff; dp != NULL; dp = dp->df_next)
     {
 	if (dp->df_lnum[idx1] > lnum1)
-	{
-	    lnum2 = lnum1 - baseline;
-	    /* don't end up past the end of the file */
-	    if (lnum2 > buf2->b_ml.ml_line_count)
-		lnum2 = buf2->b_ml.ml_line_count;
-
-	    return lnum2;
-	}
-	else if ((dp->df_lnum[idx1] + dp->df_count[idx1]) > lnum1)
+	    return lnum1 - baseline;
+	if ((dp->df_lnum[idx1] + dp->df_count[idx1]) > lnum1)
 	{
 	    /* Inside the diffblock */
 	    baseline = lnum1 - dp->df_lnum[idx1];
@@ -2568,10 +2607,11 @@ diff_get_corresponding_line(
 
 	    return dp->df_lnum[idx2] + baseline;
 	}
-	else if (   (dp->df_lnum[idx1] == lnum1)
-		 && (dp->df_count[idx1] == 0)
-		 && (dp->df_lnum[idx2] <= lnum3)
-		 && ((dp->df_lnum[idx2] + dp->df_count[idx2]) > lnum3))
+	if (    (dp->df_lnum[idx1] == lnum1)
+	     && (dp->df_count[idx1] == 0)
+	     && (dp->df_lnum[idx2] <= curwin->w_cursor.lnum)
+	     && ((dp->df_lnum[idx2] + dp->df_count[idx2])
+						      > curwin->w_cursor.lnum))
 	    /*
 	     * Special case: if the cursor is just after a zero-count
 	     * block (i.e. all filler) and the target cursor is already
@@ -2579,21 +2619,30 @@ diff_get_corresponding_line(
 	     * unmoved. This makes repeated CTRL-W W operations work
 	     * as expected.
 	     */
-	    return lnum3;
+	    return curwin->w_cursor.lnum;
 	baseline = (dp->df_lnum[idx1] + dp->df_count[idx1])
 				   - (dp->df_lnum[idx2] + dp->df_count[idx2]);
     }
 
     /* If we get here then the cursor is after the last diff */
-    lnum2 = lnum1 - baseline;
-    /* don't end up past the end of the file */
-    if (lnum2 > buf2->b_ml.ml_line_count)
-	lnum2 = buf2->b_ml.ml_line_count;
-
-    return lnum2;
+    return lnum1 - baseline;
 }
 
-#if defined(FEAT_FOLDING) || defined(PROTO)
+/*
+ * Return the line number in the current window that is closest to "lnum1" in
+ * "buf1" in diff mode.  Checks the line number to be valid.
+ */
+    linenr_T
+diff_get_corresponding_line(buf_T *buf1, linenr_T lnum1)
+{
+    linenr_T lnum = diff_get_corresponding_line_int(buf1, lnum1);
+
+    /* don't end up past the end of the file */
+    if (lnum > curbuf->b_ml.ml_line_count)
+	return curbuf->b_ml.ml_line_count;
+    return lnum;
+}
+
 /*
  * For line "lnum" in the current window find the equivalent lnum in window
  * "wp", compensating for inserted/deleted lines.
@@ -2633,6 +2682,5 @@ diff_lnum_win(linenr_T lnum, win_T *wp)
 	n = dp->df_lnum[i] + dp->df_count[i];
     return n;
 }
-#endif
 
 #endif	/* FEAT_DIFF */

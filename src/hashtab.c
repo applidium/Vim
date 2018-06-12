@@ -70,7 +70,6 @@ hash_init(hashtab_T *ht)
     ht->ht_mask = HT_INIT_SIZE - 1;
 }
 
-#if defined(FEAT_EVAL) || defined(FEAT_SYN_HL) || defined(PROTO)
 /*
  * Free the array of a hash table.  Does not free the items it contains!
  * If "ht" is not freed then you should call hash_init() next!
@@ -104,7 +103,6 @@ hash_clear_all(hashtab_T *ht, int off)
     }
     hash_clear(ht);
 }
-#endif
 
 /*
  * Find "key" in hashtable "ht".  "key" must not be NULL.
@@ -210,7 +208,7 @@ hash_add(hashtab_T *ht, char_u *key)
     hi = hash_lookup(ht, key, hash);
     if (!HASHITEM_EMPTY(hi))
     {
-	EMSG2(_(e_intern2), "hash_add()");
+	internal_error("hash_add()");
 	return FAIL;
     }
     return hash_add_item(ht, hi, key, hash);

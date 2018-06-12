@@ -45,7 +45,7 @@ void gui_mch_draw_part_cursor (int w, int h, guicolor_T color);
 void gui_mch_set_blinking (long wait, long on, long off);
 int gui_mch_is_blink_off(void);
 void gui_mch_start_blink (void);
-void gui_mch_stop_blink (void);
+void gui_mch_stop_blink (int may_call_gui_update_cursor);
 void gui_mch_getmouse (int *x, int *y);
 void gui_mch_setmouse (int x, int y);
 void mch_set_mouse_shape (int shape);

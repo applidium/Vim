@@ -4,8 +4,6 @@
 #
 # Author: Bill McCarthy
 #
-# Note that test54 has been removed until it is fixed.
-#
 # Requires a set of Unix tools: echo, diff, etc.
 
 ifneq (sh.exe, $(SHELL))
@@ -33,9 +31,6 @@ include Make_all.mak
 # Omitted:
 # test2		"\\tmp" doesn't work.
 # test10	'errorformat' is different
-# test12	can't unlink a swap file
-# test25	uses symbolic link
-# test54	doesn't work yet
 # test97	\{ and \$ are not escaped characters
 
 SCRIPTS = $(SCRIPTS_ALL) $(SCRIPTS_MORE1) $(SCRIPTS_MORE4) $(SCRIPTS_WIN32)
@@ -66,10 +61,9 @@ win32:	fixff nolog $(SCRIPTS_FIRST) $(SCRIPTS) $(SCRIPTS_WIN32) newtests
 
 # TODO: find a way to avoid changing the distributed files.
 fixff:
-	-$(VIMPROG) -u dos.vim $(NO_PLUGIN) "+argdo set ff=dos|upd" +q *.in *.ok
-	-$(VIMPROG) -u dos.vim $(NO_PLUGIN) "+argdo set ff=unix|upd" +q \
-		dotest.in test60.ok test71.ok test74.ok test_listchars.ok \
-		test_getcwd.ok test_wordcount.ok
+	-$(VIMPROG) -u dos.vim $(NO_INITS) "+argdo set ff=dos|upd" +q *.in *.ok
+	-$(VIMPROG) -u dos.vim $(NO_INITS) "+argdo set ff=unix|upd" +q \
+		dotest.in
 
 clean:
 	-@if exist *.out $(DEL) *.out
@@ -84,19 +78,22 @@ clean:
 	-@if exist lua.vim $(DEL) lua.vim
 	-@if exist Xdir1 $(DELDIR) Xdir1
 	-@if exist Xfind $(DELDIR) Xfind
+	-@if exist XfakeHOME $(DELDIR) XfakeHOME
 	-@if exist X* $(DEL) X*
 	-@if exist viminfo $(DEL) viminfo
 	-@if exist test.log $(DEL) test.log
 	-@if exist messages $(DEL) messages
+	-@if exist opt_test.vim $(DEL) opt_test.vim
 
 .in.out:
 	-@if exist $*.ok $(CP) $*.ok test.ok
-	$(VIMPROG) -u dos.vim $(NO_PLUGIN) -s dotest.in $*.in
+	$(VIMPROG) -u dos.vim $(NO_INITS) -s dotest.in $*.in
 	@diff test.out $*.ok
 	-@if exist $*.out $(DEL) $*.out
 	@$(MV) test.out $*.out
 	-@if exist Xdir1 $(DELDIR) Xdir1
 	-@if exist Xfind $(DELDIR) Xfind
+	-@if exist XfakeHOME $(DELDIR) XfakeHOME
 	-@if exist X* $(DEL) X*
 	-@if exist test.ok $(DEL) test.ok
 	-@if exist viminfo $(DEL) viminfo
@@ -107,7 +104,7 @@ nolog:
 
 bench_re_freeze.out: bench_re_freeze.vim
 	-$(DEL) benchmark.out
-	$(VIMPROG) -u dos.vim $(NO_PLUGIN) $*.in
+	$(VIMPROG) -u dos.vim $(NO_INITS) $*.in
 	$(CAT) benchmark.out
 
 # New style of tests uses Vim script with assert calls.  These are easier
@@ -117,7 +114,19 @@ bench_re_freeze.out: bench_re_freeze.vim
 newtests: $(NEW_TESTS)
 
 .vim.res:
-	@echo "$(VIMPROG)" > vimcmd
-	$(VIMPROG) -u NONE $(NO_PLUGIN) -S runtest.vim $*.vim
+	@echo $(VIMPROG) > vimcmd
+	$(VIMPROG) -u NONE $(NO_INITS) -S runtest.vim $*.vim
 	@$(DEL) vimcmd
 
+test_gui.res: test_gui.vim
+	@echo $(VIMPROG) > vimcmd
+	$(VIMPROG) -u NONE $(NO_INITS) -S runtest.vim $<
+	@$(DEL) vimcmd
+
+test_gui_init.res: test_gui_init.vim
+	@echo $(VIMPROG) > vimcmd
+	$(VIMPROG) -u gui_preinit.vim -U gui_init.vim $(NO_PLUGINS) -S runtest.vim $<
+	@$(DEL) vimcmd
+
+opt_test.vim: ../option.c gen_opt_test.vim
+	$(VIMPROG) -u NONE -S gen_opt_test.vim --noplugin --not-a-term ../option.c

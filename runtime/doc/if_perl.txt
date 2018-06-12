@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 8.0.  Last change: 2015 Oct 16
+*if_perl.txt*   For Vim version 8.1.  Last change: 2017 Nov 24
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -7,7 +7,7 @@
 Perl and Vim				*perl* *Perl*
 
 1. Editing Perl files			|perl-editing|
-2. Compiling VIM with Perl interface	|perl-compiling|
+2. Compiling Vim with Perl interface	|perl-compiling|
 3. Using the Perl interface		|perl-using|
 4. Dynamic loading			|perl-dynamic|
 
@@ -33,7 +33,7 @@ Vim in the $VIMRUNTIME/tools directory.  This script has currently more
 features than Exuberant ctags' Perl support.
 
 ==============================================================================
-2. Compiling VIM with Perl interface			*perl-compiling*
+2. Compiling Vim with Perl interface			*perl-compiling*
 
 To compile Vim with Perl interface, you need Perl 5.004 (or later).  Perl must
 be installed before you compile Vim.  Vim's Perl interface does NOT work with
@@ -112,7 +112,7 @@ possible.
 Here is an overview of the functions that are available to Perl: >
 
   :perl VIM::Msg("Text")		# displays a message
-  :perl VIM::Msg("Error", "ErrorMsg")	# displays an error message
+  :perl VIM::Msg("Wrong!", "ErrorMsg")	# displays an error message
   :perl VIM::Msg("remark", "Comment")	# displays a highlighted message
   :perl VIM::SetOption("ai")		# sets a vim option
   :perl $nbuf = VIM::Buffers()		# returns the number of buffers

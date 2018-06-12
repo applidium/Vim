@@ -8,20 +8,23 @@
  */
 
 /*
- * os_macosx.m -- Mac specific things for Mac OS/X.
+ * os_macosx.m -- Mac specific things for Mac OS X.
  */
 
-#ifndef MACOS_X_UNIX
-    Error: MACOS 9 is no longer supported in Vim 7
+/* Suppress compiler warnings to non-C89 code. */
+#if defined(__clang__) && defined(__STRICT_ANSI__)
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wc99-extensions"
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeclaration-after-statement"
 #endif
 
 /* Avoid a conflict for the definition of Boolean between Mac header files and
  * X11 header files. */
 #define NO_X11_INCLUDES
-#define BalloonEval int   /* used in header files */
 
 #include "vim.h"
-#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
 
 /*
@@ -194,3 +197,9 @@ releasepool:
 }
 
 #endif /* FEAT_CLIPBOARD */
+
+/* Lift the compiler warning suppression. */
+#if defined(__clang__) && defined(__STRICT_ANSI__)
+# pragma clang diagnostic pop
+# pragma clang diagnostic pop
+#endif

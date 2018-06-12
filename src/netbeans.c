@@ -107,7 +107,7 @@ netbeans_close(void)
 	nb_channel = NULL;
     }
 
-#ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL_GUI
     bevalServers &= ~BEVAL_NETBEANS;
 #endif
 
@@ -121,14 +121,7 @@ netbeans_close(void)
     update_screen(CLEAR);
     setcursor();
     cursor_on();
-    out_flush();
-#ifdef FEAT_GUI
-    if (gui.in_use)
-    {
-	gui_update_cursor(TRUE, FALSE);
-	gui_mch_flush();
-    }
-#endif
+    out_flush_cursor(TRUE, FALSE);
 }
 
 #define NB_DEF_HOST "localhost"
@@ -220,7 +213,7 @@ netbeans_connect(char *params, int doabort)
 	if (nb_channel != NULL)
 	{
 	    /* success */
-# ifdef FEAT_BEVAL
+# ifdef FEAT_BEVAL_GUI
 	    bevalServers |= BEVAL_NETBEANS;
 # endif
 
@@ -587,8 +580,7 @@ nb_free(void)
 	    buf.bufp->b_was_netbeans_file = FALSE;
 	}
     }
-    vim_free(buf_list);
-    buf_list = NULL;
+    VIM_CLEAR(buf_list);
     buf_list_size = 0;
     buf_list_used = 0;
 
@@ -1484,8 +1476,7 @@ nb_do_cmd(
 		EMSG("E636: invalid buffer identifier in create");
 		return FAIL;
 	    }
-	    vim_free(buf->displayname);
-	    buf->displayname = NULL;
+	    VIM_CLEAR(buf->displayname);
 
 	    netbeansReadFile = 0; /* don't try to open disk file */
 	    do_ecmd(0, NULL, 0, 0, ECMD_ONE, ECMD_HIDE + ECMD_OLDBUF, curwin);
@@ -1590,9 +1581,7 @@ nb_do_cmd(
 	    do_update = 1;
 	    buf->initDone = TRUE;
 	    nb_set_curbuf(buf->bufp);
-#if defined(FEAT_AUTOCMD)
 	    apply_autocmds(EVENT_BUFREADPOST, 0, 0, FALSE, buf->bufp);
-#endif
 
 	    /* handle any postponed key commands */
 	    handle_key_queue();
@@ -1754,10 +1743,8 @@ nb_do_cmd(
 	    buf->modified = buf->bufp->b_changed;
 	    if (prev_b_changed != buf->bufp->b_changed)
 	    {
-#ifdef FEAT_WINDOWS
 		check_status(buf->bufp);
 		redraw_tabline = TRUE;
-#endif
 #ifdef FEAT_TITLE
 		maketitle();
 #endif
@@ -1790,7 +1777,7 @@ nb_do_cmd(
 	}
 	else if (streq((char *)cmd, "showBalloon"))
 	{
-#if defined(FEAT_BEVAL)
+#if defined(FEAT_BEVAL_GUI)
 	    static char	*text = NULL;
 
 	    /*
@@ -1850,14 +1837,8 @@ nb_do_cmd(
 	    update_screen(VALID);
 	    setcursor();
 	    cursor_on();
-	    out_flush();
-#ifdef FEAT_GUI
-	    if (gui.in_use)
-	    {
-		gui_update_cursor(TRUE, FALSE);
-		gui_mch_flush();
-	    }
-#endif
+	    out_flush_cursor(TRUE, FALSE);
+
 	    /* Quit a hit-return or more prompt. */
 	    if (State == HITRETURN || State == ASKMORE)
 	    {
@@ -2156,7 +2137,7 @@ nb_do_cmd(
 	else if (streq((char *)cmd, "save"))
 	{
 	    /*
-	     * NOTE - This command is obsolete wrt NetBeans. Its left in
+	     * NOTE - This command is obsolete wrt NetBeans. It's left in
 	     * only for historical reasons.
 	     */
 	    if (buf == NULL || buf->bufp == NULL)
@@ -2177,17 +2158,13 @@ nb_do_cmd(
 #endif
 			)
 		{
-#ifdef FEAT_AUTOCMD
 		    bufref_T bufref;
 
 		    set_bufref(&bufref, buf->bufp);
-#endif
 		    buf_write_all(buf->bufp, FALSE);
-#ifdef FEAT_AUTOCMD
 		    /* an autocommand may have deleted the buffer */
 		    if (!bufref_valid(&bufref))
 			buf->bufp = NULL;
-#endif
 		}
 	    }
 	    else
@@ -2242,7 +2219,7 @@ nb_do_cmd(
 
     /*
      * Is this needed? I moved the netbeans_Xt_connect() later during startup
-     * and it may no longer be necessary. If its not needed then needupdate
+     * and it may no longer be necessary. If it's not needed then needupdate
      * and do_update can also be removed.
      */
     if (buf != NULL && buf->initDone && do_update)
@@ -2250,14 +2227,8 @@ nb_do_cmd(
 	update_screen(NOT_VALID);
 	setcursor();
 	cursor_on();
-	out_flush();
-#ifdef FEAT_GUI
-	if (gui.in_use)
-	{
-	    gui_update_cursor(TRUE, FALSE);
-	    gui_mch_flush();
-	}
-#endif
+	out_flush_cursor(TRUE, FALSE);
+
 	/* Quit a hit-return or more prompt. */
 	if (State == HITRETURN || State == ASKMORE)
 	{
@@ -2283,10 +2254,8 @@ nb_set_curbuf(buf_T *buf)
     if (curbuf != buf) {
 	if (buf_jump_open_win(buf) != NULL)
 	    return;
-# ifdef FEAT_WINDOWS
 	if ((swb_flags & SWB_USETAB) && buf_jump_open_tab(buf) != NULL)
 	    return;
-# endif
 	set_curbuf(buf, DOBUF_GOTO);
     }
 }
@@ -2301,7 +2270,7 @@ coloncmd(char *cmd, ...)
     va_list ap;
 
     va_start(ap, cmd);
-    vim_vsnprintf(buf, sizeof(buf), cmd, ap, NULL);
+    vim_vsnprintf(buf, sizeof(buf), cmd, ap);
     va_end(ap);
 
     nbdebug(("    COLONCMD %s\n", buf));
@@ -2311,15 +2280,7 @@ coloncmd(char *cmd, ...)
 /*     ALT_INPUT_LOCK_OFF; */
 
     setcursor();		/* restore the cursor position */
-    out_flush();		/* make sure output has been written */
-
-#ifdef FEAT_GUI
-    if (gui.in_use)
-    {
-	gui_update_cursor(TRUE, FALSE);
-	gui_mch_flush();
-    }
-#endif
+    out_flush_cursor(TRUE, FALSE);
 }
 
 
@@ -2332,7 +2293,8 @@ special_keys(char_u *args)
     char *save_str = nb_unquote(args, NULL);
     char *tok = strtok(save_str, " ");
     char *sep;
-    char keybuf[64];
+#define KEYBUFLEN 64
+    char keybuf[KEYBUFLEN];
     char cmdbuf[256];
 
     while (tok != NULL)
@@ -2359,10 +2321,13 @@ special_keys(char_u *args)
 	    tok++;
 	}
 
-	strcpy(&keybuf[i], tok);
-	vim_snprintf(cmdbuf, sizeof(cmdbuf),
-				"<silent><%s> :nbkey %s<CR>", keybuf, keybuf);
-	do_map(0, (char_u *)cmdbuf, NORMAL, FALSE);
+	if (strlen(tok) + i < KEYBUFLEN)
+	{
+	    strcpy(&keybuf[i], tok);
+	    vim_snprintf(cmdbuf, sizeof(cmdbuf),
+				 "<silent><%s> :nbkey %s<CR>", keybuf, keybuf);
+	    do_map(0, (char_u *)cmdbuf, NORMAL, FALSE);
+	}
 	tok = strtok(NULL, " ");
     }
     vim_free(save_str);
@@ -2506,7 +2471,7 @@ netbeans_beval_cb(
 
     /* Don't do anything when 'ballooneval' is off, messages scrolled the
      * windows up or we have no connection. */
-    if (!p_beval || msg_scrolled > 0 || !NETBEANS_OPEN)
+    if (!can_use_beval() || !NETBEANS_OPEN)
 	return;
 
     if (get_beval_info(beval, TRUE, &wp, &lnum, &text, &col) == OK)
@@ -2569,14 +2534,7 @@ netbeans_open(char *params, int doabort)
     update_screen(CLEAR);
     setcursor();
     cursor_on();
-    out_flush();
-#ifdef FEAT_GUI
-    if (gui.in_use)
-    {
-	gui_update_cursor(TRUE, FALSE);
-	gui_mch_flush();
-    }
-#endif
+    out_flush_cursor(TRUE, FALSE);
 }
 
 /*
@@ -2697,7 +2655,7 @@ netbeans_file_opened(buf_T *bufp)
     nbdebug(("EVT: %s", buffer));
 
     nb_send(buffer, "netbeans_file_opened");
-    if (p_acd && vim_chdirfile(bufp->b_ffname) == OK)
+    if (p_acd && vim_chdirfile(bufp->b_ffname, "auto") == OK)
 	shorten_fnames(TRUE);
 }
 
@@ -2856,7 +2814,7 @@ netbeans_unmodified(buf_T *bufp UNUSED)
 }
 
 /*
- * Send a button release event back to netbeans. Its up to netbeans
+ * Send a button release event back to netbeans. It's up to netbeans
  * to decide what to do (if anything) with this event.
  */
     void
@@ -2872,7 +2830,7 @@ netbeans_button_release(int button)
 
     if (bufno >= 0 && curwin != NULL && curwin->w_buffer == curbuf)
     {
-	int col = mouse_col - W_WINCOL(curwin)
+	int col = mouse_col - curwin->w_wincol
 			      - ((curwin->w_p_nu || curwin->w_p_rnu) ? 9 : 1);
 	long off = pos2off(curbuf, &curwin->w_cursor);
 
@@ -3453,7 +3411,7 @@ pos2off(buf_T *buf, pos_T *pos)
 
 
 /*
- * This message is printed after NetBeans opens a new file. Its
+ * This message is printed after NetBeans opens a new file. It's
  * similar to the message readfile() uses, but since NetBeans
  * doesn't normally call readfile, we do our own.
  */
@@ -3481,8 +3439,7 @@ print_read_msg(nbbuf_T *buf)
     msg_add_lines(c, (long)lnum, nchars);
 
     /* Now display it */
-    vim_free(keep_msg);
-    keep_msg = NULL;
+    VIM_CLEAR(keep_msg);
     msg_scrolled_ign = TRUE;
     msg_trunc_attr(IObuff, FALSE, 0);
     msg_scrolled_ign = FALSE;
@@ -3509,8 +3466,7 @@ print_save_msg(nbbuf_T *buf, off_T nchars)
 	msg_add_lines(c, buf->bufp->b_ml.ml_line_count,
 						buf->bufp->b_orig_size);
 
-	vim_free(keep_msg);
-	keep_msg = NULL;
+	VIM_CLEAR(keep_msg);
 	msg_scrolled_ign = TRUE;
 	p = msg_trunc_attr(IObuff, FALSE, 0);
 	if ((msg_scrolled && !need_wait_return) || !buf->initDone)
