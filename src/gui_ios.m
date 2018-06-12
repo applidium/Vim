@@ -447,7 +447,11 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
-    CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+    CGFloat scale = [UIScreen mainScreen].scale;
+    CGPoint point = CGPointMake((destinationRect.origin.x - sourceRect.origin.x) * scale,
+                                (destinationRect.origin.y - sourceRect.origin.y) * scale);
+    CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
+    CGContextDrawLayerAtPoint(context, point, layer);
     gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, destinationRect);
     CGContextRestoreGState(context);
 }
