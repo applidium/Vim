@@ -65,6 +65,19 @@
 		7A8CAA27147FAC1600908FBE /* runtime in Resources */ = {isa = PBXBuildFile; fileRef = 7A7B1FA6142FBE2E00A537BD /* runtime */; };
 		7A8CAA28147FAC2E00908FBE /* vimrc in Resources */ = {isa = PBXBuildFile; fileRef = 7A8CAA1D147FA3D100908FBE /* vimrc */; };
 		7A9DD4E5142CC10600B8F464 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A9DD4E4142CC10600B8F464 /* CoreText.framework */; };
+		871BF38120CFCC6C0013E295 /* evalfunc.c in Sources */ = {isa = PBXBuildFile; fileRef = 871BF38020CFCC6C0013E295 /* evalfunc.c */; };
+		871BF38820CFCCBD0013E295 /* farsi.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF38320CFCCBC0013E295 /* farsi.pro */; };
+		871BF38920CFCCBD0013E295 /* arabic.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF38420CFCCBC0013E295 /* arabic.pro */; };
+		871BF38A20CFCCBD0013E295 /* userfunc.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF38520CFCCBD0013E295 /* userfunc.pro */; };
+		871BF38B20CFCCBD0013E295 /* list.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF38620CFCCBD0013E295 /* list.pro */; };
+		871BF38C20CFCCBD0013E295 /* dict.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF38720CFCCBD0013E295 /* dict.pro */; };
+		871BF39020CFCD240013E295 /* list.c in Sources */ = {isa = PBXBuildFile; fileRef = 871BF38D20CFCD240013E295 /* list.c */; };
+		871BF39120CFCD240013E295 /* userfunc.c in Sources */ = {isa = PBXBuildFile; fileRef = 871BF38E20CFCD240013E295 /* userfunc.c */; };
+		871BF39220CFCD240013E295 /* dict.c in Sources */ = {isa = PBXBuildFile; fileRef = 871BF38F20CFCD240013E295 /* dict.c */; };
+		871BF39320CFCD900013E295 /* farsi.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B831422932F00075221 /* farsi.c */; };
+		871BF39520CFCDE20013E295 /* spellfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 871BF39420CFCDE10013E295 /* spellfile.c */; };
+		871BF39720CFCDF40013E295 /* spellfile.pro in Resources */ = {isa = PBXBuildFile; fileRef = 871BF39620CFCDF40013E295 /* spellfile.pro */; };
+		871BF39820CFCE0D0013E295 /* arabic.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A992B5C1422932F00075221 /* arabic.c */; };
 		EC8336781F4B2AED0068351A /* crypt_zip.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336761F4B2AED0068351A /* crypt_zip.c */; };
 		EC8336791F4B2AED0068351A /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = EC8336771F4B2AED0068351A /* crypt.c */; };
 		EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */ = {isa = PBXBuildFile; fileRef = EC83367A1F4B2B040068351A /* crypt_zip.pro */; };
@@ -630,6 +643,18 @@
 		7A9DD4E4142CC10600B8F464 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		7AE20BB2142B8D7E00848B40 /* ios_info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ios_info.plist; sourceTree = "<group>"; };
 		7AE20BB3142B8D7E00848B40 /* ios_prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_prefix.pch; sourceTree = "<group>"; };
+		871BF38020CFCC6C0013E295 /* evalfunc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = evalfunc.c; sourceTree = "<group>"; };
+		871BF38220CFCC810013E295 /* evalfunc.pro */ = {isa = PBXFileReference; lastKnownFileType = text; path = evalfunc.pro; sourceTree = "<group>"; };
+		871BF38320CFCCBC0013E295 /* farsi.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = farsi.pro; sourceTree = "<group>"; };
+		871BF38420CFCCBC0013E295 /* arabic.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = arabic.pro; sourceTree = "<group>"; };
+		871BF38520CFCCBD0013E295 /* userfunc.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = userfunc.pro; sourceTree = "<group>"; };
+		871BF38620CFCCBD0013E295 /* list.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = list.pro; sourceTree = "<group>"; };
+		871BF38720CFCCBD0013E295 /* dict.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dict.pro; sourceTree = "<group>"; };
+		871BF38D20CFCD240013E295 /* list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = list.c; sourceTree = "<group>"; };
+		871BF38E20CFCD240013E295 /* userfunc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = userfunc.c; sourceTree = "<group>"; };
+		871BF38F20CFCD240013E295 /* dict.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dict.c; sourceTree = "<group>"; };
+		871BF39420CFCDE10013E295 /* spellfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spellfile.c; sourceTree = "<group>"; };
+		871BF39620CFCDF40013E295 /* spellfile.pro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = spellfile.pro; sourceTree = "<group>"; };
 		EC8336751F4B2AED0068351A /* alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alloc.h; sourceTree = "<group>"; };
 		EC8336761F4B2AED0068351A /* crypt_zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt_zip.c; sourceTree = "<group>"; };
 		EC8336771F4B2AED0068351A /* crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt.c; sourceTree = "<group>"; };
@@ -715,6 +740,7 @@
 				7A992B6B1422932F00075221 /* blowfish.c */,
 				7A992B6C1422932F00075221 /* buffer.c */,
 				7A992B6D1422932F00075221 /* charset.c */,
+				871BF38F20CFCD240013E295 /* dict.c */,
 				7A992B751422932F00075221 /* diff.c */,
 				7A992B761422932F00075221 /* digraph.c */,
 				7A992B781422932F00075221 /* dlldata.c */,
@@ -722,6 +748,7 @@
 				7A992B7A1422932F00075221 /* dosinst.h */,
 				7A992B7B1422932F00075221 /* edit.c */,
 				7A992B7C1422932F00075221 /* eval.c */,
+				871BF38020CFCC6C0013E295 /* evalfunc.c */,
 				7A992B7D1422932F00075221 /* ex_cmds.c */,
 				7A992B7E1422932F00075221 /* ex_cmds.h */,
 				7A992B7F1422932F00075221 /* ex_cmds2.c */,
@@ -789,6 +816,7 @@
 				7A992BD91422932F00075221 /* integration.c */,
 				7A992BDA1422932F00075221 /* integration.h */,
 				7A992BDF1422932F00075221 /* keymap.h */,
+				871BF38D20CFCD240013E295 /* list.c */,
 				7A992BE21422932F00075221 /* macros.h */,
 				7A992BE41422932F00075221 /* main.c */,
 				7A992BF61422932F00075221 /* mark.c */,
@@ -857,6 +885,7 @@
 				7A992CF11422932F00075221 /* search.c */,
 				7A992CF21422932F00075221 /* sha256.c */,
 				7A992CF31422932F00075221 /* spell.c */,
+				871BF39420CFCDE10013E295 /* spellfile.c */,
 				7A992CF41422932F00075221 /* structs.h */,
 				7A992CF51422932F00075221 /* swis.s */,
 				7A992CF61422932F00075221 /* syntax.c */,
@@ -875,6 +904,7 @@
 				7A992DBD1422932F00075221 /* ui.c */,
 				7A992DBE1422932F00075221 /* undo.c */,
 				7A992DBF1422932F00075221 /* uninstal.c */,
+				871BF38E20CFCD240013E295 /* userfunc.c */,
 				7A992DC01422932F00075221 /* version.c */,
 				7A992DC11422932F00075221 /* version.h */,
 				7A992DC31422932F00075221 /* vim.def */,
@@ -991,19 +1021,23 @@
 				EC83367B1F4B2B040068351A /* crypt.pro */,
 				EC83367C1F4B2B040068351A /* gui_gtk_gresources.pro */,
 				EC83367D1F4B2B040068351A /* os_beos.pro */,
+				871BF38420CFCCBC0013E295 /* arabic.pro */,
 				7A992C991422932F00075221 /* blowfish.pro */,
 				7A31B10E142BA1CE006D816D /* gui_ios.pro */,
 				7A992C9A1422932F00075221 /* buffer.pro */,
 				7A992C9B1422932F00075221 /* charset.pro */,
+				871BF38720CFCCBD0013E295 /* dict.pro */,
 				7A992C9C1422932F00075221 /* diff.pro */,
 				7A992C9D1422932F00075221 /* digraph.pro */,
 				7A992C9E1422932F00075221 /* edit.pro */,
 				7A992C9F1422932F00075221 /* eval.pro */,
+				871BF38220CFCC810013E295 /* evalfunc.pro */,
 				7A992CA01422932F00075221 /* ex_cmds.pro */,
 				7A992CA11422932F00075221 /* ex_cmds2.pro */,
 				7A992CA21422932F00075221 /* ex_docmd.pro */,
 				7A992CA31422932F00075221 /* ex_eval.pro */,
 				7A992CA41422932F00075221 /* ex_getln.pro */,
+				871BF38320CFCCBC0013E295 /* farsi.pro */,
 				7A992CA51422932F00075221 /* fileio.pro */,
 				7A992CA61422932F00075221 /* fold.pro */,
 				7A992CA71422932F00075221 /* getchar.pro */,
@@ -1033,6 +1067,7 @@
 				7A992CBF1422932F00075221 /* if_ruby.pro */,
 				7A992CC01422932F00075221 /* if_tcl.pro */,
 				7A992CC11422932F00075221 /* if_xcmdsrv.pro */,
+				871BF38620CFCCBD0013E295 /* list.pro */,
 				7A992CC21422932F00075221 /* main.pro */,
 				7A992CC31422932F00075221 /* mark.pro */,
 				7A992CC41422932F00075221 /* mbyte.pro */,
@@ -1064,12 +1099,14 @@
 				7A992CDE1422932F00075221 /* search.pro */,
 				7A992CDF1422932F00075221 /* sha256.pro */,
 				7A992CE01422932F00075221 /* spell.pro */,
+				871BF39620CFCDF40013E295 /* spellfile.pro */,
 				7A992CE11422932F00075221 /* syntax.pro */,
 				7A992CE21422932F00075221 /* tag.pro */,
 				7A992CE31422932F00075221 /* term.pro */,
 				7A992CE41422932F00075221 /* termlib.pro */,
 				7A992CE51422932F00075221 /* ui.pro */,
 				7A992CE61422932F00075221 /* undo.pro */,
+				871BF38520CFCCBD0013E295 /* userfunc.pro */,
 				7A992CE71422932F00075221 /* version.pro */,
 				7A992CE81422932F00075221 /* window.pro */,
 				7A992CE91422932F00075221 /* workshop.pro */,
@@ -1400,13 +1437,19 @@
 			files = (
 				EC83367E1F4B2B040068351A /* crypt_zip.pro in Resources */,
 				F84E4F221F4DF33000D0774E /* Images.xcassets in Resources */,
+				871BF38820CFCCBD0013E295 /* farsi.pro in Resources */,
 				EC8336951F4B33C70068351A /* json.pro in Resources */,
 				7A8CAA27147FAC1600908FBE /* runtime in Resources */,
 				EC83367F1F4B2B040068351A /* crypt.pro in Resources */,
 				EC83369E1F4DB3C00068351A /* LaunchScreen.xib in Resources */,
+				871BF38B20CFCCBD0013E295 /* list.pro in Resources */,
+				871BF38920CFCCBD0013E295 /* arabic.pro in Resources */,
 				EC8336801F4B2B040068351A /* gui_gtk_gresources.pro in Resources */,
 				EC8336941F4B33C70068351A /* channel.pro in Resources */,
 				7A8CAA28147FAC2E00908FBE /* vimrc in Resources */,
+				871BF39720CFCDF40013E295 /* spellfile.pro in Resources */,
+				871BF38A20CFCCBD0013E295 /* userfunc.pro in Resources */,
+				871BF38C20CFCCBD0013E295 /* dict.pro in Resources */,
 				EC8336811F4B2B040068351A /* os_beos.pro in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1429,9 +1472,12 @@
 				7A68CAFF14229E440019E159 /* popupmnu.c in Sources */,
 				7A68CB0014229E440019E159 /* pty.c in Sources */,
 				7A68CB0114229E440019E159 /* quickfix.c in Sources */,
+				871BF39020CFCD240013E295 /* list.c in Sources */,
+				871BF39320CFCD900013E295 /* farsi.c in Sources */,
 				7A68CB0214229E440019E159 /* regexp.c in Sources */,
 				7A68CB0314229E440019E159 /* screen.c in Sources */,
 				7A68CB0414229E440019E159 /* search.c in Sources */,
+				871BF39220CFCD240013E295 /* dict.c in Sources */,
 				7A68CB0514229E440019E159 /* sha256.c in Sources */,
 				7A68CB0614229E440019E159 /* spell.c in Sources */,
 				7A68CB0714229E440019E159 /* syntax.c in Sources */,
@@ -1447,9 +1493,12 @@
 				7A68CAEA142295830019E159 /* gui.c in Sources */,
 				7A68CAEB142295830019E159 /* hardcopy.c in Sources */,
 				7A68CAEC142295830019E159 /* hashtab.c in Sources */,
+				871BF39820CFCE0D0013E295 /* arabic.c in Sources */,
 				7A68CAED142295830019E159 /* if_cscope.c in Sources */,
+				871BF38120CFCC6C0013E295 /* evalfunc.c in Sources */,
 				7A68CAEE142295830019E159 /* main.c in Sources */,
 				7A68CAEF142295830019E159 /* mark.c in Sources */,
+				871BF39520CFCDE20013E295 /* spellfile.c in Sources */,
 				7A68CAF0142295830019E159 /* mbyte.c in Sources */,
 				7A68CAF1142295830019E159 /* memfile.c in Sources */,
 				7A68CAF2142295830019E159 /* memline.c in Sources */,
@@ -1457,6 +1506,7 @@
 				7A68CAF3142295830019E159 /* menu.c in Sources */,
 				7A68CAF4142295830019E159 /* message.c in Sources */,
 				EC83368F1F4B33B80068351A /* channel.c in Sources */,
+				871BF39120CFCD240013E295 /* userfunc.c in Sources */,
 				7A68CAF5142295830019E159 /* misc1.c in Sources */,
 				7A68CAF6142295830019E159 /* misc2.c in Sources */,
 				7A68CAF7142295830019E159 /* move.c in Sources */,
