@@ -2110,6 +2110,8 @@ cursor({lnum}, {col} [, {off}])
 cursor({list})			Number	move cursor to position in {list}
 deepcopy({expr} [, {noref}])	any	make a full copy of {expr}
 delete({fname} [, {flags}])	Number	delete the file or directory {fname}
+deletebufline({expr}, {first}[, {last}])
+				Number	delete lines from buffer {expr}
 did_filetype()			Number	|TRUE| if FileType autocmd event used
 diff_filler({lnum})		Number	diff filler lines about {lnum}
 diff_hlID({lnum}, {col})	Number	diff highlighting at {lnum}/{col}
@@ -2294,6 +2296,9 @@ perleval({expr})		any	evaluate |Perl| expression
 pow({x}, {y})			Float	{x} to the power of {y}
 prevnonblank({lnum})		Number	line nr of non-blank line <= {lnum}
 printf({fmt}, {expr1}...)	String	format text
+prompt_addtext({buf}, {expr})	none	add text to a prompt buffer
+prompt_setprompt({buf}, {text}) none	set prompt text
+prompt_setcallback({buf}, {expr}) none	set prompt callback function
 pumvisible()			Number	whether popup menu is visible
 pyeval({expr})			any	evaluate |Python| expression
 py3eval({expr})			any	evaluate |python3| expression
@@ -2302,6 +2307,8 @@ range({expr} [, {max} [, {stride}]])
 				List	items from {expr} to {max}
 readfile({fname} [, {binary} [, {max}]])
 				List	get list of lines from file {fname}
+reg_executing()			String	get the executing register name
+reg_recording()			String	get the recording register name
 reltime([{start} [, {end}]])	List	get time value
 reltimefloat({time})		Float	turn the time value into a Float
 reltimestr({time})		String	turn time value into a String
@@ -2555,6 +2562,21 @@ append({lnum}, {expr})					*append()*
 		0 for success.  Example: >
 			:let failed = append(line('$'), "# THE END")
 			:let failed = append(0, ["Chapter 1", "the beginning"])
+
+appendbufline({expr}, {lnum}, {text})			*appendbufline()*
+		Like |append()| but append the text in buffer {expr}.
+
+		For the use of {expr}, see |bufname()|.
+
+		{lnum} is used like with |append()|.  Note that using |line()|
+		would use the current buffer, not the one appending to.
+		Use "$" to append at the end of the buffer.
+
+		On success 0 is returned, on failure 1 is returned.
+
+		If {expr} is not a valid buffer or {lnum} is not valid, an
+		error message is given. Example: >
+			:let failed = appendbufline(13, 0, "# THE START")
 <
 							*argc()*
 argc()		The result is the number of files in the argument list of the
@@ -3497,8 +3519,19 @@ delete({fname} [, {flags}])					*delete()*
 		successful and -1 when the deletion failed or partly failed.
 
 		Use |remove()| to delete an item from a |List|.
-		To delete a line from the buffer use |:delete|.  Use |:exe|
-		when the line number is in a variable.
+		To delete a line from the buffer use |:delete| or
+		|deletebufline()|.
+
+deletebufline({expr}, {first}[, {last}])		*deletebufline()*
+		Delete lines {first} to {last} (inclusive) from buffer {expr}.
+		If {last} is omitted then delete line {first} only.
+		On success 0 is returned, on failure 1 is returned.
+
+		For the use of {expr}, see |bufname()| above.
+
+		{first} and {last} are used like with |setline()|. Note that
+		when using |line()| this refers to the current buffer. Use "$"
+		to refer to the last line in buffer {expr}.
 
 							*did_filetype()*
 did_filetype()	Returns |TRUE| when autocommands are being executed and the
@@ -4648,7 +4681,7 @@ getline({lnum} [, {end}])
 		from the current buffer.  Example: >
 			getline(1)
 <		When {lnum} is a String that doesn't start with a
-		digit, line() is called to translate the String into a Number.
+		digit, |line()| is called to translate the String into a Number.
 		To get the line under the cursor: >
 			getline(".")
 <		When {lnum} is smaller than 1 or bigger than the number of
@@ -5820,7 +5853,8 @@ maparg({name} [, {mode} [, {abbr} [, {dict}]]])			*maparg()*
 		listing.
 
 		When there is no mapping for {name}, an empty String is
-		returned.
+		returned.  When the mapping for {name} is empty, then "<Nop>"
+		is returned.
 
 		The {name} can have special key names, like in the ":map"
 		command.
@@ -5887,9 +5921,10 @@ mapcheck({name} [, {mode} [, {abbr}]])			*mapcheck()*
 		mapping that matches with {name}, while maparg() only finds a
 		mapping for {name} exactly.
 		When there is no mapping that starts with {name}, an empty
-		String is returned.  If there is one, the rhs of that mapping
+		String is returned.  If there is one, the RHS of that mapping
 		is returned.  If there are several mappings that start with
-		{name}, the rhs of one of them is returned.
+		{name}, the RHS of one of them is returned.  This will be
+		"<Nop>" if the RHS is empty.
 		The mappings local to the current buffer are checked first,
 		then the global mappings.
 		This function can be used to check if a mapping can be added
@@ -6471,6 +6506,42 @@ printf({fmt}, {expr1} ...)				*printf()*
 		arguments an error is given.  Up to 18 arguments can be used.
 
 
+prompt_setprompt({buf}, {text})				*prompt_setprompt()*
+		Set prompt for buffer {buf} to {text}.  You most likely want
+		{text} to end in a space.
+		The result is only visible if {buf} has 'buftype' set to
+		"prompt".  Example: >
+			call prompt_setprompt(bufnr(''), 'command: ')
+
+
+prompt_setcallback({buf}, {expr})			*prompt_setcallback()*
+		Set prompt callback for buffer {buf} to {expr}.  This has only
+		effect if {buf} has 'buftype' set to "prompt".
+		The callback is invoked when pressing Enter.  The current
+		buffer will always be the prompt buffer.  A new line for a
+		prompt is added before invoking the callback, thus the prompt
+		for which the callback was invoked will be in the last but one
+		line.
+		If the callback wants to add text to the buffer, it must
+		insert it above the last line, since that is where the current
+		prompt is.  This can also be done asynchronously.
+		The callback is invoked with one argument, which is the text
+		that was entered at the prompt.  This can be an empty string
+		if the user only typed Enter.
+		Example: >
+		   call prompt_setcallback(bufnr(''), function('s:TextEntered'))
+		   func s:TextEntered(text)
+		     if a:text == 'exit' || a:text == 'quit'
+		       stopinsert
+		       close
+		     else
+		       call append(line('$') - 1, 'Entered: "' . a:text . '"')
+		       " Reset 'modified' to allow the buffer to be closed.
+		       set nomodified
+		     endif
+		   endfunc
+
+
 pumvisible()						*pumvisible()*
 		Returns non-zero when the popup menu is visible, zero
 		otherwise.  See |ins-completion-menu|.
@@ -6557,6 +6628,15 @@ readfile({fname} [, {binary} [, {max}]])
 		When the file can't be opened an error message is given and
 		the result is an empty list.
 		Also see |writefile()|.
+
+reg_executing()						*reg_executing()*
+		Returns the single letter name of the register being executed.
+		Returns an empty string when no register is being executed.
+		See |@|.
+
+reg_recording()						*reg_recording()*
+		Returns the single letter name of the register being recorded.
+		Returns an empty string string when not recording.  See |q|.
 
 reltime([{start} [, {end}]])				*reltime()*
 		Return an item that represents a time value.  The format of
@@ -9121,22 +9201,16 @@ There are four types of features:
     Example: >
 	:if has("gui_running")
 <							*has-patch*
-3.  Included patches.  The "patch123" feature means that patch 123 has been
-    included.  Note that this form does not check the version of Vim, you need
-    to inspect |v:version| for that.
-    Example (checking version 6.2.148 or later): >
-	:if v:version > 602 || v:version == 602 && has("patch148")
-<    Note that it's possible for patch 147 to be omitted even though 148 is
-    included.
-
-4.  Beyond a certain version or at a certain version and including a specific
-    patch.  The "patch-7.4.237" feature means that the Vim version is 7.5 or
-    later, or it is version 7.4 and patch 237 was included.
-    Note that this only works for patch 7.4.237 and later, before that you
-    need to use the example above that checks v:version.  Example: >
+3.  Beyond a certain version or at a certain version and including a specific
+    patch.  The "patch-7.4.248" feature means that the Vim version is 7.5 or
+    later, or it is version 7.4 and patch 248 was included.  Example: >
 	:if has("patch-7.4.248")
-<    Note that it's possible for patch 147 to be omitted even though 148 is
-    included.
+<    Note that it's possible for patch 248 to be omitted even though 249 is
+    included.  Only happens when cherry-picking patches.
+    Note that this form only works for patch 7.4.237 and later, before that
+    you need to check for the patch and the  v:version.  Example (checking
+    version 6.2.148 or later): >
+	:if v:version > 602 || (v:version == 602 && has("patch148"))
 
 Hint: To find out if Vim supports backslashes in a file name (MS-Windows),
 use: `if exists('+shellslash')`

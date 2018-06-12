@@ -527,7 +527,7 @@ func! Test_edit_CTRL_I()
   " Tab in completion mode
   let path=expand("%:p:h")
   new
-  call setline(1, [path."/", ''])
+  call setline(1, [path. "/", ''])
   call feedkeys("Arunt\<c-x>\<c-f>\<tab>\<cr>\<esc>", 'tnix')
   call assert_match('runtest\.vim', getline(1))
   %d
@@ -1387,3 +1387,17 @@ func Test_edit_quit()
   only
 endfunc
 
+func Test_edit_alt()
+  " Keeping the cursor line didn't happen when the first line has indent.
+  new
+  call setline(1, ['  one', 'two', 'three'])
+  w XAltFile
+  $
+  call assert_equal(3, line('.'))
+  e Xother
+  e #
+  call assert_equal(3, line('.'))
+
+  bwipe XAltFile
+  call delete('XAltFile')
+endfunc
