@@ -437,13 +437,13 @@ enum blink_state {
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
     CGContextRef context = CGLayerGetContext(layer);
-    
+
     CGRect destinationRect = targetRect;
     destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
     destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
-    
+
     CGContextSaveGState(context);
-    
+
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
