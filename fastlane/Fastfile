@@ -1,0 +1,102 @@
+import_from_git(url: 'ssh://git@codereview.technologies.fabernovel.com:29418/ADFastlane',
+                path: 'Fastfile_ios.rb',
+                branch: 'feature/v6_2')
+
+override_lane :get_default_build_variant do
+  lane_context[:BUILD_VARIANT] = 'vimDistribution'
+end
+
+override_lane :get_project_configuration do
+  {
+    xcworkspace: 'Vim.xcworkspace',
+    xcodeproj: 'Vim.xcodeproj'
+  }
+end
+
+override_lane :get_variants_build_configurations do
+  {
+    'vimDebug' => {
+      scheme: 'Vim',
+      xcode_configuration: 'Debug',
+      target_name: 'Vim'
+    },
+    'vimDistribution' => {
+      scheme: 'Vim',
+      xcode_configuration: 'Distribution',
+      target_name: 'Vim'
+    }
+  }
+end
+
+override_lane :get_variants_to_build_on_ci do |options|
+  case options[:commit_type]
+  when 'merge'
+    variants = ['vimDebug']
+  when 'release'
+    variants = ['vimDebug']
+  else
+    variants = ['vimDebug']
+  end
+  variants
+end
+
+override_lane :get_variants_codesign_configurations do
+  CODESIGN_CONFIGURATION =  {
+    bundles: ["com.applidium.Vim"],
+    fabernovel_bundles: ["com.applidium.Vim"],
+    provisioning_profile_templates: nil,
+    local_provisioning_profile_names: nil,
+    match_configuration: {
+      apple_id: "fastlane@fabernovel.com",
+      apple_id_password: lane_context[:ALL_CLI_OPTIONS][:apple_password],
+      team_id: "LL36D6ZV57",
+      team_name: "APPLIDIUM",
+      git_repository: "ssh://ci@codereview.technologies.fabernovel.com:29418/ADSigningAssets",
+      git_branch: "master",
+      git_password: lane_context[:ALL_CLI_OPTIONS][:match_password],
+    }
+  }
+  {
+    'vimDebug' => CODESIGN_CONFIGURATION,
+    'vimDistribution' => CODESIGN_CONFIGURATION
+  }
+end
+
+override_lane :get_variants_itunes_connect_configurations do
+  {
+    'vimDistribution' => {
+      apple_id: "fastlane@fabernovel.com",
+      apple_id_password: lane_context[:ALL_CLI_OPTIONS][:itc_password],
+      team_id: "221586",
+      team_name: 'APPLIDIUM',
+      itc_provider: "RomainGOYET12118548"
+    }
+  }
+end
+
+override_lane :get_variants_hockeyapp_configurations do
+  HOCKEYAPP_API_TOKEN = 'f2c0bd7767da492ca34c14684864a6e9'
+
+  {
+    'vimDistribution' => { api_token: HOCKEYAPP_API_TOKEN, public_identifier: nil } # Avoid sharing it on github. Pass it through CLI.
+  }
+end
+
+override_lane :get_project_tests_configurations do
+  {}
+end
+
+override_lane :get_test_configurations_for_ci do
+  {}
+end
+
+override_lane :get_appstore_screenshots_test_configuration do
+  {}
+end
+
+override_lane :get_slack_configuration do
+  {
+    channel: 'ad-vim',
+    slack_url: nil
+  }
+end
