@@ -1,0 +1,2 @@
+Vim is a text editor first released publicly in 1991. Based on the vi editor common to Unix-like systems, Vim is designed for use both from a command line interface and as a standalone application in a graphical user interface. Vim is free and open source software and is released under a license which includes some charityware clauses, encouraging users who enjoy the software to consider donating to children in Uganda. 
+https://vim.sourceforge.io/about.php
