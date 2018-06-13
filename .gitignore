@@ -63,6 +63,8 @@ src/xxd/xxd.dSYM
 *.xcodeproj/*.perspectivev3
 *.xcodeproj/project.xcworkspace/
 *.xcodeproj/xcuserdata/
+**.xcuserstate
+**IDEWorkspaceChecks.plist
 
 # All platforms
 *.rej
@@ -92,3 +94,30 @@ src/memfile_test
 src/json_test
 src/message_test
 src/kword_test
+
+##Fastlane
+# fastlane specific
+fastlane/report.xml
+
+# deliver temporary files
+fastlane/Preview.html
+
+# snapshot generated screenshots
+fastlane/screenshots
+
+# scan temporary files
+fastlane/test_output
+
+#fastlane bundler
+fastlane/Gemfile
+fastlane/Gemfile.lock
+fastlane/.bundle/config
+
+#fastlane plugins
+Pluginfile_fastlane
+Gemfile_fastlane
+Gemfile_fastlane.lock
+
+#fastlane build artifacts
+/build
+/derived_data
