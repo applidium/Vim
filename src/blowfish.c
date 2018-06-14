@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -34,11 +34,11 @@ typedef union {
     char_u   uc[8];
 } block8;
 
-#if defined(WIN3264) || defined(DOS32) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
+#if defined(WIN3264) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
   /* MS-Windows is always little endian */
 #else
 # ifdef HAVE_CONFIG_H
-   /* in configure.in AC_C_BIGENDIAN() defines WORDS_BIGENDIAN when needed */
+   /* in configure.ac AC_C_BIGENDIAN() defines WORDS_BIGENDIAN when needed */
 # else
    error!
    Please change this code to define WORDS_BIGENDIAN for big-endian machines.
@@ -426,7 +426,7 @@ bf_key_init(
     keylen = (int)STRLEN(key) / 2;
     if (keylen == 0)
     {
-	EMSG(_("E831: bf_key_init() called with empty password"));
+	IEMSG(_("E831: bf_key_init() called with empty password"));
 	return;
     }
     for (i = 0; i < keylen; i++)

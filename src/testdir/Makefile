@@ -4,6 +4,7 @@
 
 # Use console or GUI.
 VIMPROG = ../vim
+XXDPROG = ../xxd/xxd
 # VIMPROG = ../gvim
 
 SCRIPTSOURCE = ../../runtime
@@ -12,7 +13,7 @@ SCRIPTSOURCE = ../../runtime
 #   The output goes into a file "valgrind.testN"
 #   Vim should be compiled with EXITFREE to avoid false warnings.
 #   This will make testing about 10 times as slow.
-# VALGRIND = valgrind --tool=memcheck --leak-check=yes --num-callers=15 --log-file=valgrind.$*
+# VALGRIND = valgrind --tool=memcheck --leak-check=yes --num-callers=25 --log-file=valgrind.$*
 
 default: nongui
 
@@ -24,7 +25,6 @@ include Make_all.mak
 SCRIPTS = $(SCRIPTS_ALL) \
 	  $(SCRIPTS_MORE1) \
 	  $(SCRIPTS_MORE2) \
-	  $(SCRIPTS_MORE3) \
 	  $(SCRIPTS_MORE4)
 
 SCRIPTS_BENCH = bench_re_freeze.out
@@ -52,10 +52,10 @@ $(SCRIPTS) $(SCRIPTS_GUI) $(NEW_TESTS): $(SCRIPTS_FIRST)
 
 RM_ON_RUN = test.out X* viminfo
 RM_ON_START = tiny.vim small.vim mbyte.vim mzscheme.vim lua.vim test.ok benchmark.out
-RUN_VIM = VIMRUNTIME=$(SCRIPTSOURCE); export VIMRUNTIME; $(VALGRIND) $(VIMPROG) -f -u unix.vim -U NONE --noplugin -s dotest.in
+RUN_VIM = VIMRUNTIME=$(SCRIPTSOURCE); export VIMRUNTIME; $(VALGRIND) $(VIMPROG) -f $(GUI_FLAG) -u unix.vim $(NO_INITS) -s dotest.in
 
 clean:
-	-rm -rf *.out *.failed *.res *.rej *.orig test.log messages $(RM_ON_RUN) $(RM_ON_START) valgrind.*
+	-rm -rf *.out *.failed *.res *.rej *.orig opt_test.vim test.log messages $(RM_ON_RUN) $(RM_ON_START) valgrind.*
 
 test1.out: test1.in
 	-rm -rf $*.failed $(RM_ON_RUN) $(RM_ON_START) wrongtermsize
@@ -78,16 +78,16 @@ test1.out: test1.in
 	# 200 msec is sufficient, but only modern sleep supports a fraction of
 	# a second, fall back to a second if it fails.
 	@-/bin/sh -c "sleep .2 > /dev/null 2>&1 || sleep 1"
-	-$(RUN_VIM) $*.in
+	$(RUN_VIM) $*.in
 
-	# For flaky tests retry one time.
-	@/bin/sh -c "if test -f test.out -a $* = test61; then \
-		  if diff test.out $*.ok; \
-		  then echo flaky test ok first time; \
-		  else rm -rf $*.failed $(RM_ON_RUN); \
-			$(RUN_VIM) $*.in; \
-		  fi \
-		fi"
+	# For flaky tests retry one time.  No tests at the moment.
+	#@/bin/sh -c "if test -f test.out -a $* = test61; then \
+	#	  if diff test.out $*.ok; \
+	#	  then echo flaky test ok first time; \
+	#	  else rm -rf $*.failed $(RM_ON_RUN); \
+	#		$(RUN_VIM) $*.in; \
+	#	  fi \
+	#	fi"
 
 	# Check if the test.out file matches test.ok.
 	@/bin/sh -c "if test -f test.out; then \
@@ -108,7 +108,7 @@ bench_re_freeze.out: bench_re_freeze.vim
 	# 200 msec is sufficient, but only modern sleep supports a fraction of
 	# a second, fall back to a second if it fails.
 	@-/bin/sh -c "sleep .2 > /dev/null 2>&1 || sleep 1"
-	-$(RUN_VIM) $*.in
+	$(RUN_VIM) $*.in
 	@/bin/sh -c "if test -f benchmark.out; then cat benchmark.out; fi"
 
 nolog:
@@ -118,13 +118,34 @@ nolog:
 # New style of tests uses Vim script with assert calls.  These are easier
 # to write and a lot easier to read and debug.
 # Limitation: Only works with the +eval feature.
-RUN_VIMTEST = VIMRUNTIME=$(SCRIPTSOURCE); export VIMRUNTIME; $(VALGRIND) $(VIMPROG) -f -u unix.vim -U NONE --noplugin
+RUN_VIMTEST = VIMRUNTIME=$(SCRIPTSOURCE); export VIMRUNTIME; $(VALGRIND) $(VIMPROG) -f $(GUI_FLAG) -u unix.vim
 
 newtests: newtestssilent
-	@/bin/sh -c "if test -f messages && grep -q 'FAILED' messages; then cat messages && cat test.log; fi"
+	@/bin/sh -c "if test -f messages && grep -q 'SKIPPED\|FAILED' messages; then cat messages && if test -f test.log; then cat test.log; fi ; fi"
 
 newtestssilent: $(NEW_TESTS)
 
 
-.vim.res:
-	$(RUN_VIMTEST) -u NONE -U NONE -S runtest.vim $*.vim
+.vim.res: writevimcmd
+	@echo "$(VIMPROG)" > vimcmd
+	@echo "$(RUN_VIMTEST)" >> vimcmd
+	$(RUN_VIMTEST) $(NO_INITS) -S runtest.vim $*.vim
+	@rm vimcmd
+
+test_gui.res: test_gui.vim
+	@echo "$(VIMPROG)" > vimcmd
+	@echo "$(RUN_GVIMTEST)" >> vimcmd
+	$(RUN_VIMTEST) -u NONE $(NO_INITS) -S runtest.vim $<
+	@rm vimcmd
+
+test_gui_init.res: test_gui_init.vim
+	@echo "$(VIMPROG)" > vimcmd
+	@echo "$(RUN_GVIMTEST_WITH_GVIMRC)" >> vimcmd
+	$(RUN_VIMTEST) -u gui_preinit.vim -U gui_init.vim $(NO_PLUGINS) -S runtest.vim $<
+	@rm vimcmd
+
+opt_test.vim: ../option.c gen_opt_test.vim
+	$(VIMPROG) -u NONE -S gen_opt_test.vim --noplugin --not-a-term ../option.c
+
+test_xxd.res:
+	XXD=$(XXDPROG); export XXD; $(RUN_VIMTEST) $(NO_INITS) -S runtest.vim test_xxd.vim

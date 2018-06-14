@@ -30,9 +30,9 @@ DOCS = \
 	filetype.txt \
 	fold.txt \
 	ft_ada.txt \
+	ft_rust.txt \
 	ft_sql.txt \
 	gui.txt \
-	gui_w16.txt \
 	gui_w32.txt \
 	gui_x11.txt \
 	hangulin.txt \
@@ -101,6 +101,7 @@ DOCS = \
 	tabpage.txt \
 	tagsrch.txt \
 	term.txt \
+	terminal.txt \
 	tips.txt \
 	todo.txt \
 	uganda.txt \
@@ -143,6 +144,7 @@ DOCS = \
 	version5.txt \
 	version6.txt \
 	version7.txt \
+	version8.txt \
 	vi_diff.txt \
 	visual.txt \
 	windows.txt \
@@ -165,9 +167,9 @@ HTMLS = \
 	filetype.html \
 	fold.html \
 	ft_ada.html \
+	ft_rust.html \
 	ft_sql.html \
 	gui.html \
-	gui_w16.html \
 	gui_w32.html \
 	gui_x11.html \
 	hangulin.html \
@@ -235,6 +237,7 @@ HTMLS = \
 	tabpage.html \
 	tagsrch.html \
 	term.html \
+	terminal.html \
 	tips.html \
 	todo.html \
 	uganda.html \
@@ -277,6 +280,7 @@ HTMLS = \
 	version5.html \
 	version6.html \
 	version7.html \
+	version8.html \
 	vi_diff.html \
 	vimindex.html \
 	visual.html \
@@ -339,7 +343,7 @@ xxd.man: xxd.1
 	nroff -man xxd.1 | sed -e s/.//g > xxd.man
 
 uganda.nsis.txt: uganda.txt
-	sed -e 's/[ 	]*\*[-a-zA-Z0-9.]*\*//g' -e 's/vim:tw=78://' \
+	sed -e 's/[ 	]*\*[-a-zA-Z0-9.]*\*//g' -e 's/vim:tw=78:.*//' \
 		uganda.txt | uniq >uganda.nsis.txt
 
 # Awk version of .txt to .html conversion.
@@ -371,6 +375,10 @@ tags.ref tags.html: tags
 perlhtml: tags $(DOCS)
 	./vim2html.pl tags $(DOCS)
 
+# Check URLs in the help with "curl".
+test_urls:
+	vim -S test_urls.vim
+
 clean:
 	-rm doctags *.html tags.ref
 
@@ -387,9 +395,6 @@ hebrew.txt:
 
 russian.txt:
 	touch russian.txt
-
-gui_w16.txt:
-	touch gui_w16.txt
 
 gui_w32.txt:
 	touch gui_w32.txt

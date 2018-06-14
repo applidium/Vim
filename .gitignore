@@ -5,6 +5,7 @@ src/xxd/xxd
 src/auto/if_perl.c
 src/auto/gui_gtk_gresources.c
 src/auto/gui_gtk_gresources.h
+src/objects/.dirstamp
 src/tags
 
 # We do need src/auto/configure.
@@ -37,6 +38,7 @@ src/pathdef.c
 src/Obj*/pathdef.c
 gvimext.dll
 gvimext.lib
+gvim.lib
 runtime/doc/uganda.nsis.txt
 
 # Borland C++
@@ -61,6 +63,8 @@ src/xxd/xxd.dSYM
 *.xcodeproj/*.perspectivev3
 *.xcodeproj/project.xcworkspace/
 *.xcodeproj/xcuserdata/
+**.xcuserstate
+**IDEWorkspaceChecks.plist
 
 # All platforms
 *.rej
@@ -85,4 +89,35 @@ src/testdir/test.log
 src/testdir/dostmp/*
 src/testdir/messages
 src/testdir/viminfo
+src/testdir/opt_test.vim
 src/memfile_test
+src/json_test
+src/message_test
+src/kword_test
+
+##Fastlane
+# fastlane specific
+fastlane/report.xml
+
+# deliver temporary files
+fastlane/Preview.html
+
+# snapshot generated screenshots
+fastlane/screenshots
+
+# scan temporary files
+fastlane/test_output
+
+#fastlane bundler
+fastlane/Gemfile
+fastlane/Gemfile.lock
+fastlane/.bundle/config
+
+#fastlane plugins
+Pluginfile_fastlane
+Gemfile_fastlane
+Gemfile_fastlane.lock
+
+#fastlane build artifacts
+/build
+/derived_data

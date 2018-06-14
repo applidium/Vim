@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -164,7 +164,7 @@ parse_printoptions(void)
 
 #if (defined(FEAT_MBYTE) && defined(FEAT_POSTSCRIPT)) || defined(PROTO)
 /*
- * Parse 'printoptions' and set the flags in "printer_opts".
+ * Parse 'printmbfont' and set the flags in "mbfont_opts".
  * Returns an error message or NULL;
  */
     char_u *
@@ -189,6 +189,8 @@ parse_list_options(
     option_table_T	*table,
     int			table_size)
 {
+    option_table_T *old_opts;
+    char_u	*ret = NULL;
     char_u	*stringp;
     char_u	*colonp;
     char_u	*commap;
@@ -196,8 +198,16 @@ parse_list_options(
     int		idx = 0;		/* init for GCC */
     int		len;
 
+    /* Save the old values, so that they can be restored in case of an error. */
+    old_opts = (option_table_T *)alloc(sizeof(option_table_T) * table_size);
+    if (old_opts == NULL)
+	return NULL;
+
     for (idx = 0; idx < table_size; ++idx)
+    {
+	old_opts[idx] = table[idx];
 	table[idx].present = FALSE;
+    }
 
     /*
      * Repeat for all comma separated parts.
@@ -207,7 +217,10 @@ parse_list_options(
     {
 	colonp = vim_strchr(stringp, ':');
 	if (colonp == NULL)
-	    return (char_u *)N_("E550: Missing colon");
+	{
+	    ret = (char_u *)N_("E550: Missing colon");
+	    break;
+	}
 	commap = vim_strchr(stringp, ',');
 	if (commap == NULL)
 	    commap = option_str + STRLEN(option_str);
@@ -219,15 +232,20 @@ parse_list_options(
 		break;
 
 	if (idx == table_size)
-	    return (char_u *)N_("E551: Illegal component");
-
+	{
+	    ret = (char_u *)N_("E551: Illegal component");
+	    break;
+	}
 	p = colonp + 1;
 	table[idx].present = TRUE;
 
 	if (table[idx].hasnum)
 	{
 	    if (!VIM_ISDIGIT(*p))
-		return (char_u *)N_("E552: digit expected");
+	    {
+		ret = (char_u *)N_("E552: digit expected");
+		break;
+	    }
 
 	    table[idx].number = getdigits(&p); /*advances p*/
 	}
@@ -240,7 +258,14 @@ parse_list_options(
 	    ++stringp;
     }
 
-    return NULL;
+    if (ret != NULL)
+    {
+	/* Restore old options in case of error */
+	for (idx = 0; idx < table_size; ++idx)
+	    table[idx] = old_opts[idx];
+    }
+    vim_free(old_opts);
+    return ret;
 }
 
 
@@ -282,8 +307,8 @@ prt_get_attr(
     pattr->underline = (highlight_has_attr(hl_id, HL_UNDERLINE, modec) != NULL);
     pattr->undercurl = (highlight_has_attr(hl_id, HL_UNDERCURL, modec) != NULL);
 
-# ifdef FEAT_GUI
-    if (gui.in_use)
+# if defined(FEAT_GUI) || defined(FEAT_TERMGUICOLORS)
+    if (USE_24BIT)
     {
 	bg_color = highlight_gui_color_rgb(hl_id, FALSE);
 	if (bg_color == PRCOLOR_BLACK)
@@ -544,7 +569,7 @@ prt_header(
 prt_message(char_u *s)
 {
     screen_fill((int)Rows - 1, (int)Rows, 0, (int)Columns, ' ', ' ', 0);
-    screen_puts(s, (int)Rows - 1, 0, hl_attr(HLF_R));
+    screen_puts(s, (int)Rows - 1, 0, HL_ATTR(HLF_R));
     out_flush();
 }
 
@@ -1741,7 +1766,7 @@ prt_find_resource(char *name, struct prt_ps_resource_S *resource)
     vim_strcat(buffer, (char_u *)name, MAXPATHL);
     vim_strcat(buffer, (char_u *)".ps", MAXPATHL);
     resource->filename[0] = NUL;
-    retval = (do_in_runtimepath(buffer, FALSE, prt_resource_name,
+    retval = (do_in_runtimepath(buffer, 0, prt_resource_name,
 							   resource->filename)
 	    && resource->filename[0] != NUL);
     vim_free(buffer);
@@ -2185,8 +2210,7 @@ mch_print_cleanup(void)
 	for (i = PRT_PS_FONT_ROMAN; i <= PRT_PS_FONT_BOLDOBLIQUE; i++)
 	{
 	    if (prt_ps_mb_font.ps_fontname[i] != NULL)
-		vim_free(prt_ps_mb_font.ps_fontname[i]);
-	    prt_ps_mb_font.ps_fontname[i] = NULL;
+		VIM_CLEAR(prt_ps_mb_font.ps_fontname[i]);
 	}
     }
 
@@ -2203,10 +2227,7 @@ mch_print_cleanup(void)
 	prt_file_error = FALSE;
     }
     if (prt_ps_file_name != NULL)
-    {
-	vim_free(prt_ps_file_name);
-	prt_ps_file_name = NULL;
-    }
+	VIM_CLEAR(prt_ps_file_name);
 }
 
     static float
@@ -3361,6 +3382,7 @@ mch_print_text_out(char_u *p, int len UNUSED)
 #ifdef FEAT_MBYTE
     int		in_ascii;
     int		half_width;
+    char_u	*tofree = NULL;
 #endif
 
     char_width = prt_char_width;
@@ -3486,19 +3508,15 @@ mch_print_text_out(char_u *p, int len UNUSED)
 
 #ifdef FEAT_MBYTE
     if (prt_do_conv)
-    {
 	/* Convert from multi-byte to 8-bit encoding */
-	p = string_convert(&prt_conv, p, &len);
-	if (p == NULL)
-	    p = (char_u *)"";
-    }
+	tofree = p = string_convert(&prt_conv, p, &len);
 
     if (prt_out_mbyte)
     {
 	/* Multi-byte character strings are represented more efficiently as hex
 	 * strings when outputting clean 8 bit PS.
 	 */
-	do
+	while (len-- > 0)
 	{
 	    ch = prt_hexchar[(unsigned)(*p) >> 4];
 	    ga_append(&prt_ps_buffer, ch);
@@ -3506,7 +3524,6 @@ mch_print_text_out(char_u *p, int len UNUSED)
 	    ga_append(&prt_ps_buffer, ch);
 	    p++;
 	}
-	while (--len);
     }
     else
 #endif
@@ -3553,8 +3570,7 @@ mch_print_text_out(char_u *p, int len UNUSED)
 
 #ifdef FEAT_MBYTE
     /* Need to free any translated characters */
-    if (prt_do_conv && (*p != NUL))
-	vim_free(p);
+    vim_free(tofree);
 #endif
 
     prt_text_run += char_width;

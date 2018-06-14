@@ -1,5 +1,5 @@
 /* option.c */
-void set_init_1(void);
+void set_init_1(int clean_arg);
 void set_string_default(char *name, char_u *val);
 void set_number_default(char *name, long val);
 void free_all_options(void);
@@ -9,6 +9,7 @@ void set_helplang_default(char_u *lang);
 void init_gui_options(void);
 void set_title_defaults(void);
 int do_set(char_u *arg, int opt_flags);
+int string_to_key(char_u *arg, int multi_byte);
 void set_options_bin(int oldval, int newval, int opt_flags);
 int get_viminfo_parameter(int type);
 char_u *find_viminfo_parameter(int type);
@@ -63,4 +64,6 @@ long get_sw_value(buf_T *buf);
 long get_sts_value(void);
 void find_mps_values(int *initc, int *findc, int *backwards, int switchit);
 unsigned int get_bkc_value(buf_T *buf);
+int signcolumn_on(win_T *wp);
+dict_T *get_winbuf_options(int bufopt);
 /* vim: set ft=c : */

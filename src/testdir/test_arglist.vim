@@ -6,6 +6,10 @@ func Test_argidx()
   call assert_equal(2, argidx())
   %argdelete
   call assert_equal(0, argidx())
+  " doing it again doesn't result in an error
+  %argdelete
+  call assert_equal(0, argidx())
+  call assert_fails('2argdelete', 'E16:')
 
   args a b c
   call assert_equal(0, argidx())
@@ -61,13 +65,19 @@ func Test_argadd()
   %argd
   edit d
   arga
-  call assert_equal(len(argv()), 1)
-  call assert_equal(get(argv(), 0, ''), 'd')
+  call assert_equal(1, len(argv()))
+  call assert_equal('d', get(argv(), 0, ''))
+
+  %argd
+  edit some\ file
+  arga
+  call assert_equal(1, len(argv()))
+  call assert_equal('some file', get(argv(), 0, ''))
 
   %argd
   new
   arga
-  call assert_equal(len(argv()), 0)
+  call assert_equal(0, len(argv()))
 endfunc
 
 func Init_abc()
@@ -86,7 +96,7 @@ endfunc
 
 " Test for [count]argument and [count]argdelete commands
 " Ported from the test_argument_count.in test script
-function Test_argument()
+func Test_argument()
   " Clean the argument list
   arga a | %argd
 
@@ -112,9 +122,9 @@ function Test_argument()
   call assert_equal(['d', 'c', 'b', 'a', 'c'], g:buffers)
 
   redir => result
-  ar
+  args
   redir END
-  call assert_true(result =~# 'a b \[c] d')
+  call assert_equal('a   b   [c] d', trim(result))
 
   .argd
   call assert_equal(['a', 'b', 'd'], argv())
@@ -158,11 +168,39 @@ function Test_argument()
 
   %argdelete
   call assert_fails('argument', 'E163:')
-endfunction
+endfunc
+
+func Test_list_arguments()
+  " Clean the argument list
+  arga a | %argd
+
+  " four args half the screen width makes two lines with two columns
+  let aarg = repeat('a', &columns / 2 - 4)
+  let barg = repeat('b', &columns / 2 - 4)
+  let carg = repeat('c', &columns / 2 - 4)
+  let darg = repeat('d', &columns / 2 - 4)
+  exe 'argadd ' aarg barg carg darg
+
+  redir => result
+  args
+  redir END
+  call assert_match('\[' . aarg . '] \+' . carg . '\n' . barg . ' \+' . darg, trim(result))
+
+  " if one arg is longer than half the screen make one column
+  exe 'argdel' aarg
+  let aarg = repeat('a', &columns / 2 + 2)
+  exe '0argadd' aarg
+  redir => result
+  args
+  redir END
+  call assert_match(aarg . '\n\[' . barg . ']\n' . carg . '\n' . darg, trim(result))
+
+  %argdelete
+endfunc
 
 " Test for 0argadd and 0argedit
 " Ported from the test_argument_0count.in test script
-function Test_zero_argadd()
+func Test_zero_argadd()
   " Clean the argument list
   arga a | %argd
 
@@ -184,22 +222,27 @@ function Test_zero_argadd()
   2argu
   arga third
   call assert_equal(['edited', 'a', 'third', 'b', 'c', 'd'], argv())
-endfunction
 
-function Reset_arglist()
+  2argu
+  argedit file\ with\ spaces another file
+  call assert_equal(['edited', 'a', 'file with spaces', 'another', 'file', 'third', 'b', 'c', 'd'], argv())
+  call assert_equal('file with spaces', expand('%'))
+endfunc
+
+func Reset_arglist()
   args a | %argd
-endfunction
+endfunc
 
 " Test for argc()
-function Test_argc()
+func Test_argc()
   call Reset_arglist()
   call assert_equal(0, argc())
   argadd a b
   call assert_equal(2, argc())
-endfunction
+endfunc
 
 " Test for arglistid()
-function Test_arglistid()
+func Test_arglistid()
   call Reset_arglist()
   arga a b
   call assert_equal(0, arglistid())
@@ -214,19 +257,19 @@ function Test_arglistid()
   tabonly | only | enew!
   argglobal
   call assert_equal(0, arglistid())
-endfunction
+endfunc
 
 " Test for argv()
-function Test_argv()
+func Test_argv()
   call Reset_arglist()
   call assert_equal([], argv())
   call assert_equal("", argv(2))
   argadd a b c d
   call assert_equal('c', argv(2))
-endfunction
+endfunc
 
 " Test for the :argedit command
-function Test_argedit()
+func Test_argedit()
   call Reset_arglist()
   argedit a
   call assert_equal(['a'], argv())
@@ -235,25 +278,52 @@ function Test_argedit()
   call assert_equal(['a', 'b'], argv())
   call assert_equal('b', expand('%:t'))
   argedit a
-  call assert_equal(['a', 'b'], argv())
+  call assert_equal(['a', 'b', 'a'], argv())
   call assert_equal('a', expand('%:t'))
-  if has('unix')
-    " on MS-Windows this would edit file "a b"
-    call assert_fails('argedit a b', 'E172:')
-  endif
+  " When file name case is ignored, an existing buffer with only case
+  " difference is re-used.
+  argedit C D
+  call assert_equal('C', expand('%:t'))
+  call assert_equal(['a', 'b', 'a', 'C', 'D'], argv())
   argedit c
-  call assert_equal(['a', 'c', 'b'], argv())
+  if has('fname_case')
+    call assert_equal(['a', 'b', 'a', 'C', 'c', 'D'], argv())
+  else
+    call assert_equal(['a', 'b', 'a', 'C', 'C', 'D'], argv())
+  endif
   0argedit x
-  call assert_equal(['x', 'a', 'c', 'b'], argv())
+  if has('fname_case')
+    call assert_equal(['x', 'a', 'b', 'a', 'C', 'c', 'D'], argv())
+  else
+    call assert_equal(['x', 'a', 'b', 'a', 'C', 'C', 'D'], argv())
+  endif
   enew! | set modified
   call assert_fails('argedit y', 'E37:')
   argedit! y
-  call assert_equal(['x', 'y', 'a', 'c', 'b'], argv())
+  if has('fname_case')
+    call assert_equal(['x', 'y', 'y', 'a', 'b', 'a', 'C', 'c', 'D'], argv())
+  else
+    call assert_equal(['x', 'y', 'y', 'a', 'b', 'a', 'C', 'C', 'D'], argv())
+  endif
   %argd
-endfunction
+  bwipe! C
+  bwipe! D
+
+  " :argedit reuses the current buffer if it is empty
+  %argd
+  " make sure to use a new buffer number for x when it is loaded
+  bw! x
+  new
+  let a = bufnr('')
+  argedit x
+  call assert_equal(a, bufnr(''))
+  call assert_equal('x', bufname(''))
+  %argd
+  bw! x
+endfunc
 
 " Test for the :argdelete command
-function Test_argdelete()
+func Test_argdelete()
   call Reset_arglist()
   args aa a aaa b bb
   argdelete a*
@@ -265,10 +335,10 @@ function Test_argdelete()
   call assert_fails('argdelete', 'E471:')
   call assert_fails('1,100argdelete', 'E16:')
   %argd
-endfunction
+endfunc
 
 " Tests for the :next, :prev, :first, :last, :rewind commands
-function Test_argpos()
+func Test_argpos()
   call Reset_arglist()
   args a b c d
   last
@@ -286,4 +356,40 @@ function Test_argpos()
   rewind
   call assert_equal(0, argidx())
   %argd
-endfunction
+endfunc
+
+" Test for autocommand that redefines the argument list, when doing ":all".
+func Test_arglist_autocmd()
+  autocmd BufReadPost Xxx2 next Xxx2 Xxx1
+  call writefile(['test file Xxx1'], 'Xxx1')
+  call writefile(['test file Xxx2'], 'Xxx2')
+  call writefile(['test file Xxx3'], 'Xxx3')
+
+  new
+  " redefine arglist; go to Xxx1
+  next! Xxx1 Xxx2 Xxx3
+  " open window for all args
+  all
+  call assert_equal('test file Xxx1', getline(1))
+  wincmd w
+  wincmd w
+  call assert_equal('test file Xxx1', getline(1))
+  " should now be in Xxx2
+  rewind
+  call assert_equal('test file Xxx2', getline(1))
+
+  autocmd! BufReadPost Xxx2
+  enew! | only
+  call delete('Xxx1')
+  call delete('Xxx2')
+  call delete('Xxx3')
+  argdelete Xxx*
+  bwipe! Xxx1 Xxx2 Xxx3
+endfunc
+
+func Test_arg_all_expand()
+  call writefile(['test file Xxx1'], 'Xx x')
+  next notexist Xx\ x runtest.vim
+  call assert_equal('notexist Xx\ x runtest.vim', expand('##'))
+  call delete('Xx x')
+endfunc

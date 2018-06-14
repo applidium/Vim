@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *				GUI support by Robert Webb
@@ -38,13 +38,12 @@ void _cdecl SaveInst(HINSTANCE hInst);
 static void (_cdecl *pSaveInst)(HINSTANCE);
 #endif
 
-/*ARGSUSED*/
     int WINAPI
 WinMain(
-    HINSTANCE	hInstance,
-    HINSTANCE	hPrevInst,
+    HINSTANCE	hInstance UNUSED,
+    HINSTANCE	hPrevInst UNUSED,
     LPSTR	lpszCmdLine,
-    int		nCmdShow)
+    int		nCmdShow UNUSED)
 {
     int		argc = 0;
     char	**argv;

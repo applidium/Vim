@@ -78,12 +78,22 @@ enum blink_state {
             CGContextBeginPath(context);
             CGContextAddRect(context, rect);
             CGContextClip(context);
+            CGFloat scale = [UIScreen mainScreen].scale;
+            CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
             CGContextDrawLayerAtPoint(context, rect.origin, gui_ios.layer);
             CGContextRestoreGState(context);
             gui_ios.dirtyRect = CGRectZero;
         }
     } else {
-        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(), CGSizeMake(1024.0f, 1024.0f), nil);
+        CGFloat shellSize = MAX(CGRectGetHeight([UIScreen mainScreen].bounds),
+                                CGRectGetWidth([UIScreen mainScreen].bounds));
+        CGFloat scale = [UIScreen mainScreen].scale;
+        shellSize *= scale;
+        gui_ios.layer = CGLayerCreateWithContext(UIGraphicsGetCurrentContext(),
+                                                 CGSizeMake(shellSize, shellSize),
+                                                 nil);
+        CGContextRef context = CGLayerGetContext(gui_ios.layer);
+        CGContextScaleCTM(context, scale, scale);
     }
 }
 
@@ -93,7 +103,6 @@ enum blink_state {
 }
 
 - (void)resizeShell {
-//    NSLog(@"Setting shell size to %d x %d", (int)self.bounds.size.width, (int)self.bounds.size.height);
     gui_resize_shell(self.bounds.size.width, self.bounds.size.height);
 }
 @end
@@ -127,17 +136,18 @@ enum blink_state {
 
 #pragma mark UIViewController
 - (void)loadView {
-    self.view = [[[UIView alloc] initWithFrame:gui_ios.window.bounds] autorelease];
-    self.view.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-
-    CGFloat statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
-        statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
-    }
-    CGFloat statusBarOffset = (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) ? 0.0f : statusBarHeight;
-    _textView = [[VimTextView alloc] initWithFrame:CGRectMake(0.0f, statusBarOffset, self.view.bounds.size.width, self.view.bounds.size.height - statusBarOffset)];
-    _textView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    self.view = [[[UIView alloc] init] autorelease];
+    _textView = [[VimTextView alloc] init];
+    _textView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_textView];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.topLayoutGuide attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeTop multiplier:1.0 constant:0.0]];
+     [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0.0]];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0.0]];
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual
+                                                             toItem:_textView attribute:NSLayoutAttributeRight multiplier:1.0 constant:0.0]];
     [_textView release];
 
     _hasBeenFlushedOnce = NO;
@@ -169,6 +179,11 @@ enum blink_state {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
                                                  name:UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController setNavigationBarHidden:YES];
 }
 
 - (void)viewDidUnload {
@@ -208,6 +223,10 @@ enum blink_state {
 
 - (UIKeyboardType)keyboardType {
     return UIKeyboardTypeDefault;
+}
+
+- (UITextAutocorrectionType)autocorrectionType {
+    return UITextAutocorrectionTypeNo;
 }
 
 #pragma mark VimViewController
@@ -330,36 +349,84 @@ enum blink_state {
 #pragma mark -
 #pragma mark VimAppDelegate
 
-@interface VimAppDelegate : NSObject <UIApplicationDelegate> {
-}
+@interface VimAppDelegate : NSObject <UIApplicationDelegate>
+@property (nonatomic, readonly, nullable) NSString * homePath;
 @end
 
 @implementation VimAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Per Apple's documentation : Performs the specified selector on the application's main thread during that thread's next run loop cycle.
+
+    NSURL* url = nil;
+    if (launchOptions && launchOptions.count) {
+        // Someone asked us to restart the application
+        // Need to extract the URL to open
+        url = [launchOptions valueForKey:UIApplicationLaunchOptionsURLKey];
+    }
+
     gui_ios.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     gui_ios.view_controller = [[VimViewController alloc] init];
-    gui_ios.window.rootViewController = gui_ios.view_controller;
+    gui_ios.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:gui_ios.view_controller];
     [gui_ios.view_controller release];
     [gui_ios.window makeKeyAndVisible];
 
-    [self performSelectorOnMainThread:@selector(_VimMain) withObject:nil waitUntilDone:NO];
+    [self performSelectorOnMainThread:@selector(_VimMain:) withObject:url waitUntilDone:NO];
     return YES;
 }
 
-- (void)_VimMain {
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    if (![gui_ios.view_controller canBecomeFirstResponder]) { return NO; }
+    NSString* urlString = url.absoluteString;
+    if (!url.isFileURL) { return NO; }
+    // Find "Documents/" in the urlString.
+    NSRange position = [urlString rangeOfString:@"Documents/"];
+    if (position.location == NSNotFound) { return NO; }
+    position.location += position.length;
+    position.length = [urlString length] - position.location;
+    NSString* fileName = [urlString substringWithRange:position];
+    char command[255];
+    sprintf(command, "tabedit %s", [fileName UTF8String]);
+    do_cmdline_cmd((char_u *)command);
+    command[0] = Ctrl_L;
+    command[1] = 0x0;
+    add_to_input_buf((char_u *)command, 1);
+    return YES;
+}
+
+- (void)_VimMain:(NSURL *)url {
     NSString * vimPath = [[NSBundle mainBundle] resourcePath];
     vim_setenv((char_u *)"VIM", (char_u *)[vimPath UTF8String]);
     vim_setenv((char_u *)"VIMRUNTIME", (char_u *)[[vimPath stringByAppendingPathComponent:@"runtime"] UTF8String]);
 
-    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    if (paths.count > 0) {
-        vim_setenv((char_u *)"HOME", (char_u *)[[paths objectAtIndex:0] UTF8String]);
-        [[NSFileManager defaultManager] changeCurrentDirectoryPath:[paths objectAtIndex:0]];
+    NSString * homePath = self.homePath;
+    if (homePath != nil) {
+        vim_setenv((char_u *)"HOME", (char_u *)homePath.UTF8String);
+        [[NSFileManager defaultManager] changeCurrentDirectoryPath:homePath];
+    }
+    char * argv[2] = { "vim", nil};
+    int numArgs = 1;
+    if (url.isFileURL && homePath != nil) {
+        NSString* urlString = url.absoluteString;
+        NSRange position = [urlString rangeOfString:homePath];
+        if (position.location != NSNotFound) {
+            position.location += position.length;
+            position.length = [urlString length] - position.location;
+            NSString * fileName = [urlString substringWithRange:position];
+            char fileNameChar[fileName.length];
+            strncpy(fileNameChar, fileName.UTF8String, fileName.length);
+            argv[1] = fileNameChar;
+            numArgs += 1;
+        }
     }
 
-    char * argv[] = { "vim" };
-    VimMain(1, argv);
+    VimMain(numArgs, argv);
+}
+
+#pragma mark - Private
+
+- (NSString *)homePath {
+    NSArray * paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    return paths.firstObject;
 }
 @end
 
@@ -370,17 +437,21 @@ enum blink_state {
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect) {
     CGContextRef context = CGLayerGetContext(layer);
-    
+
     CGRect destinationRect = targetRect;
     destinationRect.size.width = MIN(targetRect.size.width, sourceRect.size.width);
     destinationRect.size.height = MIN(targetRect.size.height, sourceRect.size.height);
-    
+
     CGContextSaveGState(context);
-    
+
     CGContextBeginPath(context);
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
-    CGContextDrawLayerAtPoint(context, CGPointMake(destinationRect.origin.x - sourceRect.origin.x, destinationRect.origin.y - sourceRect.origin.y), layer);
+    CGFloat scale = [UIScreen mainScreen].scale;
+    CGPoint point = CGPointMake((destinationRect.origin.x - sourceRect.origin.x) * scale,
+                                (destinationRect.origin.y - sourceRect.origin.y) * scale);
+    CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
+    CGContextDrawLayerAtPoint(context, point, layer);
     gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, destinationRect);
     CGContextRestoreGState(context);
 }
@@ -1106,6 +1177,12 @@ gui_mch_set_blinking(long wait, long on, long off)
 }
 
 
+    int
+gui_mch_is_blink_off(void)
+{
+    return gui_ios.blink_state == BLINK_OFF;
+}
+
 /*
  * Start the cursor blinking.  If it was already blinking, this restarts the
  * waiting time and shows the cursor.
@@ -1135,7 +1212,7 @@ gui_mch_start_blink(void)
  * Stop the cursor blinking.  Show the cursor if it wasn't shown.
  */
     void
-gui_mch_stop_blink(void)
+gui_mch_stop_blink(int may_call_gui_update_cursor)
 {
 //    printf("%s\n",__func__);  
     [gui_ios.blink_timer invalidate];

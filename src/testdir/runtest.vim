@@ -2,6 +2,11 @@
 " When the script is successful the .res file will be created.
 " Errors are appended to the test.log file.
 "
+" To execute only specific test functions, add a second argument.  It will be
+" matched against the names of the Test_ funtion.  E.g.:
+"	../vim -u NONE -S runtest.vim test_channel.vim open_delay
+" The output can be found in the "messages" file.
+"
 " The test script may contain anything, only functions that start with
 " "Test_" are special.  These will be invoked and should contain assert
 " functions.  See test_assert.vim for an example.
@@ -19,6 +24,10 @@
 "
 " If cleanup after each Test_ function is needed, define a TearDown function.
 " It will be called after each Test_ function.
+"
+" When debugging a test it can be useful to add messages to v:errors:
+" 	call add(v:errors, "this happened")
+
 
 " Without the +eval feature we can't run these tests, bail out.
 so small.vim
@@ -33,9 +42,20 @@ if &lines < 24 || &columns < 80
   cquit
 endif
 
+" Common with all tests on all systems.
+source setup.vim
+
 " For consistency run all tests with 'nocompatible' set.
 " This also enables use of line continuation.
 set nocp viminfo+=nviminfo
+
+" Use utf-8 or latin1 by default, instead of whatever the system default
+" happens to be.  Individual tests can overrule this at the top of the file.
+if has('multi_byte')
+  set encoding=utf-8
+else
+  set encoding=latin1
+endif
 
 " Avoid stopping at the "hit enter" prompt
 set nomore
@@ -47,6 +67,9 @@ lang mess C
 set shellslash
 
 let s:srcdir = expand('%:p:h:h')
+
+" Prepare for calling test_garbagecollect_now().
+let v:testing = 1
 
 " Support function: get the alloc ID by name.
 function GetAllocId(name)
@@ -63,89 +86,233 @@ function GetAllocId(name)
   return lnum - top - 1
 endfunc
 
+func RunTheTest(test)
+  echo 'Executing ' . a:test
+
+  " Avoid stopping at the "hit enter" prompt
+  set nomore
+
+  " Avoid a three second wait when a message is about to be overwritten by the
+  " mode message.
+  set noshowmode
+
+  " Clear any overrides.
+  call test_override('ALL', 0)
+
+  " Some tests wipe out buffers.  To be consistent, always wipe out all
+  " buffers.
+  %bwipe!
+
+  " The test may change the current directory. Save and restore the
+  " directory after executing the test.
+  let save_cwd = getcwd()
+
+  if exists("*SetUp")
+    try
+      call SetUp()
+    catch
+      call add(v:errors, 'Caught exception in SetUp() before ' . a:test . ': ' . v:exception . ' @ ' . v:throwpoint)
+    endtry
+  endif
+
+  call add(s:messages, 'Executing ' . a:test)
+  let s:done += 1
+
+  if a:test =~ 'Test_nocatch_'
+    " Function handles errors itself.  This avoids skipping commands after the
+    " error.
+    exe 'call ' . a:test
+  else
+    try
+      exe 'call ' . a:test
+    catch /^\cskipped/
+      call add(s:messages, '    Skipped')
+      call add(s:skipped, 'SKIPPED ' . a:test . ': ' . substitute(v:exception, '^\S*\s\+', '',  ''))
+    catch
+      call add(v:errors, 'Caught exception in ' . a:test . ': ' . v:exception . ' @ ' . v:throwpoint)
+    endtry
+  endif
+
+  if exists("*TearDown")
+    try
+      call TearDown()
+    catch
+      call add(v:errors, 'Caught exception in TearDown() after ' . a:test . ': ' . v:exception . ' @ ' . v:throwpoint)
+    endtry
+  endif
+
+  " Clear any autocommands
+  au!
+
+  " Close any extra tab pages and windows and make the current one not modified.
+  while tabpagenr('$') > 1
+    quit!
+  endwhile
+
+  while 1
+    let wincount = winnr('$')
+    if wincount == 1
+      break
+    endif
+    bwipe!
+    if wincount == winnr('$')
+      " Did not manage to close a window.
+      only!
+      break
+    endif
+  endwhile
+
+  exe 'cd ' . save_cwd
+endfunc
+
+func AfterTheTest()
+  if len(v:errors) > 0
+    let s:fail += 1
+    call add(s:errors, 'Found errors in ' . s:test . ':')
+    call extend(s:errors, v:errors)
+    let v:errors = []
+  endif
+endfunc
+
+" This function can be called by a test if it wants to abort testing.
+func FinishTesting()
+  call AfterTheTest()
+
+  " Don't write viminfo on exit.
+  set viminfo=
+
+  " Clean up files created by setup.vim
+  call delete('XfakeHOME', 'rf')
+
+  if s:fail == 0
+    " Success, create the .res file so that make knows it's done.
+    exe 'split ' . fnamemodify(g:testname, ':r') . '.res'
+    write
+  endif
+
+  if len(s:errors) > 0
+    " Append errors to test.log
+    split test.log
+    call append(line('$'), '')
+    call append(line('$'), 'From ' . g:testname . ':')
+    call append(line('$'), s:errors)
+    write
+  endif
+
+  if s:done == 0
+    let message = 'NO tests executed'
+  else
+    let message = 'Executed ' . s:done . (s:done > 1 ? ' tests' : ' test')
+  endif
+  echo message
+  call add(s:messages, message)
+  if s:fail > 0
+    let message = s:fail . ' FAILED:'
+    echo message
+    call add(s:messages, message)
+    call extend(s:messages, s:errors)
+  endif
+
+  " Add SKIPPED messages
+  call extend(s:messages, s:skipped)
+
+  " Append messages to the file "messages"
+  split messages
+  call append(line('$'), '')
+  call append(line('$'), 'From ' . g:testname . ':')
+  call append(line('$'), s:messages)
+  write
+
+  qall!
+endfunc
 
 " Source the test script.  First grab the file name, in case the script
-" navigates away.
-let testname = expand('%')
-let done = 0
-let fail = 0
-let errors = []
-let messages = []
-if expand('%') =~ 'test_viml.vim'
-  " this test has intentional errors, don't use try/catch.
+" navigates away.  g:testname can be used by the tests.
+let g:testname = expand('%')
+let s:done = 0
+let s:fail = 0
+let s:errors = []
+let s:messages = []
+let s:skipped = []
+if expand('%') =~ 'test_vimscript.vim'
+  " this test has intentional s:errors, don't use try/catch.
   source %
 else
   try
     source %
   catch
-    let fail += 1
-    call add(errors, 'Caught exception: ' . v:exception . ' @ ' . v:throwpoint)
+    let s:fail += 1
+    call add(s:errors, 'Caught exception: ' . v:exception . ' @ ' . v:throwpoint)
   endtry
 endif
+
+" Names of flaky tests.
+let s:flaky = [
+      \ 'Test_client_server()',
+      \ 'Test_close_and_exit_cb()',
+      \ 'Test_collapse_buffers()',
+      \ 'Test_communicate()',
+      \ 'Test_cwd()',
+      \ 'Test_exit_callback_interval()',
+      \ 'Test_nb_basic()',
+      \ 'Test_oneshot()',
+      \ 'Test_out_cb()',
+      \ 'Test_paused()',
+      \ 'Test_pipe_through_sort_all()',
+      \ 'Test_pipe_through_sort_some()',
+      \ 'Test_quoteplus()',
+      \ 'Test_quotestar()',
+      \ 'Test_reltime()',
+      \ 'Test_repeat_three()',
+      \ 'Test_terminal_composing_unicode()',
+      \ 'Test_terminal_noblock()',
+      \ 'Test_terminal_redir_file()',
+      \ 'Test_terminal_tmap()',
+      \ 'Test_with_partial_callback()',
+      \ ]
 
 " Locate Test_ functions and execute them.
-set nomore
 redir @q
-function /^Test_
+silent function /^Test_
 redir END
-let tests = split(substitute(@q, 'function \(\k*()\)', '\1', 'g'))
+let s:tests = split(substitute(@q, 'function \(\k*()\)', '\1', 'g'))
+
+" If there is an extra argument filter the function names against it.
+if argc() > 1
+  let s:tests = filter(s:tests, 'v:val =~ argv(1)')
+endif
 
 " Execute the tests in alphabetical order.
- for test in sort(tests)
-  if exists("*SetUp")
-    call SetUp()
-  endif
+for s:test in sort(s:tests)
+  " Silence, please!
+  set belloff=all
 
-  call add(messages, 'Executing ' . test)
-  let done += 1
-  try
-    exe 'call ' . test
-  catch
-    let fail += 1
-    call add(v:errors, 'Caught exception in ' . test . ': ' . v:exception . ' @ ' . v:throwpoint)
-  endtry
+  call RunTheTest(s:test)
 
-  if len(v:errors) > 0
-    let fail += 1
-    call add(errors, 'Found errors in ' . test . ':')
-    call extend(errors, v:errors)
+  if len(v:errors) > 0 && index(s:flaky, s:test) >= 0
+    call add(s:messages, 'Found errors in ' . s:test . ':')
+    call extend(s:messages, v:errors)
+    call add(s:messages, 'Flaky test failed, running it again')
+    let first_run = v:errors
+
+    " Flakiness is often caused by the system being very busy.  Sleep a couple
+    " of seconds to have a higher chance of succeeding the second time.
+    sleep 2
+
     let v:errors = []
+    call RunTheTest(s:test)
+    if len(v:errors) > 0
+      let second_run = v:errors
+      let v:errors = ['First run:']
+      call extend(v:errors, first_run)
+      call add(v:errors, 'Second run:')
+      call extend(v:errors, second_run)
+    endif
   endif
 
-  if exists("*TearDown")
-    call TearDown()
-  endif
+  call AfterTheTest()
 endfor
 
-if fail == 0
-  " Success, create the .res file so that make knows it's done.
-  exe 'split ' . fnamemodify(testname, ':r') . '.res'
-  write
-endif
+call FinishTesting()
 
-if len(errors) > 0
-  " Append errors to test.log
-  split test.log
-  call append(line('$'), '')
-  call append(line('$'), 'From ' . testname . ':')
-  call append(line('$'), errors)
-  write
-endif
-
-let message = 'Executed ' . done . (done > 1 ? ' tests': ' test')
-echo message
-call add(messages, message)
-if fail > 0
-  let message = fail . ' FAILED'
-  echo message
-  call add(messages, message)
-endif
-
-" Append messages to "messages"
-split messages
-call append(line('$'), '')
-call append(line('$'), 'From ' . testname . ':')
-call append(line('$'), messages)
-write
-
-qall!
+" vim: shiftwidth=2 sts=2 expandtab

@@ -37,5 +37,6 @@ void foldMarkAdjust(win_T *wp, linenr_T line1, linenr_T line2, long amount, long
 int getDeepestNesting(void);
 char_u *get_foldtext(win_T *wp, linenr_T lnum, linenr_T lnume, foldinfo_T *foldinfo, char_u *buf);
 void foldtext_cleanup(char_u *str);
+void foldMoveRange(garray_T *gap, linenr_T line1, linenr_T line2, linenr_T dest);
 int put_folds(FILE *fd, win_T *wp);
 /* vim: set ft=c : */

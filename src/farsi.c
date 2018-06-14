@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -9,34 +9,17 @@
 
 /*
  * farsi.c: functions for Farsi language
- *
- * Included by main.c, when FEAT_FKMAP is defined.
  */
 
-static int toF_Xor_X_(int c);
-static int F_is_TyE(int c);
-static int F_is_TyC_TyD(int c);
+#include "vim.h"
+
+#if defined(FEAT_FKMAP) || defined(PROTO)
+
 static int F_is_TyB_TyC_TyD(int src, int offset);
-static int toF_TyB(int c);
-static void put_curr_and_l_to_X(int c);
-static void put_and_redo(int c);
-static void chg_c_toX_orX(void);
-static void chg_c_to_X_orX_(void);
-static void chg_c_to_X_or_X(void);
-static void chg_l_to_X_orX_(void);
-static void chg_l_toXor_X(void);
-static void chg_r_to_Xor_X_(void);
-static int toF_leading(int c);
-static int toF_Rjoin(int c);
-static int canF_Ljoin(int c);
-static int canF_Rjoin(int c);
-static int F_isterm(int c);
-static int toF_ending(int c);
-static void lrswapbuf(char_u *buf, int len);
 
 /*
-** Convert the given Farsi character into a _X or _X_ type
-*/
+ * Convert the given Farsi character into a _X or _X_ type
+ */
     static int
 toF_Xor_X_(int c)
 {
@@ -44,61 +27,35 @@ toF_Xor_X_(int c)
 
     switch (c)
     {
-	case BE:
-		return _BE;
-	case PE:
-		return _PE;
-	case TE:
-		return _TE;
-	case SE:
-		return _SE;
-	case JIM:
-		return _JIM;
-	case CHE:
-		return _CHE;
-	case HE_J:
-		return _HE_J;
-	case XE:
-		return _XE;
-	case SIN:
-		return _SIN;
-	case SHIN:
-		return _SHIN;
-	case SAD:
-		return _SAD;
-	case ZAD:
-		return _ZAD;
-	case AYN:
-		return _AYN;
-	case AYN_:
-		return _AYN_;
-	case GHAYN:
-		return _GHAYN;
-	case GHAYN_:
-		return _GHAYN_;
-	case FE:
-		return _FE;
-	case GHAF:
-		return _GHAF;
-	case KAF:
-		return _KAF;
-	case GAF:
-		return _GAF;
-	case LAM:
-		return _LAM;
-	case MIM:
-		return _MIM;
-	case NOON:
-		return _NOON;
+	case BE: return _BE;
+	case PE: return _PE;
+	case TE: return _TE;
+	case SE: return _SE;
+	case JIM: return _JIM;
+	case CHE: return _CHE;
+	case HE_J: return _HE_J;
+	case XE: return _XE;
+	case SIN: return _SIN;
+	case SHIN: return _SHIN;
+	case SAD: return _SAD;
+	case ZAD: return _ZAD;
+	case AYN: return _AYN;
+	case AYN_: return _AYN_;
+	case GHAYN: return _GHAYN;
+	case GHAYN_: return _GHAYN_;
+	case FE: return _FE;
+	case GHAF: return _GHAF;
+	case KAF: return _KAF;
+	case GAF: return _GAF;
+	case LAM: return _LAM;
+	case MIM: return _MIM;
+	case NOON: return _NOON;
 	case YE:
-	case YE_:
-		return _YE;
+	case YE_: return _YE;
 	case YEE:
-	case YEE_:
-		return _YEE;
+	case YEE_: return _YEE;
 	case IE:
-	case IE_:
-		return _IE;
+	case IE_: return _IE;
 	case F_HE:
 		tempc = _HE;
 
@@ -128,87 +85,59 @@ toF_Xor_X_(int c)
 }
 
 /*
-** Convert the given Farsi character into Farsi capital character .
-*/
-    int
-toF_TyA(int c )
+ * Convert the given Farsi character into Farsi capital character.
+ */
+    static int
+toF_TyA(int c)
 {
     switch (c)
     {
-	case ALEF_:
-		return ALEF;
-	case ALEF_U_H_:
-		return ALEF_U_H;
-	case _BE:
-		return BE;
-	case _PE:
-		return PE;
-	case _TE:
-		return TE;
-	case _SE:
-		return SE;
-	case _JIM:
-		return JIM;
-	case _CHE:
-		return CHE;
-	case _HE_J:
-		return HE_J;
-	case _XE:
-		return XE;
-	case _SIN:
-		return SIN;
-	case _SHIN:
-		return SHIN;
-	case _SAD:
-		return SAD;
-	case _ZAD:
-		return ZAD;
+	case ALEF_: return ALEF;
+	case ALEF_U_H_: return ALEF_U_H;
+	case _BE: return BE;
+	case _PE: return PE;
+	case _TE: return TE;
+	case _SE: return SE;
+	case _JIM: return JIM;
+	case _CHE: return CHE;
+	case _HE_J: return HE_J;
+	case _XE: return XE;
+	case _SIN: return SIN;
+	case _SHIN: return SHIN;
+	case _SAD: return SAD;
+	case _ZAD: return ZAD;
 	case _AYN:
 	case AYN_:
-	case _AYN_:
-		return AYN;
+	case _AYN_: return AYN;
 	case _GHAYN:
 	case GHAYN_:
-	case _GHAYN_:
-		return GHAYN;
-	case _FE:
-		return FE;
-	case _GHAF:
-		return GHAF;
-/* I am not sure what it is !!!	    case _KAF_H: */
-	case _KAF:
-		return KAF;
-	case _GAF:
-		return GAF;
-	case _LAM:
-		return LAM;
-	case _MIM:
-		return MIM;
-	case _NOON:
-		return NOON;
+	case _GHAYN_: return GHAYN;
+	case _FE: return FE;
+	case _GHAF: return GHAF;
+	/* I am not sure what it is !!!	    case _KAF_H: */
+	case _KAF: return KAF;
+	case _GAF: return GAF;
+	case _LAM: return LAM;
+	case _MIM: return MIM;
+	case _NOON: return NOON;
 	case _YE:
-	case YE_:
-		return YE;
+	case YE_: return YE;
 	case _YEE:
-	case YEE_:
-		return YEE;
-	case TEE_:
-		return TEE;
+	case YEE_: return YEE;
+	case TEE_: return TEE;
 	case _IE:
-	case IE_:
-		return IE;
+	case IE_: return IE;
 	case _HE:
-	case _HE_:
-		return F_HE;
+	case _HE_: return F_HE;
     }
     return c;
 }
 
 /*
-** Is the character under the cursor+offset in the given buffer a join type.
-** That is a character that is combined with the others.
-** Note: the offset is used only for command line buffer.
-*/
+ * Is the character under the cursor+offset in the given buffer a join type.
+ * That is a character that is combined with the others.
+ * Note: the offset is used only for command line buffer.
+ */
     static int
 F_is_TyB_TyC_TyD(int src, int offset)
 {
@@ -258,8 +187,8 @@ F_is_TyB_TyC_TyD(int src, int offset)
 }
 
 /*
-** Is the Farsi character one of the terminating only type.
-*/
+ * Is the Farsi character one of the terminating only type.
+ */
     static int
 F_is_TyE(int c)
 {
@@ -281,8 +210,8 @@ F_is_TyE(int c)
 }
 
 /*
-** Is the Farsi character one of the none leading type.
-*/
+ * Is the Farsi character one of the none leading type.
+ */
     static int
 F_is_TyC_TyD(int c)
 {
@@ -305,15 +234,15 @@ F_is_TyC_TyD(int c)
 }
 
 /*
-** Convert a none leading Farsi char into a leading type.
-*/
+ * Convert a none leading Farsi char into a leading type.
+ */
     static int
 toF_TyB(int c)
 {
     switch (c)
     {
 	case ALEF_:	return ALEF;
-	case ALEF_U_H_:	    return ALEF_U_H;
+	case ALEF_U_H_:	return ALEF_U_H;
 	case _AYN_:	return _AYN;
 	case AYN_:	return AYN;	/* exception - there are many of them */
 	case _GHAYN_:	return _GHAYN;
@@ -327,9 +256,18 @@ toF_TyB(int c)
     return c;
 }
 
+
+    static void
+put_and_redo(int c)
+{
+    pchar_cursor(c);
+    AppendCharToRedobuff(K_BS);
+    AppendCharToRedobuff(c);
+}
+
 /*
-** Overwrite the current redo and cursor characters + left adjust
-*/
+ * Overwrite the current redo and cursor characters + left adjust.
+ */
     static void
 put_curr_and_l_to_X(int c)
 {
@@ -364,17 +302,9 @@ put_curr_and_l_to_X(int c)
     put_and_redo(c);
 }
 
-    static void
-put_and_redo(int c)
-{
-    pchar_cursor(c);
-    AppendCharToRedobuff(K_BS);
-    AppendCharToRedobuff(c);
-}
-
 /*
-** Change the char. under the cursor to a X_ or X type
-*/
+ * Change the char. under the cursor to a X_ or X type
+ */
     static void
 chg_c_toX_orX(void)
 {
@@ -497,9 +427,8 @@ chg_c_toX_orX(void)
 }
 
 /*
-** Change the char. under the cursor to a _X_ or X_ type
-*/
-
+ * Change the char. under the cursor to a _X_ or X_ type
+ */
     static void
 chg_c_to_X_orX_(void)
 {
@@ -549,10 +478,10 @@ chg_c_to_X_orX_(void)
 }
 
 /*
-** Change the char. under the cursor to a _X_ or _X type
-*/
+ * Change the char. under the cursor to a _X_ or _X type
+ */
     static void
-chg_c_to_X_or_X (void)
+chg_c_to_X_or_X(void)
 {
     int	tempc;
 
@@ -580,10 +509,10 @@ chg_c_to_X_or_X (void)
 }
 
 /*
-** Change the character left to the cursor to a _X_ or X_ type
-*/
+ * Change the character left to the cursor to a _X_ or X_ type
+ */
     static void
-chg_l_to_X_orX_ (void)
+chg_l_to_X_orX_(void)
 {
     int	tempc;
 
@@ -648,11 +577,10 @@ chg_l_to_X_orX_ (void)
 }
 
 /*
-** Change the character left to the cursor to a X or _X type
-*/
-
+ * Change the character left to the cursor to a X or _X type
+ */
     static void
-chg_l_toXor_X (void)
+chg_l_toXor_X(void)
 {
     int	tempc;
 
@@ -717,9 +645,8 @@ chg_l_toXor_X (void)
 }
 
 /*
-** Change the character right to the cursor to a _X or _X_ type
-*/
-
+ * Change the character right to the cursor to a _X or _X_ type
+ */
     static void
 chg_r_to_Xor_X_(void)
 {
@@ -742,49 +669,51 @@ chg_r_to_Xor_X_(void)
 }
 
 /*
-** Map Farsi keyboard when in fkmap mode.
-*/
-
+ * Map Farsi keyboard when in fkmap mode.
+ */
     int
 fkmap(int c)
 {
     int		tempc;
-    static int	revins;
+    int		insert_mode = (State & INSERT);
+    static int	revins = 0;
 
     if (IS_SPECIAL(c))
 	return c;
 
-    if (VIM_ISDIGIT(c) || ((c == '.' || c == '+' || c == '-' ||
-	c == '^' || c == '%' || c == '#' || c == '=')  && revins))
+    if (insert_mode)
     {
-	if (!revins)
+	if (VIM_ISDIGIT(c) || ((c == '.' || c == '+' || c == '-' ||
+	    c == '^' || c == '%' || c == '#' || c == '=') && revins))
 	{
-	    if (curwin->w_cursor.col)
+	    /* Numbers are entered left-to-right. */
+	    if (!revins)
 	    {
-		if (!p_ri)
-		    dec_cursor();
+		if (curwin->w_cursor.col)
+		{
+		    if (!p_ri)
+			dec_cursor();
 
 		    chg_c_toX_orX ();
 		    chg_l_toXor_X ();
 
-		if (!p_ri)
-		    inc_cursor();
+		    if (!p_ri)
+			inc_cursor();
+		}
 	    }
+
+	    arrow_used = TRUE;
+	    (void)stop_arrow();
+
+	    if (!curwin->w_p_rl && revins)
+		inc_cursor();
+
+	    ++revins;
+	    p_ri = 1;
 	}
-
-	arrow_used = TRUE;
-	(void)stop_arrow();
-
-	if (!curwin->w_p_rl && revins)
-	    inc_cursor();
-
-	++revins;
-	p_ri=1;
-    }
-    else
-    {
-	if (revins)
+	else if (revins)
 	{
+	    /* Stop entering number. */
 	    arrow_used = TRUE;
 	    (void)stop_arrow();
 
@@ -825,14 +754,14 @@ fkmap(int c)
     if (!revins)
     {
 	if (curwin->w_p_rl)
-	    p_ri=0;
+	    p_ri = 0;
 	if (!curwin->w_p_rl)
-	    p_ri=1;
+	    p_ri = 1;
     }
 
-    if ((c < 0x100) && (isalpha(c) || c == '&' ||   c == '^' ||	c == ';' ||
+    if ((c < 0x100) && (isalpha(c) || c == '&' || c == '^' ||	c == ';' ||
 			    c == '\''||	c == ',' || c == '[' ||
-			    c == ']' ||	c == '{' || c == '}'	))
+			    c == ']' ||	c == '{' || c == '}'))
 	chg_r_to_Xor_X_();
 
     tempc = 0;
@@ -896,13 +825,12 @@ fkmap(int c)
 	case  NL:
 	case  TAB:
 
-	    if (p_ri && c == NL && curwin->w_cursor.col)
+	    if (p_ri && c == NL && curwin->w_cursor.col && insert_mode)
 	    {
 		/*
-		** If the char before the cursor is _X_ or X_ do not change
-		** the one under the cursor with X type.
-		*/
-
+		 * If the char before the cursor is _X_ or X_ do not change
+		 * the one under the cursor with X type.
+		 */
 		dec_cursor();
 
 		if (F_isalpha(gchar_cursor()))
@@ -914,8 +842,7 @@ fkmap(int c)
 		inc_cursor();
 	    }
 
-	    if (!p_ri)
-	    if (!curwin->w_cursor.col)
+	    if (!p_ri && !curwin->w_cursor.col)
 	    {
 		switch (c)
 		{
@@ -973,224 +900,227 @@ fkmap(int c)
 		}
 		break;
 	    }
-	    if (!p_ri)
-		dec_cursor();
 
-	    switch ((tempc = gchar_cursor()))
+	    if (insert_mode)
 	    {
-		case _BE:
-		case _PE:
-		case _TE:
-		case _SE:
-		case _JIM:
-		case _CHE:
-		case _HE_J:
-		case _XE:
-		case _SIN:
-		case _SHIN:
-		case _SAD:
-		case _ZAD:
-		case _FE:
-		case _GHAF:
-		case _KAF:
-		case _KAF_H:
-		case _GAF:
-		case _LAM:
-		case _MIM:
-		case _NOON:
-		case _HE:
-		case _HE_:
-		case _TA:
-		case _ZA:
-			put_curr_and_l_to_X(toF_TyA(tempc));
-			break;
-		case _AYN:
-		case _AYN_:
+		if (!p_ri)
+		    dec_cursor();
 
-			if (!p_ri)
-			    if (!curwin->w_cursor.col)
-			    {
-				put_curr_and_l_to_X(AYN);
-				break;
-			    }
+		switch ((tempc = gchar_cursor()))
+		{
+		    case _BE:
+		    case _PE:
+		    case _TE:
+		    case _SE:
+		    case _JIM:
+		    case _CHE:
+		    case _HE_J:
+		    case _XE:
+		    case _SIN:
+		    case _SHIN:
+		    case _SAD:
+		    case _ZAD:
+		    case _FE:
+		    case _GHAF:
+		    case _KAF:
+		    case _KAF_H:
+		    case _GAF:
+		    case _LAM:
+		    case _MIM:
+		    case _NOON:
+		    case _HE:
+		    case _HE_:
+		    case _TA:
+		    case _ZA:
+			    put_curr_and_l_to_X(toF_TyA(tempc));
+			    break;
+		    case _AYN:
+		    case _AYN_:
 
-			if (p_ri)
-			    inc_cursor();
-			else
-			    dec_cursor();
+			    if (!p_ri)
+				if (!curwin->w_cursor.col)
+				{
+				    put_curr_and_l_to_X(AYN);
+				    break;
+				}
 
-			if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-			    tempc = AYN_;
-			else
-			    tempc = AYN;
+			    if (p_ri)
+				inc_cursor();
+			    else
+				dec_cursor();
 
-			if (p_ri)
-			    dec_cursor();
-			else
-			    inc_cursor();
+			    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
+				tempc = AYN_;
+			    else
+				tempc = AYN;
 
-			put_curr_and_l_to_X(tempc);
+			    if (p_ri)
+				dec_cursor();
+			    else
+				inc_cursor();
 
-			break;
-		case _GHAYN:
-		case _GHAYN_:
+			    put_curr_and_l_to_X(tempc);
 
-			if (!p_ri)
-			    if (!curwin->w_cursor.col)
-			    {
-				put_curr_and_l_to_X(GHAYN);
-				break;
-			    }
+			    break;
+		    case _GHAYN:
+		    case _GHAYN_:
 
-			if (p_ri)
-			    inc_cursor();
-			else
-			    dec_cursor();
+			    if (!p_ri)
+				if (!curwin->w_cursor.col)
+				{
+				    put_curr_and_l_to_X(GHAYN);
+				    break;
+				}
 
-			if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-			    tempc = GHAYN_;
-			else
-			    tempc = GHAYN;
+			    if (p_ri)
+				inc_cursor();
+			    else
+				dec_cursor();
 
-			if (p_ri)
-			    dec_cursor();
-			else
-			    inc_cursor();
+			    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
+				tempc = GHAYN_;
+			    else
+				tempc = GHAYN;
 
-			put_curr_and_l_to_X(tempc);
-			break;
-		case _YE:
-		case _IE:
-		case _YEE:
-			if (!p_ri)
-			    if (!curwin->w_cursor.col)
-			    {
-				put_curr_and_l_to_X((tempc == _YE ? YE :
-					    (tempc == _IE ? IE : YEE)));
-				break;
-			    }
+			    if (p_ri)
+				dec_cursor();
+			    else
+				inc_cursor();
 
-			if (p_ri)
-			    inc_cursor();
-			else
-			    dec_cursor();
+			    put_curr_and_l_to_X(tempc);
+			    break;
+		    case _YE:
+		    case _IE:
+		    case _YEE:
+			    if (!p_ri)
+				if (!curwin->w_cursor.col)
+				{
+				    put_curr_and_l_to_X((tempc == _YE ? YE :
+						(tempc == _IE ? IE : YEE)));
+				    break;
+				}
 
-			if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-				tempc = (tempc == _YE ? YE_ :
-				    (tempc == _IE ? IE_ : YEE_));
-			else
-				tempc = (tempc == _YE ? YE :
-				    (tempc == _IE ? IE : YEE));
+			    if (p_ri)
+				inc_cursor();
+			    else
+				dec_cursor();
 
-			if (p_ri)
-			    dec_cursor();
-			else
-			    inc_cursor();
+			    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
+				    tempc = (tempc == _YE ? YE_ :
+					(tempc == _IE ? IE_ : YEE_));
+			    else
+				    tempc = (tempc == _YE ? YE :
+					(tempc == _IE ? IE : YEE));
 
-			put_curr_and_l_to_X(tempc);
-			break;
+			    if (p_ri)
+				dec_cursor();
+			    else
+				inc_cursor();
+
+			    put_curr_and_l_to_X(tempc);
+			    break;
 		}
 
 		if (!p_ri)
 		    inc_cursor();
+	    }
 
-		tempc = 0;
+	    tempc = 0;
 
-		switch (c)
-		{
-		    case '0':	return FARSI_0;
-		    case '1':	return FARSI_1;
-		    case '2':	return FARSI_2;
-		    case '3':	return FARSI_3;
-		    case '4':	return FARSI_4;
-		    case '5':	return FARSI_5;
-		    case '6':	return FARSI_6;
-		    case '7':	return FARSI_7;
-		    case '8':	return FARSI_8;
-		    case '9':	return FARSI_9;
-		    case 'B':	return F_PSP;
-		    case 'E':	return JAZR_N;
-		    case 'F':	return ALEF_D_H;
-		    case 'H':	return ALEF_A;
-		    case 'I':	return TASH;
-		    case 'K':	return F_LQUOT;
-		    case 'L':	return F_RQUOT;
-		    case 'M':	return HAMZE;
-		    case 'O':	return '[';
-		    case 'P':	return ']';
-		    case 'Q':	return OO;
-		    case 'R':	return MAD_N;
-		    case 'T':	return OW;
-		    case 'U':	return MAD;
-		    case 'W':	return OW_OW;
-		    case 'Y':	return JAZR;
-		    case '`':	return F_PCN;
-		    case '!':	return F_EXCL;
-		    case '@':	return F_COMMA;
-		    case '#':	return F_DIVIDE;
-		    case '$':	return F_CURRENCY;
-		    case '%':	return F_PERCENT;
-		    case '^':	return F_MUL;
-		    case '&':	return F_BCOMMA;
-		    case '*':	return F_STAR;
-		    case '(':	return F_LPARENT;
-		    case ')':	return F_RPARENT;
-		    case '-':	return F_MINUS;
-		    case '_':	return F_UNDERLINE;
-		    case '=':	return F_EQUALS;
-		    case '+':	return F_PLUS;
-		    case '\\':	return F_BSLASH;
-		    case '|':	return F_PIPE;
-		    case ':':	return F_DCOLON;
-		    case '"':	return F_SEMICOLON;
-		    case '.':	return F_PERIOD;
-		    case '/':	return F_SLASH;
-		    case '<':	return F_LESS;
-		    case '>':	return F_GREATER;
-		    case '?':	return F_QUESTION;
-		    case ' ':	return F_BLANK;
-		}
-		break;
+	    switch (c)
+	    {
+		case '0':	return FARSI_0;
+		case '1':	return FARSI_1;
+		case '2':	return FARSI_2;
+		case '3':	return FARSI_3;
+		case '4':	return FARSI_4;
+		case '5':	return FARSI_5;
+		case '6':	return FARSI_6;
+		case '7':	return FARSI_7;
+		case '8':	return FARSI_8;
+		case '9':	return FARSI_9;
+		case 'B':	return F_PSP;
+		case 'E':	return JAZR_N;
+		case 'F':	return ALEF_D_H;
+		case 'H':	return ALEF_A;
+		case 'I':	return TASH;
+		case 'K':	return F_LQUOT;
+		case 'L':	return F_RQUOT;
+		case 'M':	return HAMZE;
+		case 'O':	return '[';
+		case 'P':	return ']';
+		case 'Q':	return OO;
+		case 'R':	return MAD_N;
+		case 'T':	return OW;
+		case 'U':	return MAD;
+		case 'W':	return OW_OW;
+		case 'Y':	return JAZR;
+		case '`':	return F_PCN;
+		case '!':	return F_EXCL;
+		case '@':	return F_COMMA;
+		case '#':	return F_DIVIDE;
+		case '$':	return F_CURRENCY;
+		case '%':	return F_PERCENT;
+		case '^':	return F_MUL;
+		case '&':	return F_BCOMMA;
+		case '*':	return F_STAR;
+		case '(':	return F_LPARENT;
+		case ')':	return F_RPARENT;
+		case '-':	return F_MINUS;
+		case '_':	return F_UNDERLINE;
+		case '=':	return F_EQUALS;
+		case '+':	return F_PLUS;
+		case '\\':	return F_BSLASH;
+		case '|':	return F_PIPE;
+		case ':':	return F_DCOLON;
+		case '"':	return F_SEMICOLON;
+		case '.':	return F_PERIOD;
+		case '/':	return F_SLASH;
+		case '<':	return F_LESS;
+		case '>':	return F_GREATER;
+		case '?':	return F_QUESTION;
+		case ' ':	return F_BLANK;
+	    }
+	    break;
 
 	case 'a':
-		tempc = _SHIN;
+	    tempc = _SHIN;
 	    break;
 	case 'A':
-		tempc = WAW_H;
+	    tempc = WAW_H;
 	    break;
 	case 'b':
-		tempc = ZAL;
+	    tempc = ZAL;
 	    break;
 	case 'c':
-		tempc = ZE;
+	    tempc = ZE;
 	    break;
 	case 'C':
-		tempc = JE;
+	    tempc = JE;
 	    break;
 	case 'd':
-		tempc = _YE;
+	    tempc = _YE;
 	    break;
 	case 'D':
-		tempc = _YEE;
+	    tempc = _YEE;
 	    break;
 	case 'e':
-		tempc = _SE;
+	    tempc = _SE;
 	    break;
 	case 'f':
-		tempc = _BE;
+	    tempc = _BE;
 	    break;
 	case 'g':
-		tempc = _LAM;
+	    tempc = _LAM;
 	    break;
 	case 'G':
 	    if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-		{
+	    {
 
 		if (gchar_cursor() == _LAM)
 		    chg_c_toX_orX ();
-		else
-		    if (p_ri)
-			chg_c_to_X_or_X ();
+		else if (p_ri)
+		    chg_c_to_X_or_X ();
 	    }
 
 	    if (!p_ri)
@@ -1204,16 +1134,15 @@ fkmap(int c)
 	    {
 		chg_c_toX_orX ();
 		chg_l_toXor_X ();
-		    tempc = ALEF_U_H;
+		tempc = ALEF_U_H;
+	    }
+	    else if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
+	    {
+		tempc = ALEF_U_H_;
+		chg_l_toXor_X ();
 	    }
 	    else
-		if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-		{
-			tempc = ALEF_U_H_;
-		    chg_l_toXor_X ();
-		}
-		else
-			tempc = ALEF_U_H;
+		tempc = ALEF_U_H;
 
 	    if (!p_ri)
 		inc_cursor();
@@ -1243,17 +1172,17 @@ fkmap(int c)
 		if (!p_ri)
 		    dec_cursor();
 
-		    tempc = LA;
+		tempc = LA;
 	    }
 	    else
 	    {
 		if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
 		{
-			tempc = ALEF_;
+		    tempc = ALEF_;
 		    chg_l_toXor_X ();
 		}
 		else
-			tempc = ALEF;
+		    tempc = ALEF;
 	    }
 
 	    if (!p_ri)
@@ -1261,8 +1190,8 @@ fkmap(int c)
 
 	    return tempc;
 	case 'i':
-	    if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-		{
+	    if (!curwin->w_cursor.col && STRLEN(ml_get_curline()))
+	    {
 		if (!p_ri && !F_is_TyE(tempc))
 		    chg_c_to_X_orX_ ();
 		if (p_ri)
@@ -1277,19 +1206,19 @@ fkmap(int c)
 		dec_cursor();
 
 	    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-		    tempc = _HE_;
+		tempc = _HE_;
 	    else
-		    tempc = _HE;
+		tempc = _HE;
 
 	    if (!p_ri)
 		inc_cursor();
 	    break;
 	case 'j':
-		tempc = _TE;
+	    tempc = _TE;
 	    break;
 	case 'J':
 	    if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-		{
+	    {
 		if (p_ri)
 		    chg_c_to_X_or_X ();
 
@@ -1304,88 +1233,88 @@ fkmap(int c)
 
 	    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
 	    {
-		    tempc = TEE_;
+		tempc = TEE_;
 		chg_l_toXor_X ();
 	    }
 	    else
-			tempc = TEE;
+		tempc = TEE;
 
 	    if (!p_ri)
 		inc_cursor();
 
 	    return tempc;
 	case 'k':
-		tempc = _NOON;
+	    tempc = _NOON;
 	    break;
 	case 'l':
-		tempc = _MIM;
+	    tempc = _MIM;
 	    break;
 	case 'm':
-		tempc = _PE;
+	    tempc = _PE;
 	    break;
 	case 'n':
 	case 'N':
-		tempc = DAL;
+	    tempc = DAL;
 	    break;
 	case 'o':
-		tempc = _XE;
+	    tempc = _XE;
 	    break;
 	case 'p':
-		tempc = _HE_J;
+	    tempc = _HE_J;
 	    break;
 	case 'q':
-		tempc = _ZAD;
+	    tempc = _ZAD;
 	    break;
 	case 'r':
-		tempc = _GHAF;
+	    tempc = _GHAF;
 	    break;
 	case 's':
-		tempc = _SIN;
+	    tempc = _SIN;
 	    break;
 	case 'S':
-		tempc = _IE;
+	    tempc = _IE;
 	    break;
 	case 't':
-		tempc = _FE;
+	    tempc = _FE;
 	    break;
 	case 'u':
-		if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-		{
-		    if (!p_ri && !F_is_TyE(tempc))
-			chg_c_to_X_orX_ ();
-		    if (p_ri)
-			chg_c_to_X_or_X ();
+	    if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
+	    {
+		if (!p_ri && !F_is_TyE(tempc))
+		    chg_c_to_X_orX_ ();
+		if (p_ri)
+		    chg_c_to_X_or_X ();
 
-		}
+	    }
 
-		if (!p_ri && !curwin->w_cursor.col)
-		    return _AYN;
+	    if (!p_ri && !curwin->w_cursor.col)
+		return _AYN;
 
-		if (!p_ri)
-		    dec_cursor();
+	    if (!p_ri)
+		dec_cursor();
 
-		if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
-		    tempc = _AYN_;
-		else
-		    tempc = _AYN;
+	    if (F_is_TyB_TyC_TyD(SRC_EDT, AT_CURSOR))
+		tempc = _AYN_;
+	    else
+		tempc = _AYN;
 
-		if (!p_ri)
-		    inc_cursor();
+	    if (!p_ri)
+		inc_cursor();
 	    break;
 	case 'v':
 	case 'V':
-		tempc = RE;
+	    tempc = RE;
 	    break;
 	case 'w':
-		tempc = _SAD;
+	    tempc = _SAD;
 	    break;
 	case 'x':
 	case 'X':
-		tempc = _TA;
+	    tempc = _TA;
 	    break;
 	case 'y':
 	    if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-		{
+	    {
 		if (!p_ri && !F_is_TyE(tempc))
 		    chg_c_to_X_orX_ ();
 		if (p_ri)
@@ -1409,36 +1338,36 @@ fkmap(int c)
 
 	    break;
 	case 'z':
-		tempc = _ZA;
+	    tempc = _ZA;
 	    break;
 	case 'Z':
-		tempc = _KAF_H;
+	    tempc = _KAF_H;
 	    break;
 	case ';':
-		tempc = _KAF;
+	    tempc = _KAF;
 	    break;
 	case '\'':
-		tempc = _GAF;
+	    tempc = _GAF;
 	    break;
 	case ',':
-		tempc = WAW;
+	    tempc = WAW;
 	    break;
 	case '[':
-		tempc = _JIM;
+	    tempc = _JIM;
 	    break;
 	case ']':
-		tempc = _CHE;
+	    tempc = _CHE;
 	    break;
     }
 
-    if ((F_isalpha(tempc) || F_isdigit(tempc)))
+    if (F_isalpha(tempc) || F_isdigit(tempc))
     {
-	if (!curwin->w_cursor.col  &&  STRLEN(ml_get_curline()))
-	    {
+	if (!curwin->w_cursor.col && STRLEN(ml_get_curline()))
+	{
 	    if (!p_ri && !F_is_TyE(tempc))
-		chg_c_to_X_orX_ ();
+		chg_c_to_X_orX_();
 	    if (p_ri)
-		chg_c_to_X_or_X ();
+		chg_c_to_X_or_X();
 	}
 
 	if (curwin->w_cursor.col)
@@ -1447,9 +1376,9 @@ fkmap(int c)
 		dec_cursor();
 
 	    if (F_is_TyE(tempc))
-		chg_l_toXor_X ();
+		chg_l_toXor_X();
 	    else
-		chg_l_to_X_orX_ ();
+		chg_l_to_X_orX_();
 
 	    if (!p_ri)
 		inc_cursor();
@@ -1461,8 +1390,8 @@ fkmap(int c)
 }
 
 /*
-** Convert a none leading Farsi char into a leading type.
-*/
+ * Convert a none leading Farsi char into a leading type.
+ */
     static int
 toF_leading(int c)
 {
@@ -1515,8 +1444,8 @@ toF_leading(int c)
 }
 
 /*
-** Convert a given Farsi char into right joining type.
-*/
+ * Convert a given Farsi char into right joining type.
+ */
     static int
 toF_Rjoin(int c)
 {
@@ -1571,8 +1500,8 @@ toF_Rjoin(int c)
 }
 
 /*
-** Can a given Farsi character join via its left edj.
-*/
+ * Can a given Farsi character join via its left edj.
+ */
     static int
 canF_Ljoin(int c)
 {
@@ -1645,8 +1574,8 @@ canF_Ljoin(int c)
 }
 
 /*
-** Can a given Farsi character join via its right edj.
-*/
+ * Can a given Farsi character join via its right edj.
+ */
     static int
 canF_Rjoin(int c)
 {
@@ -1673,8 +1602,8 @@ canF_Rjoin(int c)
 }
 
 /*
-** is a given Farsi character a terminating type.
-*/
+ * is a given Farsi character a terminating type.
+ */
     static int
 F_isterm(int c)
 {
@@ -1700,86 +1629,54 @@ F_isterm(int c)
 }
 
 /*
-** Convert the given Farsi character into a ending type .
-*/
+ * Convert the given Farsi character into a ending type .
+ */
     static int
 toF_ending(int c)
 {
-
     switch (c)
     {
-	case _BE:
-		return BE;
-	case _PE:
-		return PE;
-	case _TE:
-		return TE;
-	case _SE:
-		return SE;
-	case _JIM:
-		return JIM;
-	case _CHE:
-		return CHE;
-	case _HE_J:
-		return HE_J;
-	case _XE:
-		return XE;
-	case _SIN:
-		return SIN;
-	case _SHIN:
-		return SHIN;
-	case _SAD:
-		return SAD;
-	case _ZAD:
-		return ZAD;
-	case _AYN:
-		return AYN;
-	case _AYN_:
-		return AYN_;
-	case _GHAYN:
-		return GHAYN;
-	case _GHAYN_:
-		return GHAYN_;
-	case _FE:
-		return FE;
-	case _GHAF:
-		return GHAF;
+	case _BE: return BE;
+	case _PE: return PE;
+	case _TE: return TE;
+	case _SE: return SE;
+	case _JIM: return JIM;
+	case _CHE: return CHE;
+	case _HE_J: return HE_J;
+	case _XE: return XE;
+	case _SIN: return SIN;
+	case _SHIN: return SHIN;
+	case _SAD: return SAD;
+	case _ZAD: return ZAD;
+	case _AYN: return AYN;
+	case _AYN_: return AYN_;
+	case _GHAYN: return GHAYN;
+	case _GHAYN_: return GHAYN_;
+	case _FE: return FE;
+	case _GHAF: return GHAF;
 	case _KAF_H:
-	case _KAF:
-		return KAF;
-	case _GAF:
-		return GAF;
-	case _LAM:
-		return LAM;
-	case _MIM:
-		return MIM;
-	case _NOON:
-		return NOON;
-	case _YE:
-		return YE_;
-	case YE_:
-		return YE;
-	case _YEE:
-		return YEE_;
-	case YEE_:
-		return YEE;
-	case TEE:
-		return TEE_;
-	case _IE:
-		return IE_;
-	case IE_:
-		return IE;
+	case _KAF: return KAF;
+	case _GAF: return GAF;
+	case _LAM: return LAM;
+	case _MIM: return MIM;
+	case _NOON: return NOON;
+	case _YE: return YE_;
+	case YE_: return YE;
+	case _YEE: return YEE_;
+	case YEE_: return YEE;
+	case TEE: return TEE_;
+	case _IE: return IE_;
+	case IE_: return IE;
 	case _HE:
-	case _HE_:
-		return F_HE;
+	case _HE_: return F_HE;
     }
     return c;
 }
 
 /*
-** Convert the Farsi 3342 standard into Farsi VIM.
-*/
-    void
+ * Convert the Farsi 3342 standard into Farsi VIM.
+ */
+    static void
 conv_to_pvim(void)
 {
     char_u	*ptr;
@@ -1791,14 +1688,14 @@ conv_to_pvim(void)
 
 	llen = (int)STRLEN(ptr);
 
-	for ( i = 0; i < llen-1; i++)
+	for (i = 0; i < llen-1; i++)
 	{
 	    if (canF_Ljoin(ptr[i]) && canF_Rjoin(ptr[i+1]))
 	    {
 		ptr[i] = toF_leading(ptr[i]);
 		++i;
 
-		while (canF_Rjoin(ptr[i]) && i < llen)
+		while (i < llen && canF_Rjoin(ptr[i]))
 		{
 		    ptr[i] = toF_Rjoin(ptr[i]);
 		    if (F_isterm(ptr[i]) || !F_isalpha(ptr[i]))
@@ -1817,18 +1714,18 @@ conv_to_pvim(void)
      * Following lines contains Farsi encoded character.
      */
 
-    do_cmdline_cmd((char_u *)"%s/\202\231/\232/g");
-    do_cmdline_cmd((char_u *)"%s/\201\231/\370\334/g");
+    do_cmdline_cmd((char_u *)"%s/\202\231/\232/ge");
+    do_cmdline_cmd((char_u *)"%s/\201\231/\370\334/ge");
 
     /* Assume the screen has been messed up: clear it and redraw. */
     redraw_later(CLEAR);
-    MSG_ATTR(farsi_text_1, hl_attr(HLF_S));
+    MSG_ATTR(farsi_text_1, HL_ATTR(HLF_S));
 }
 
 /*
  * Convert the Farsi VIM into Farsi 3342 standard.
  */
-    void
+    static void
 conv_to_pstd(void)
 {
     char_u	*ptr;
@@ -1837,25 +1734,20 @@ conv_to_pstd(void)
     /*
      * Following line contains Farsi encoded character.
      */
-
-    do_cmdline_cmd((char_u *)"%s/\232/\202\231/g");
+    do_cmdline_cmd((char_u *)"%s/\232/\202\231/ge");
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
 	ptr = ml_get((linenr_T)lnum);
-
 	llen = (int)STRLEN(ptr);
 
-	for ( i = 0; i < llen; i++)
-	{
+	for (i = 0; i < llen; i++)
 	    ptr[i] = toF_TyA(ptr[i]);
-
-	}
     }
 
     /* Assume the screen has been messed up: clear it and redraw. */
     redraw_later(CLEAR);
-    MSG_ATTR(farsi_text_2, hl_attr(HLF_S));
+    MSG_ATTR(farsi_text_2, HL_ATTR(HLF_S));
 }
 
 /*
@@ -2028,56 +1920,56 @@ cmdl_fkmap(int c)
 	case  NL:
 	case  TAB:
 
-	       switch ((tempc = cmd_gchar(AT_CURSOR)))
-	       {
-	    case _BE:
-	    case _PE:
-	    case _TE:
-	    case _SE:
-	    case _JIM:
-	    case _CHE:
-	    case _HE_J:
-	    case _XE:
-	    case _SIN:
-	    case _SHIN:
-	    case _SAD:
-	    case _ZAD:
-	    case _AYN:
-	    case _GHAYN:
-	    case _FE:
-	    case _GHAF:
-	    case _KAF:
-	    case _GAF:
-	    case _LAM:
-	    case _MIM:
-	    case _NOON:
-	    case _HE:
-	    case _HE_:
-			cmd_pchar(toF_TyA(tempc), AT_CURSOR);
-		break;
-	    case _AYN_:
-			cmd_pchar(AYN_, AT_CURSOR);
-		break;
-	    case _GHAYN_:
-			cmd_pchar(GHAYN_, AT_CURSOR);
-		break;
-	    case _IE:
-		if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
-			    cmd_pchar(IE_, AT_CURSOR);
-		else
-			    cmd_pchar(IE, AT_CURSOR);
-		break;
-	    case _YEE:
-		if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
-			    cmd_pchar(YEE_, AT_CURSOR);
-			else
-			    cmd_pchar(YEE, AT_CURSOR);
-		break;
-	    case _YE:
-		if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
-			    cmd_pchar(YE_, AT_CURSOR);
-			else
-			    cmd_pchar(YE, AT_CURSOR);
+	    switch ((tempc = cmd_gchar(AT_CURSOR)))
+	    {
+		case _BE:
+		case _PE:
+		case _TE:
+		case _SE:
+		case _JIM:
+		case _CHE:
+		case _HE_J:
+		case _XE:
+		case _SIN:
+		case _SHIN:
+		case _SAD:
+		case _ZAD:
+		case _AYN:
+		case _GHAYN:
+		case _FE:
+		case _GHAF:
+		case _KAF:
+		case _GAF:
+		case _LAM:
+		case _MIM:
+		case _NOON:
+		case _HE:
+		case _HE_:
+		    cmd_pchar(toF_TyA(tempc), AT_CURSOR);
+		    break;
+		case _AYN_:
+		    cmd_pchar(AYN_, AT_CURSOR);
+		    break;
+		case _GHAYN_:
+		    cmd_pchar(GHAYN_, AT_CURSOR);
+		    break;
+		case _IE:
+		    if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
+			cmd_pchar(IE_, AT_CURSOR);
+		    else
+			cmd_pchar(IE, AT_CURSOR);
+		    break;
+		case _YEE:
+		    if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
+			cmd_pchar(YEE_, AT_CURSOR);
+		    else
+			cmd_pchar(YEE, AT_CURSOR);
+		    break;
+		case _YE:
+		    if (F_is_TyB_TyC_TyD(SRC_CMD, AT_CURSOR+1))
+			cmd_pchar(YE_, AT_CURSOR);
+		    else
+			cmd_pchar(YE, AT_CURSOR);
 	    }
 
 	    switch (c)
@@ -2148,7 +2040,7 @@ cmdl_fkmap(int c)
 	case 'f':   return _BE;
 	case 'g':   return _LAM;
 	case 'G':
-		    if (cmd_gchar(AT_CURSOR) == _LAM )
+		if (cmd_gchar(AT_CURSOR) == _LAM)
 		{
 		    cmd_pchar(LAM, AT_CURSOR);
 			    return ALEF_U_H;
@@ -2159,7 +2051,7 @@ cmdl_fkmap(int c)
 		else
 			return ALEF_U_H;
 	case 'h':
-		    if (cmd_gchar(AT_CURSOR) == _LAM )
+		if (cmd_gchar(AT_CURSOR) == _LAM)
 		{
 		    cmd_pchar(LA, AT_CURSOR);
 		    redrawcmdline();
@@ -2215,9 +2107,9 @@ cmdl_fkmap(int c)
 	case ',':   return WAW;
 	case '[':   return _JIM;
 	case ']':   return _CHE;
-	}
+    }
 
-	return c;
+    return c;
 }
 
 /*
@@ -2226,7 +2118,7 @@ cmdl_fkmap(int c)
     int
 F_isalpha(int c)
 {
-    return (( c >= TEE_ && c <= _YE)
+    return ((c >= TEE_ && c <= _YE)
 	    || (c >= ALEF_A && c <= YE)
 	    || (c >= _IE && c <= YE_));
 }
@@ -2246,45 +2138,42 @@ F_isdigit(int c)
     int
 F_ischar(int c)
 {
- return (c >= TEE_ && c <= YE_);
+    return (c >= TEE_ && c <= YE_);
 }
 
     void
-farsi_fkey(
-    cmdarg_T	*cap)
+farsi_f8(cmdarg_T *cap UNUSED)
 {
-    int		c = cap->cmdchar;
-
-    if (c == K_F8)
+    if (p_altkeymap)
     {
-	if (p_altkeymap)
+	if (curwin->w_farsi & W_R_L)
 	{
-	    if (curwin->w_farsi & W_R_L)
-	    {
-		p_fkmap = 0;
-		do_cmdline_cmd((char_u *)"set norl");
-		MSG("");
-	    }
-	    else
-	    {
-		p_fkmap = 1;
-		do_cmdline_cmd((char_u *)"set rl");
-		MSG("");
-	    }
-
-	    curwin->w_farsi = curwin->w_farsi ^ W_R_L;
+	    p_fkmap = 0;
+	    do_cmdline_cmd((char_u *)"set norl");
+	    MSG("");
 	}
-    }
-
-    if (c == K_F9)
-    {
-	if (p_altkeymap && curwin->w_p_rl)
+	else
 	{
-	    curwin->w_farsi = curwin->w_farsi ^ W_CONV;
-	    if (curwin->w_farsi & W_CONV)
-		conv_to_pvim();
-	    else
-		conv_to_pstd();
+	    p_fkmap = 1;
+	    do_cmdline_cmd((char_u *)"set rl");
+	    MSG("");
 	}
+
+	curwin->w_farsi = curwin->w_farsi ^ W_R_L;
     }
 }
+
+    void
+farsi_f9(cmdarg_T *cap UNUSED)
+{
+    if (p_altkeymap && curwin->w_p_rl)
+    {
+	curwin->w_farsi = curwin->w_farsi ^ W_CONV;
+	if (curwin->w_farsi & W_CONV)
+	    conv_to_pvim();
+	else
+	    conv_to_pstd();
+    }
+}
+
+#endif /* FEAT_FKMAP */

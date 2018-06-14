@@ -1,4 +1,4 @@
-/* vi:set ts=8 sts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4 noet:
  *
  * MzScheme interface by Sergey Khorev <sergey.khorev@gmail.com>
  * Based on work by Brent Fulgham <bfulgham@debian.org>
@@ -145,10 +145,8 @@ static Scheme_Object *get_window_num(void *, int, Scheme_Object **);
 static Scheme_Object *get_window_buffer(void *, int, Scheme_Object **);
 static Scheme_Object *get_window_height(void *, int, Scheme_Object **);
 static Scheme_Object *set_window_height(void *, int, Scheme_Object **);
-#ifdef FEAT_VERTSPLIT
 static Scheme_Object *get_window_width(void *, int, Scheme_Object **);
 static Scheme_Object *set_window_width(void *, int, Scheme_Object **);
-#endif
 static Scheme_Object *get_cursor(void *, int, Scheme_Object **);
 static Scheme_Object *set_cursor(void *, int, Scheme_Object **);
 static Scheme_Object *get_window_list(void *, int, Scheme_Object **);
@@ -545,7 +543,7 @@ static void (*dll_scheme_set_config_path)(Scheme_Object *p);
 
 # if MZSCHEME_VERSION_MAJOR >= 500
 #  if defined(IMPLEMENT_THREAD_LOCAL_VIA_WIN_TLS) || defined(IMPLEMENT_THREAD_LOCAL_EXTERNALLY_VIA_PROC)
-/* define as function for macro in schshread.h */
+/* define as function for macro in schthread.h */
 Thread_Local_Variables *
 scheme_external_get_thread_local_variables(void)
 {
@@ -759,7 +757,7 @@ mzscheme_runtime_link_init(char *sch_dll, char *gc_dll, int verbose)
 mzscheme_enabled(int verbose)
 {
     return mzscheme_runtime_link_init(
-	    DYNAMIC_MZSCH_DLL, DYNAMIC_MZGC_DLL, verbose) == OK;
+	    (char *)p_mzschemedll, (char *)p_mzschemegcdll, verbose) == OK;
 }
 
     static void
@@ -849,10 +847,14 @@ static long range_end;
 static int mz_threads_allow = 0;
 
 #if defined(FEAT_GUI_W32)
-static void CALLBACK timer_proc(HWND, UINT, UINT, DWORD);
+static void CALLBACK timer_proc(HWND, UINT, UINT_PTR, DWORD);
 static UINT timer_id = 0;
 #elif defined(FEAT_GUI_GTK)
+# if GTK_CHECK_VERSION(3,0,0)
+static gboolean timer_proc(gpointer);
+# else
 static gint timer_proc(gpointer);
+# endif
 static guint timer_id = 0;
 #elif defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
 static void timer_proc(XtPointer, XtIntervalId *);
@@ -890,9 +892,13 @@ static void remove_timer(void);
 /* timers are presented in GUI only */
 # if defined(FEAT_GUI_W32)
     static void CALLBACK
-timer_proc(HWND hwnd UNUSED, UINT uMsg UNUSED, UINT idEvent UNUSED, DWORD dwTime UNUSED)
+timer_proc(HWND hwnd UNUSED, UINT uMsg UNUSED, UINT_PTR idEvent UNUSED, DWORD dwTime UNUSED)
 # elif defined(FEAT_GUI_GTK)
+#  if GTK_CHECK_VERSION(3,0,0)
+    static gboolean
+#  else
     static gint
+#  endif
 timer_proc(gpointer data UNUSED)
 # elif defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
     static void
@@ -919,7 +925,11 @@ setup_timer(void)
 # if defined(FEAT_GUI_W32)
     timer_id = SetTimer(NULL, 0, p_mzq, timer_proc);
 # elif defined(FEAT_GUI_GTK)
+#  if GTK_CHECK_VERSION(3,0,0)
+    timer_id = g_timeout_add((guint)p_mzq, (GSourceFunc)timer_proc, NULL);
+#  else
     timer_id = gtk_timeout_add((guint32)p_mzq, (GtkFunction)timer_proc, NULL);
+#  endif
 # elif defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
     timer_id = XtAppAddTimeOut(app_context, p_mzq, timer_proc, NULL);
 # elif defined(FEAT_GUI_MAC)
@@ -935,7 +945,11 @@ remove_timer(void)
 # if defined(FEAT_GUI_W32)
     KillTimer(NULL, timer_id);
 # elif defined(FEAT_GUI_GTK)
+#  if GTK_CHECK_VERSION(3,0,0)
+    g_source_remove(timer_id);
+#  else
     gtk_timeout_remove(timer_id);
+#  endif
 # elif defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)
     XtRemoveTimeOut(timer_id);
 # elif defined(FEAT_GUI_MAC)
@@ -992,9 +1006,17 @@ static intptr_t _tls_index = 0;
 # endif
 #endif
 
+/*
+ * mzscheme_main() is called early in main().
+ * We may call scheme_main_setup() which calls mzscheme_env_main() which then
+ * trampolines into vim_main2(), which never returns.
+ */
     int
-mzscheme_main(int argc, char** argv)
+mzscheme_main(void)
 {
+    int	    argc = 0;
+    char    *argv = NULL;
+
 #ifdef DYNAMIC_MZSCHEME
     /*
      * Racket requires trampolined startup.  We can not load it later.
@@ -1003,23 +1025,22 @@ mzscheme_main(int argc, char** argv)
     if (!mzscheme_enabled(FALSE))
     {
 	disabled = TRUE;
-	return vim_main2(argc, argv);
+	return vim_main2();
     }
 #endif
 #ifdef HAVE_TLS_SPACE
     scheme_register_tls_space(&tls_space, _tls_index);
 #endif
 #ifdef TRAMPOLINED_MZVIM_STARTUP
-    return scheme_main_setup(TRUE, mzscheme_env_main, argc, argv);
+    return scheme_main_setup(TRUE, mzscheme_env_main, argc, &argv);
 #else
-    return mzscheme_env_main(NULL, argc, argv);
+    return mzscheme_env_main(NULL, argc, &argv);
 #endif
 }
 
     static int
-mzscheme_env_main(Scheme_Env *env, int argc, char **argv)
+mzscheme_env_main(Scheme_Env *env, int argc UNUSED, char **argv UNUSED)
 {
-    int vim_main_result;
 #ifdef TRAMPOLINED_MZVIM_STARTUP
     /* Scheme has created the environment for us */
     environment = env;
@@ -1036,17 +1057,10 @@ mzscheme_env_main(Scheme_Env *env, int argc, char **argv)
 # endif
 #endif
 
-    /* mzscheme_main is called as a trampoline from main.
-     * We trampoline into vim_main2
-     * Passing argc, argv through from mzscheme_main
-     */
-    vim_main_result = vim_main2(argc, argv);
-#if !defined(TRAMPOLINED_MZVIM_STARTUP) && defined(MZ_PRECISE_GC)
-    /* releasing dummy */
-    MZ_GC_REG();
-    MZ_GC_UNREG();
-#endif
-    return vim_main_result;
+    vim_main2();
+    /* not reached, vim_main2() will loop until exit() */
+
+    return 0;
 }
 
     static Scheme_Object*
@@ -1057,7 +1071,7 @@ load_base_module(void *data)
 }
 
     static Scheme_Object *
-load_base_module_on_error(void *data)
+load_base_module_on_error(void *data UNUSED)
 {
     load_base_module_failed = TRUE;
     return scheme_null;
@@ -1101,10 +1115,10 @@ startup_mzscheme(void)
 	MZ_GC_VAR_IN_REG(0, coll_path);
 	MZ_GC_REG();
 	/* workaround for dynamic loading on windows */
-	s = vim_getenv("PLTCOLLECTS", &mustfree);
+	s = vim_getenv((char_u *)"PLTCOLLECTS", &mustfree);
 	if (s != NULL)
 	{
-	    coll_path = scheme_make_path(s);
+	    coll_path = scheme_make_path((char *)s);
 	    MZ_GC_CHECK();
 	    if (mustfree)
 		vim_free(s);
@@ -1158,10 +1172,10 @@ startup_mzscheme(void)
 	MZ_GC_VAR_IN_REG(0, config_path);
 	MZ_GC_REG();
 	/* workaround for dynamic loading on windows */
-	s = vim_getenv("PLTCONFIGDIR", &mustfree);
+	s = vim_getenv((char_u *)"PLTCONFIGDIR", &mustfree);
 	if (s != NULL)
 	{
-	    config_path = scheme_make_path(s);
+	    config_path = scheme_make_path((char *)s);
 	    MZ_GC_CHECK();
 	    if (mustfree)
 		vim_free(s);
@@ -1897,11 +1911,9 @@ get_curr_win(void *data UNUSED, int argc UNUSED, Scheme_Object **argv UNUSED)
 get_window_count(void *data UNUSED, int argc UNUSED, Scheme_Object **argv UNUSED)
 {
     int	    n = 0;
-#ifdef FEAT_WINDOWS
     win_T   *w;
 
-    for (w = firstwin; w != NULL; w = w->w_next)
-#endif
+    FOR_ALL_WINDOWS(w)
 	++n;
     return scheme_make_integer(n);
 }
@@ -1918,9 +1930,7 @@ get_window_list(void *data, int argc, Scheme_Object **argv)
     buf = get_buffer_arg(prim->name, 0, argc, argv);
     list = scheme_null;
 
-#ifdef FEAT_WINDOWS
     for ( ; w != NULL; w = w->w_next)
-#endif
 	if (w->w_buffer == buf->buf)
 	{
 	    list = scheme_make_pair(window_new(w), list);
@@ -1972,13 +1982,11 @@ window_new(win_T *win)
 get_window_num(void *data UNUSED, int argc UNUSED, Scheme_Object **argv UNUSED)
 {
     int		nr = 1;
-#ifdef FEAT_WINDOWS
     Vim_Prim	*prim = (Vim_Prim *)data;
     win_T	*win = get_window_arg(prim->name, 0, argc, argv)->win;
     win_T	*wp;
 
     for (wp = firstwin; wp != win; wp = wp->w_next)
-#endif
 	++nr;
 
     return scheme_make_integer(nr);
@@ -1996,9 +2004,7 @@ get_window_by_num(void *data, int argc, Scheme_Object **argv)
     if (fnum < 1)
 	scheme_signal_error(_("window index is out of range"));
 
-#ifdef FEAT_WINDOWS
     for ( ; win != NULL; win = win->w_next, --fnum)
-#endif
 	if (fnum == 1)	    /* to be 1-based */
 	    return window_new(win);
 
@@ -2050,7 +2056,6 @@ set_window_height(void *data, int argc, Scheme_Object **argv)
     return scheme_void;
 }
 
-#ifdef FEAT_VERTSPLIT
 /* (get-win-width [window]) */
     static Scheme_Object *
 get_window_width(void *data, int argc, Scheme_Object **argv)
@@ -2058,7 +2063,7 @@ get_window_width(void *data, int argc, Scheme_Object **argv)
     Vim_Prim	    *prim = (Vim_Prim *)data;
     vim_mz_window   *win = get_window_arg(prim->name, 0, argc, argv);
 
-    return scheme_make_integer(W_WIDTH(win->win));
+    return scheme_make_integer(win->win->w_width);
 }
 
 /* (set-win-width {width} [window]) */
@@ -2085,7 +2090,6 @@ set_window_width(void *data, int argc, Scheme_Object **argv)
     raise_if_error();
     return scheme_void;
 }
-#endif
 
 /* (get-cursor [window]) -> (line . col) */
     static Scheme_Object *
@@ -2181,7 +2185,7 @@ get_buffer_by_num(void *data, int argc, Scheme_Object **argv)
 
     fnum = SCHEME_INT_VAL(GUARANTEE_INTEGER(prim->name, 0));
 
-    for (buf = firstbuf; buf; buf = buf->b_next)
+    FOR_ALL_BUFFERS(buf)
 	if (buf->b_fnum == fnum)
 	    return buffer_new(buf);
 
@@ -2204,7 +2208,7 @@ get_buffer_by_name(void *data, int argc, Scheme_Object **argv)
     fname = GUARANTEED_STRING_ARG(prim->name, 0);
     buffer = scheme_false;
 
-    for (buf = firstbuf; buf; buf = buf->b_next)
+    FOR_ALL_BUFFERS(buf)
     {
 	if (buf->b_ffname == NULL || buf->b_sfname == NULL)
 	    /* empty string */
@@ -2267,7 +2271,7 @@ get_buffer_count(void *data UNUSED, int argc UNUSED, Scheme_Object **argv UNUSED
     buf_T   *b;
     int	    n = 0;
 
-    for (b = firstbuf; b; b = b->b_next) ++n;
+    FOR_ALL_BUFFERS(b) ++n;
     return scheme_make_integer(n);
 }
 
@@ -2709,7 +2713,8 @@ set_buffer_line_list(void *data, int argc, Scheme_Object **argv)
 	 * Adjust marks. Invalidate any which lie in the
 	 * changed range, and move any in the remainder of the buffer.
 	 */
-	mark_adjust((linenr_T)lo, (linenr_T)(hi - 1), (long)MAXLNUM, (long)extra);
+	mark_adjust((linenr_T)lo, (linenr_T)(hi - 1),
+						  (long)MAXLNUM, (long)extra);
 	changed_lines((linenr_T)lo, 0, (linenr_T)hi, (long)extra);
 
 	if (buf->buf == curwin->w_buffer)
@@ -3093,6 +3098,7 @@ vim_to_mzscheme_impl(typval_T *vim_value, int depth, Scheme_Hash_Table *visited)
 	MZ_GC_VAR_IN_REG(0, funcname);
 	MZ_GC_REG();
 
+	/* FIXME: func_ref() and func_unref() are needed. */
 	funcname = scheme_make_byte_string((char *)vim_value->vval.v_string);
 	MZ_GC_CHECK();
 	result = scheme_make_closed_prim_w_arity(vim_funcref, funcname,
@@ -3100,6 +3106,30 @@ vim_to_mzscheme_impl(typval_T *vim_value, int depth, Scheme_Hash_Table *visited)
 	MZ_GC_CHECK();
 
 	MZ_GC_UNREG();
+    }
+    else if (vim_value->v_type == VAR_PARTIAL)
+    {
+	if (vim_value->vval.v_partial == NULL)
+	    result = scheme_null;
+	else
+	{
+	    Scheme_Object *funcname = NULL;
+
+	    MZ_GC_DECL_REG(1);
+	    MZ_GC_VAR_IN_REG(0, funcname);
+	    MZ_GC_REG();
+
+	    /* FIXME: func_ref() and func_unref() are needed. */
+	    /* TODO: Support pt_dict and pt_argv. */
+	    funcname = scheme_make_byte_string(
+			      (char *)partial_name(vim_value->vval.v_partial));
+	    MZ_GC_CHECK();
+	    result = scheme_make_closed_prim_w_arity(vim_funcref, funcname,
+		    (const char *)BYTE_STRING_VALUE(funcname), 0, -1);
+	    MZ_GC_CHECK();
+
+	    MZ_GC_UNREG();
+	}
     }
     else if (vim_value->v_type == VAR_SPECIAL)
     {
@@ -3530,7 +3560,7 @@ raise_vim_exn(const char *add_info)
 
 	info = scheme_make_byte_string(add_info);
 	MZ_GC_CHECK();
-	c_string = scheme_format_utf8(fmt, STRLEN(fmt), 1, &info, NULL);
+	c_string = scheme_format_utf8(fmt, (int)STRLEN(fmt), 1, &info, NULL);
 	MZ_GC_CHECK();
 	byte_string = scheme_make_byte_string(c_string);
 	MZ_GC_CHECK();
@@ -3702,10 +3732,8 @@ static Vim_Prim prims[]=
     {get_window_buffer, "get-win-buffer", 0, 1},
     {get_window_height, "get-win-height", 0, 1},
     {set_window_height, "set-win-height", 1, 2},
-#ifdef FEAT_VERTSPLIT
     {get_window_width, "get-win-width", 0, 1},
     {set_window_width, "set-win-width", 1, 2},
-#endif
     {get_cursor, "get-cursor", 0, 1},
     {set_cursor, "set-cursor", 1, 2},
     {get_window_list, "get-win-list", 0, 1},
