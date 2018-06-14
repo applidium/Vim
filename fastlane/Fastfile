@@ -1,6 +1,6 @@
 import_from_git(url: 'ssh://git@codereview.technologies.fabernovel.com:29418/ADFastlane',
                 path: 'Fastfile_ios.rb',
-                branch: 'feature/v6_2')
+                branch: 'v6.0+')
 
 override_lane :get_default_build_variant do
   lane_context[:BUILD_VARIANT] = 'vimDistribution'
