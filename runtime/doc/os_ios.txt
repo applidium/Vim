@@ -1,6 +1,6 @@
 *os_ios.txt*    For Vim version 7.3.  Last change: 2012 Jan 03
 
-		  VIM REFERENCE MANUAL    by Applidium
+		  VIM REFERENCE MANUAL    by Fabernovel Technologies
 
 					*ios* *iOS* *iPhone* *iPad*
 
@@ -13,7 +13,8 @@ been mapped to the backslash key. You can customize this to fit your taste.
 2. User interface               |ios-ui|
 2. iTunes files sharing         |ios-itunes|
 
-Vim on the iOS has been made possible by Applidium, http://applidium.com
+Vim on the iOS has been made possible by Fabernovel Technologies,
+https://technologies.fabernovel.com/fr/
 
 ==============================================================================
 1. General	               				*ios-general*
