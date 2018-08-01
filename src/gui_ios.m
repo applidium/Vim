@@ -623,10 +623,13 @@ gui_mch_clear_all(void)
 {
 //    printf("%s\n",__func__);
     CGContextRef context = CGLayerGetContext(gui_ios.layer);
-    
-    CGContextSetFillColorWithColor(context, gui_ios.bg_color);
+    CGContextSaveGState(context);
+    CGColorRef cgColor = CGColorCreateFromVimColor(gui.back_pixel);
+    CGContextSetFillColorWithColor(context, cgColor);
+    CGColorRelease(cgColor);
     CGSize size = CGLayerGetSize(gui_ios.layer);
     CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
+    CGContextRestoreGState(context);
     gui_ios.dirtyRect = gui_ios.view_controller.textView.bounds;
 }
 
