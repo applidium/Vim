@@ -1624,8 +1624,7 @@ gui_mch_set_shellsize(
     int		direction)
 {
 //    printf("%s\n",__func__);
-//    CGSize layerSize = CGLayerGetSize(gui_ios.layer);
-//    gui_resize_shell(layerSize.width, layerSize.height);
+    [gui_ios.view_controller resizeShell];
 }
 
 
