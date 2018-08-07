@@ -509,6 +509,9 @@ static struct vimoption options[] =
 #if defined(FEAT_GUI_MAC)
 			    (char_u *)&p_antialias, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)FALSE}
+#elif defined(FEAT_GUI_IOS)
+                (char_u *)&p_antialias, PV_NONE,
+                {(char_u *)TRUE, (char_u *)FALSE}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)FALSE}
