@@ -310,7 +310,10 @@ enum blink_state {
 }
 
 - (void)flush {
-    _hasBeenFlushedOnce = YES;
+    if (!_hasBeenFlushedOnce) {
+        _hasBeenFlushedOnce = YES;
+        [self becomeFirstResponder];
+    }
     [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
