@@ -30,6 +30,8 @@ static int hex_digit(int c) {
 
 void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRect);
 CGColorRef CGColorCreateFromVimColor(guicolor_T color);
+void inputSpecialName(const char * name);
+
 @class VimViewController;
 @class VimTextView;
 
@@ -127,7 +129,6 @@ enum blink_state {
 #pragma mark UIResponder
 - (BOOL)canBecomeFirstResponder {
     return _hasBeenFlushedOnce;
-//    return YES;
 }
 
 - (BOOL)canResignFirstResponder {
@@ -179,6 +180,7 @@ enum blink_state {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillBeHidden:)
                                                  name:UIKeyboardWillHideNotification object:nil];
+    [self createKeyCommands];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -193,7 +195,6 @@ enum blink_state {
     for (UIGestureRecognizer * gestureRecognizer in _textView.gestureRecognizers) {
         [_textView removeGestureRecognizer:gestureRecognizer];
     }
-
     [super viewDidUnload];
 }
 
@@ -349,6 +350,94 @@ enum blink_state {
 
 @end
 
+#pragma mark ExternalKeyboard
+
+@interface VimViewController (ExternalKeyboard)
+- (void)createKeyCommands;
+- (void)handleKeyCommand:(UIKeyCommand *)keyCommand;
+- (NSString *)inputFromSpecialString:(NSString *)keyString;
+@end
+
+@implementation VimViewController (ExternalKeyboard)
+
+- (void)createKeyCommands {
+    NSArray<NSString *> * specialKeys = @[
+        UIKeyInputUpArrow, UIKeyInputLeftArrow,
+        UIKeyInputDownArrow, UIKeyInputRightArrow,
+        UIKeyInputEscape
+    ];
+    UIKeyModifierFlags modifiers[] = {
+        0, UIKeyModifierControl,
+        UIKeyModifierShift, UIKeyModifierAlternate,
+        UIKeyModifierCommand
+    };
+    for (int index = 0; index < ARRAY_LENGTH(modifiers); index++) {
+        for (NSString * specialKey in specialKeys) {
+            UIKeyCommand * keyCommand = [UIKeyCommand keyCommandWithInput:specialKey
+                                                            modifierFlags:modifiers[index]
+                                                                   action:@selector(handleKeyCommand:)];
+            [self addKeyCommand:keyCommand];
+        }
+    }
+    char keys[] = "`-=~!@#$%^&*()_+[]\\{}|;':\",./<>?"
+                  "1234567890"
+                  "abcdefghijklmnopqrstuvwxyz"
+                  "\t\r";
+    for (int modifiersIndex = 0; modifiersIndex < ARRAY_LENGTH(modifiers); modifiersIndex++) {
+        for (int charactersIndex = 0; charactersIndex < ARRAY_LENGTH(keys); charactersIndex++) {
+            NSString * inputString = [NSString stringWithFormat:@"%c", keys[charactersIndex]];
+            UIKeyCommand * keyCommand = [UIKeyCommand keyCommandWithInput:inputString
+                                                            modifierFlags:modifiers[modifiersIndex]
+                                                                   action:@selector(handleKeyCommand:)];
+            [self addKeyCommand:keyCommand];
+        }
+    }
+}
+
+- (void)handleKeyCommand:(UIKeyCommand *)keyCommand {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString * input = [self inputFromSpecialString:keyCommand.input];
+        if (!keyCommand.modifierFlags && !input.length) {
+            [self insertText:keyCommand.input];
+            return;
+        }
+        NSMutableString * commandName = [[NSMutableString alloc] init];
+        switch (keyCommand.modifierFlags) {
+            case UIKeyModifierControl:
+                [commandName appendString:@"C-"];
+                break;
+            case UIKeyModifierShift:
+                [commandName appendString:@"S-"];
+                break;
+            case UIKeyModifierAlternate:
+                [commandName appendString:@"M-"];
+                break;
+            case UIKeyModifierCommand:
+                [commandName appendString:@"D-"];
+                break;
+            default:
+                break;
+        }
+        [commandName appendString:input ?: keyCommand.input];
+        NSString * specialName = [NSString stringWithFormat:@"<%@>", commandName];
+        [commandName release];
+        inputSpecialName([specialName UTF8String]);
+    });
+}
+
+- (NSString *)inputFromSpecialString:(NSString *)keyString {
+    if ([keyString isEqualToString:UIKeyInputUpArrow]) { return @"Up"; }
+    if ([keyString isEqualToString:UIKeyInputLeftArrow]) { return @"Left"; }
+    if ([keyString isEqualToString:UIKeyInputDownArrow]) { return @"Down"; }
+    if ([keyString isEqualToString:UIKeyInputRightArrow]) { return @"Right"; }
+    if ([keyString isEqualToString:UIKeyInputEscape]) { return @"Esc"; }
+    if ([keyString isEqualToString:@"\t"]) { return @"Tab"; }
+    if ([keyString isEqualToString:@"\r"]) { return @"CR"; }
+    return nil;
+}
+
+@end
+
 #pragma mark -
 #pragma mark VimAppDelegate
 
@@ -468,6 +557,18 @@ CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
     CGColorRef cgColor = CGColorCreate(colorSpace, rgb);
     CGColorSpaceRelease(colorSpace);
     return cgColor;
+}
+
+void inputSpecialName(const char * name) {
+    char_u * buffer = (char_u *)name;
+    char_u result[6] = { 0 };
+    int length = trans_special(&buffer, result, TRUE, FALSE);
+    for (int index = 0; index < length; index += 3) {
+        if (result[index] == K_SPECIAL) {
+            result[index] = CSI;
+        }
+    }
+    add_to_input_buf(result, length);
 }
 
 int main(int argc, char *argv[]) {
