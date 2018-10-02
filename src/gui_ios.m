@@ -141,14 +141,26 @@ enum blink_state {
     _textView = [[VimTextView alloc] init];
     _textView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_textView];
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.topLayoutGuide attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
-                                                             toItem:_textView attribute:NSLayoutAttributeTop multiplier:1.0 constant:0.0]];
-     [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
-                                                             toItem:_textView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0.0]];
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual
-                                                             toItem:_textView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0.0]];
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual
-                                                             toItem:_textView attribute:NSLayoutAttributeRight multiplier:1.0 constant:0.0]];
+
+    NSLayoutYAxisAnchor * topAnchor = nil;
+    NSLayoutYAxisAnchor * bottomAnchor = nil;
+    NSLayoutXAxisAnchor * leftAnchor = nil;
+    NSLayoutXAxisAnchor * rightAnchor = nil;
+    if (@available(iOS 11.0, *)) {
+        topAnchor = self.view.safeAreaLayoutGuide.topAnchor;
+        bottomAnchor = self.view.safeAreaLayoutGuide.bottomAnchor;
+        leftAnchor = self.view.safeAreaLayoutGuide.leftAnchor;
+        rightAnchor = self.view.safeAreaLayoutGuide.rightAnchor;
+    } else {
+        topAnchor = self.topLayoutGuide.bottomAnchor;
+        bottomAnchor = self.bottomLayoutGuide.topAnchor;
+        leftAnchor = self.view.leftAnchor;
+        rightAnchor = self.view.rightAnchor;
+    }
+    [_textView.topAnchor constraintEqualToAnchor:topAnchor].active = YES;
+    [_textView.bottomAnchor constraintEqualToAnchor:bottomAnchor].active = YES;
+    [_textView.leftAnchor constraintEqualToAnchor:leftAnchor].active = YES;
+    [_textView.rightAnchor constraintEqualToAnchor:rightAnchor].active = YES;
     [_textView release];
 
     _hasBeenFlushedOnce = NO;
