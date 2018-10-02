@@ -548,12 +548,10 @@ void CGLayerCopyRectToRect(CGLayerRef layer, CGRect sourceRect, CGRect targetRec
     CGContextAddRect(context, destinationRect);
     CGContextClip(context);
     CGFloat scale = [UIScreen mainScreen].scale;
-    CGPoint point = CGPointMake((destinationRect.origin.x - sourceRect.origin.x) * scale,
-                                (destinationRect.origin.y - sourceRect.origin.y) * scale);
     CGContextScaleCTM(context, 1.0/scale, 1.0/scale);
-    CGContextDrawLayerAtPoint(context, point, layer);
-    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, destinationRect);
     CGContextRestoreGState(context);
+    gui_ios.dirtyRect = CGRectUnion(gui_ios.dirtyRect, destinationRect);
+    [gui_ios.view_controller.view setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 CGColorRef CGColorCreateFromVimColor(guicolor_T color) {
