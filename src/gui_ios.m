@@ -221,7 +221,6 @@ enum blink_state {
 
 - (void)insertText:(NSString *)text {
     add_to_input_buf((char_u *)[text UTF8String], [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
-    [_textView setNeedsDisplayInRect:gui_ios.dirtyRect];
 }
 
 - (void)deleteBackward {
