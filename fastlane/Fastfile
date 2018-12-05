@@ -78,7 +78,7 @@ override_lane :get_variants_hockeyapp_configurations do
   HOCKEYAPP_API_TOKEN = 'f2c0bd7767da492ca34c14684864a6e9'
 
   {
-    'vimDistribution' => { api_token: HOCKEYAPP_API_TOKEN, public_identifier: nil } # Avoid sharing it on github. Pass it through CLI.
+    'vimDistribution' => { api_token: HOCKEYAPP_API_TOKEN, public_identifier: 'ca277374ba8c4f21a3d660496fe47b94' } # Avoid sharing it on github. Pass it through CLI.
   }
 end
 
