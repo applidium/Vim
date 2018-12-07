@@ -1,3 +1,4 @@
-• Update Vim library to the latest version (8.1.0042)
-• Add support to "open in "Vim"", thanks to @au-phiware PR
-• Fix layout bug when moving text block
+• add external keyboard basic support
+• bugfix, layout mostly
+• set UTF8 as default encoding
+• add antialiasing
