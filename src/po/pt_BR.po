@@ -3574,7 +3574,7 @@ msgid "          owned by: "
 msgstr "        pertence a: "
 
 msgid "   dated: "
-msgstr "com data: "
+msgstr "   com data: "
 
 msgid "             dated: "
 msgstr "       com data de: "
